@@ -103,4 +103,11 @@ those (rather than the shown costs) may be worth searching for. Tried so far, an
   1,150, so class does not matter, and armor is not 1.5x anything.
 - **Plain numbers and 32-bit floats** of the shown costs, in data, code and archives: nothing relevant.
 
+- **Fitting a formula to ~960 armor prices** (head, body and arm prices from a third-party database, used only to check ideas;
+  none of it is stored here): price is a multiple of 50 that depends on the set only, rises with rarity and, loosely, with
+  defense, but equal rarity and defense give different prices (e.g. two rarity-3 sets with the same base defense cost 3,350 and
+  4,150). Sums of material values, material counts and per-rarity weights do not fit, and stats bytes 1-5 plus rarity only
+  "determine" the price because they identify the set. The prices look hand-authored per set, so a stored table, perhaps in
+  code, is still the likely source.
+
 `prices-add <game dir> <ledger> <create|upgrade> <cost> <exact piece name>` adds a price read off the game's screen by hand.
