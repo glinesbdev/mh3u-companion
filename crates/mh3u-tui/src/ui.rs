@@ -133,6 +133,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
 fn draw_help(f: &mut Frame, app: &App) {
     let text = "\
 Move          ↑/↓ or j/k · PageUp/PageDown
+Top / bottom  Home/End or g/G
 Switch tab    ←/→ or h/l · Tab
 Quit          q
 
@@ -170,7 +171,8 @@ Press any key to close.";
         text.to_string()
     };
     let area = f.area();
-    let (w, h) = (area.width.min(74), area.height.min(29));
+    let lines = text.lines().count() as u16;
+    let (w, h) = (area.width.min(74), area.height.min(lines + 2));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
     f.render_widget(Clear, popup);
     f.render_widget(
@@ -189,7 +191,7 @@ fn scrollbar(f: &mut Frame, area: Rect, len: usize, selected: Option<usize>) {
         Scrollbar::new(ScrollbarOrientation::VerticalRight)
             .begin_symbol(None)
             .end_symbol(None)
-            .style(muted()),
+            .style(theme::faint()),
         area.inner(Margin {
             vertical: 1,
             horizontal: 0,

@@ -1272,6 +1272,8 @@ impl App {
             KeyCode::Up | KeyCode::Char('k') => self.move_selection(-1),
             KeyCode::PageDown => self.move_selection(10),
             KeyCode::PageUp => self.move_selection(-10),
+            KeyCode::Home | KeyCode::Char('g') => self.move_selection(isize::MIN),
+            KeyCode::End | KeyCode::Char('G') => self.move_selection(isize::MAX),
             KeyCode::Char('/') if matches!(self.tab, Tab::Items | Tab::Crafting) => self.searching = true,
             KeyCode::Char('c') if self.tab == Tab::Crafting => {
                 self.craftable_only = !self.craftable_only;
@@ -1342,9 +1344,15 @@ impl App {
             Tab::Crafting => (&mut self.craft_state, self.pieces.len()),
             Tab::Wishlist => (&mut self.wish_state, self.wishlist.len()),
         };
-        let next = (state.selected().unwrap_or(0) as isize + step).clamp(0, len.saturating_sub(1) as isize);
-        state.select(Some(next as usize));
+        state.select(Some(stepped(state.selected(), step, len)));
     }
+}
+
+/// The row to select after moving `step` rows from `current` in a list of `len` rows, staying inside the list.
+/// `isize::MIN` and `isize::MAX` therefore go to the top and the bottom.
+fn stepped(current: Option<usize>, step: isize, len: usize) -> usize {
+    let next = (current.unwrap_or(0) as isize).saturating_add(step);
+    next.clamp(0, len.saturating_sub(1) as isize) as usize
 }
 
 fn modified(path: &PathBuf) -> Option<SystemTime> {
@@ -1375,6 +1383,17 @@ mod tests {
     use super::*;
 
     use std::collections::HashMap;
+
+    #[test]
+    fn moving_stays_inside_the_list_and_home_end_reach_the_edges() {
+        assert_eq!(stepped(Some(5), 1, 10), 6);
+        assert_eq!(stepped(Some(5), -10, 10), 0);
+        assert_eq!(stepped(Some(5), 10, 10), 9);
+        assert_eq!(stepped(Some(5), isize::MIN, 10), 0, "Home");
+        assert_eq!(stepped(Some(5), isize::MAX, 10), 9, "End");
+        assert_eq!(stepped(None, isize::MAX, 10), 9);
+        assert_eq!(stepped(None, isize::MAX, 0), 0, "an empty list has nothing to reach");
+    }
 
     #[test]
     fn digits_are_grouped() {

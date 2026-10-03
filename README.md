@@ -36,7 +36,7 @@ what you own and what you need to craft or upgrade gear.
   line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set
   `NO_COLOR=1` for plain text. Below 100 columns the panes stack instead of sitting side by side.
 - **Sorting**: `s` on the Items tab sorts the item box by box order, name or quantity.
-- `?` shows a key reference.
+- `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
 
 Not shown yet: zenny costs for crafting (except those seen in live mode), weapon stats (attack, sharpness), armor max defense. See `docs/formats.md`.

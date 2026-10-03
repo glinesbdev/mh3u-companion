@@ -39,8 +39,17 @@ pub fn bad() -> Style {
     fg(Color::Red)
 }
 
-/// Secondary text and inactive borders.
+/// Secondary text: counts, separators, key descriptions. The terminal's normal gray, which stays readable on dark themes.
 pub fn muted() -> Style {
+    if colors_on() {
+        Style::new().fg(Color::Gray)
+    } else {
+        Style::new().add_modifier(Modifier::DIM)
+    }
+}
+
+/// Decoration that should recede: inactive borders and scroll bars. Darker than `muted`, so never used for text.
+pub fn faint() -> Style {
     if colors_on() {
         Style::new().fg(Color::DarkGray)
     } else {
@@ -63,7 +72,7 @@ pub const SELECTION_MARK: &str = "▶ ";
 pub fn pane<'a>(title: impl Into<String>, active: bool) -> Block<'a> {
     Block::bordered()
         .border_type(BorderType::Rounded)
-        .border_style(if active { accent() } else { muted() })
+        .border_style(if active { accent() } else { faint() })
         .title(Line::styled(title.into(), if active { bold() } else { Style::new() }))
 }
 
