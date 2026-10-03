@@ -12,3 +12,4 @@ anyhow = "1"
 mh3u-core = { path = "crates/mh3u-core" }
 flate2 = "1"
 clap = { version = "4", features = ["derive", "env"] }
+dirs = "6"

@@ -63,7 +63,7 @@ impl App {
             }
         }
         if changed
-            && let Some(path) = &self.unlocked_path
+            && let Some(path) = self.files.as_ref().map(|f| &f.unlocked)
             && let Err(message) = crate::files::save(path, &self.unlocked.format(), "unlocked pieces")
         {
             self.status = message;

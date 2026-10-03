@@ -12,7 +12,7 @@ impl App {
         self.refresh_box();
         self.refresh_equipment();
         self.refresh_pieces();
-        self.build_stale = true;
+        self.builds.stale = true;
         if self.tab == Tab::Builds {
             self.refresh_builds();
         }

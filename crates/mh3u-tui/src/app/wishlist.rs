@@ -165,7 +165,9 @@ impl App {
     }
 
     pub(super) fn save_wishlist(&mut self) {
-        let Some(path) = &self.wishlist_path else { return };
+        let Some(path) = self.files.as_ref().map(|f| &f.wishlist) else {
+            return;
+        };
         if let Err(message) = crate::files::save(path, &format_wishlist(&self.wishlist, &self.auto_parents), "wishlist") {
             self.status = message;
         }

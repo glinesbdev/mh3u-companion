@@ -10,10 +10,11 @@ mod ui;
 mod unlocked;
 mod worn;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use app::App;
 use app::Live;
 use clap::Parser;
+use files::Files;
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
 use std::path::PathBuf;
 
@@ -43,7 +44,7 @@ struct Cli {
 }
 
 fn home() -> Result<PathBuf> {
-    std::env::var_os("HOME").map(PathBuf::from).context("HOME is not set")
+    dirs::home_dir().context("no home folder")
 }
 
 /// Look for a `... [Game] [0005000010118300]` folder under ~/games/wiiu.
@@ -60,29 +61,6 @@ fn guess_game_dir() -> Option<PathBuf> {
 fn slot_of(save: &std::path::Path) -> Option<u8> {
     let n = save.file_name()?.to_str()?.strip_prefix("user")?.parse().ok()?;
     (1..=3).contains(&n).then_some(n)
-}
-
-/// One wishlist per save slot, in `$XDG_CONFIG_HOME/mh3u-companion` (or `~/.config/...` when that isn't set). Slot 1 keeps the
-/// original `wishlist.txt`, so lists made before there were several are still there; the others are `wishlist-2.txt`, ...
-fn wishlist_path(slot: u8) -> Option<PathBuf> {
-    per_slot_file("wishlist", slot)
-}
-
-/// The build manager's wanted skills, one file per save slot like the wishlist: `builds.txt`, `builds-2.txt`, ...
-fn builds_path(slot: u8) -> Option<PathBuf> {
-    per_slot_file("builds", slot)
-}
-
-fn per_slot_file(stem: &str, slot: u8) -> Option<PathBuf> {
-    let config = std::env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .or_else(|| home().ok().map(|h| h.join(".config")))?;
-    let name = if slot == 1 {
-        format!("{stem}.txt")
-    } else {
-        format!("{stem}-{slot}.txt")
-    };
-    Some(config.join("mh3u-companion").join(name))
 }
 
 /// Start Cemu on the game and read its memory. Only a process we started may be read (see `docs/live.md`).
@@ -118,12 +96,12 @@ fn start_live(game_dir: &std::path::Path, save: &std::path::Path, cemu: &str, ed
     })
 }
 
-/// Copy the save slots (and the system file) next to the one in use into
-/// `~/.local/share/mh3u-companion/backups/<time>/`, so debug edits that get saved by mistake can be undone.
-fn back_up_saves(save: &std::path::Path) -> Result<String> {
+/// Copy the save slots (and the system file) next to the one in use into `<backups>/<time>/`, so debug edits that get saved by
+/// mistake can be undone.
+fn back_up_saves(save: &std::path::Path, backups: &std::path::Path) -> Result<String> {
     let dir = save.parent().context("the save file has no folder")?;
     let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)?.as_secs();
-    let target = home()?.join(format!(".local/share/mh3u-companion/backups/{stamp}"));
+    let target = backups.join(stamp.to_string());
     std::fs::create_dir_all(&target)?;
     let mut copied = 0;
     for name in ["user1", "user2", "user3", "system"] {
@@ -132,14 +110,6 @@ fn back_up_saves(save: &std::path::Path) -> Result<String> {
         }
     }
     Ok(format!("EDIT MODE: backed up {copied} save files to {}", target.display()))
-}
-
-/// `$XDG_DATA_HOME/mh3u-companion/prices.tsv`, or `~/.local/share/...` when that isn't set.
-fn prices_path() -> Option<PathBuf> {
-    let data = std::env::var_os("XDG_DATA_HOME")
-        .map(PathBuf::from)
-        .or_else(|| home().ok().map(|h| h.join(".local/share")))?;
-    Some(data.join("mh3u-companion/prices.tsv"))
 }
 
 fn main() -> Result<()> {
@@ -163,15 +133,15 @@ fn main() -> Result<()> {
     };
 
     let game = GameData::load(&game_dir).with_context(|| format!("loading game data from {}", game_dir.display()))?;
-    let mut app = App::new(
-        game,
-        save.clone(),
-        wishlist_path(slot_of(&save).unwrap_or(slot)),
-        builds_path(slot_of(&save).unwrap_or(slot)),
-        prices_path(),
-    )?;
+    let files = Files::for_slot(slot_of(&save).unwrap_or(slot));
+    let backups = files.as_ref().map(|f| f.backups.clone());
+    let mut app = App::new(game, save.clone(), files)?;
     if live {
-        let note = if debug_edit { Some(back_up_saves(&save)?) } else { None };
+        let note = match (debug_edit, backups) {
+            (true, Some(dir)) => Some(back_up_saves(&save, &dir)?),
+            (true, None) => bail!("--debug-edit needs a home folder to keep backups of the saves in"),
+            (false, _) => None,
+        };
         app.set_live(start_live(&game_dir, &save, &cemu, debug_edit)?);
         if let Some(note) = note {
             app.enable_edit(note);

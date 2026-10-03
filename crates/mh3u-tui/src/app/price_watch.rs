@@ -63,7 +63,7 @@ impl App {
             self.catalog = self.build_catalog();
             self.refresh_pieces();
         }
-        if let Some(path) = &self.prices_path
+        if let Some(path) = self.files.as_ref().map(|f| &f.prices)
             && let Err(message) = crate::files::save(path, &self.prices.format(), "prices")
         {
             self.status = message;
@@ -74,7 +74,7 @@ impl App {
     /// what to look at when a price you expected is missing.
     pub(super) fn log_tracker(&self, line: &str) {
         use std::io::Write;
-        let Some(path) = self.prices_path.as_ref().map(|p| p.with_file_name("tracker.log")) else {
+        let Some(path) = self.files.as_ref().map(|f| &f.tracker_log) else {
             return;
         };
         let when = std::time::SystemTime::now()

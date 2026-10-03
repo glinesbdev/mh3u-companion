@@ -2,6 +2,49 @@
 
 use super::*;
 
+/// Everything the Builds tab keeps: the wanted skills and options (saved per hunter), the pieces the search may use, the sets it
+/// found, the build templates, and the popups that edit them.
+pub struct BuildManager {
+    pub settings: Settings,
+    pub pool: Vec<Candidate>,
+    pub results: Vec<Found>,
+    pub target_state: ListState,
+    pub result_state: ListState,
+    /// Which of the three lists the keys move.
+    pub focus: BuildFocus,
+    /// Saved sets, per hunter.
+    pub templates: Vec<Template>,
+    pub template_state: ListState,
+    /// The highlighted slot of the highlighted template (an index into `templates::SLOTS`).
+    pub template_slot: usize,
+    pub name_prompt: Option<NamePrompt>,
+    pub piece_picker: Option<PiecePicker>,
+    pub skill_picker: Option<SkillPicker>,
+    /// The save changed since the sets were searched; they are searched again when the Builds tab is next shown.
+    pub(super) stale: bool,
+}
+
+impl BuildManager {
+    /// Start from the saved settings and templates (the text of their files, if there are any).
+    pub(super) fn load(settings: Option<String>, templates: Option<String>) -> BuildManager {
+        BuildManager {
+            settings: settings.map(|t| Settings::parse(&t)).unwrap_or_default(),
+            pool: Vec::new(),
+            results: Vec::new(),
+            target_state: ListState::default().with_selected(Some(0)),
+            result_state: ListState::default().with_selected(Some(0)),
+            focus: BuildFocus::Skills,
+            templates: templates.map(|t| templates::parse(&t)).unwrap_or_default(),
+            template_state: ListState::default().with_selected(Some(0)),
+            template_slot: 0,
+            name_prompt: None,
+            piece_picker: None,
+            skill_picker: None,
+            stale: true,
+        }
+    }
+}
+
 /// Which list the keys move on the Builds tab.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BuildFocus {
@@ -62,7 +105,7 @@ impl App {
     /// Every armor piece and talisman the build search may use: what the equipment box holds and, as the pool setting says, what the
     /// blacksmith is offering or every piece in the game.
     pub(super) fn build_pool(&self) -> Vec<Candidate> {
-        let usable = |stats: &mh3u_core::armor::ArmorStats| builds::usable(stats, self.build.gender, self.build.class);
+        let usable = |stats: &mh3u_core::armor::ArmorStats| builds::usable(stats, self.builds.settings.gender, self.builds.settings.class);
         let mut pool: Vec<Candidate> = Vec::new();
         let mut seen: HashSet<(u8, u16)> = HashSet::new();
         for e in &self.save.equipment_box {
@@ -78,7 +121,7 @@ impl App {
                     stats: stats.clone(),
                 });
             }
-            if e.kind == 6 && self.build.use_talisman && !e.talisman_skills().is_empty() {
+            if e.kind == 6 && self.builds.settings.use_talisman && !e.talisman_skills().is_empty() {
                 pool.push(Candidate {
                     kind: 6,
                     id: e.id,
@@ -87,12 +130,12 @@ impl App {
                 });
             }
         }
-        if self.build.pool != builds::Pool::Owned {
+        if self.builds.settings.pool != builds::Pool::Owned {
             for kind in 1..=5u8 {
                 for id in self.game.piece_ids(kind) {
                     if let Some(stats) = self.game.armor_stats(kind, id).filter(|s| usable(s))
                         && !seen.contains(&(kind, id))
-                        && (self.build.pool == builds::Pool::All || self.at_blacksmith(kind, id))
+                        && (self.builds.settings.pool == builds::Pool::All || self.at_blacksmith(kind, id))
                     {
                         pool.push(Candidate {
                             kind,
@@ -110,20 +153,22 @@ impl App {
     /// Search again for sets that reach the wanted skills.
     pub fn refresh_builds(&mut self) {
         const SHOWN: usize = 300;
-        self.build_stale = false;
-        self.build_pool = self.build_pool();
-        self.build_results = builds::search(&self.build_pool, &self.build.targets, SHOWN);
-        let len = self.build_results.len();
-        let at = self.build_result_state.selected().unwrap_or(0).min(len.saturating_sub(1));
-        self.build_result_state.select((len > 0).then_some(at));
-        let wanted = self.build.targets.len();
-        let at = self.build_target_state.selected().unwrap_or(0).min(wanted.saturating_sub(1));
-        self.build_target_state.select((wanted > 0).then_some(at));
+        self.builds.stale = false;
+        self.builds.pool = self.build_pool();
+        self.builds.results = builds::search(&self.builds.pool, &self.builds.settings.targets, SHOWN);
+        let len = self.builds.results.len();
+        let at = self.builds.result_state.selected().unwrap_or(0).min(len.saturating_sub(1));
+        self.builds.result_state.select((len > 0).then_some(at));
+        let wanted = self.builds.settings.targets.len();
+        let at = self.builds.target_state.selected().unwrap_or(0).min(wanted.saturating_sub(1));
+        self.builds.target_state.select((wanted > 0).then_some(at));
     }
 
     pub(super) fn save_builds(&mut self) {
-        let Some(path) = &self.builds_path else { return };
-        if let Err(message) = crate::files::save(path, &self.build.format(), "builds") {
+        let Some(path) = self.files.as_ref().map(|f| &f.builds) else {
+            return;
+        };
+        if let Err(message) = crate::files::save(path, &self.builds.settings.format(), "builds") {
             self.status = message;
         }
     }
@@ -154,9 +199,9 @@ impl App {
 
     /// Keys while the skill picker is open.
     pub(super) fn picker_key(&mut self, code: KeyCode) {
-        let Some(picker) = self.skill_picker.as_mut() else { return };
+        let Some(picker) = self.builds.skill_picker.as_mut() else { return };
         match code {
-            KeyCode::Esc => self.skill_picker = None,
+            KeyCode::Esc => self.builds.skill_picker = None,
             KeyCode::Backspace => {
                 picker.text.pop();
                 picker.state.select(Some(0));
@@ -174,17 +219,17 @@ impl App {
                 let at = picker.state.selected().unwrap_or(0);
                 let matches = self.skill_matches(&text);
                 if let Some(&skill) = matches.get(at.min(matches.len().saturating_sub(1))) {
-                    self.skill_picker = None;
-                    if let Some(t) = self.build.targets.iter().position(|t| t.skill == skill) {
-                        self.build_target_state.select(Some(t));
+                    self.builds.skill_picker = None;
+                    if let Some(t) = self.builds.settings.targets.iter().position(|t| t.skill == skill) {
+                        self.builds.target_state.select(Some(t));
                     } else {
-                        self.build.targets.push(Target {
+                        self.builds.settings.targets.push(Target {
                             skill,
                             points: worn_active_points(),
                         });
-                        self.build_target_state.select(Some(self.build.targets.len() - 1));
+                        self.builds.target_state.select(Some(self.builds.settings.targets.len() - 1));
                     }
-                    self.build_focus = BuildFocus::Skills;
+                    self.builds.focus = BuildFocus::Skills;
                     self.builds_changed();
                 }
             }
@@ -197,28 +242,28 @@ impl App {
         use mh3u_core::armor::{ArmorClass, Gender};
         match code {
             KeyCode::Char('a') => {
-                self.skill_picker = Some(SkillPicker {
+                self.builds.skill_picker = Some(SkillPicker {
                     text: String::new(),
                     state: ListState::default().with_selected(Some(0)),
                 });
             }
             KeyCode::Char('f') => {
-                self.build_focus = match self.build_focus {
+                self.builds.focus = match self.builds.focus {
                     BuildFocus::Skills => BuildFocus::Sets,
                     BuildFocus::Sets => BuildFocus::Templates,
                     BuildFocus::Templates => BuildFocus::Skills,
                 };
             }
             KeyCode::Char('o') => {
-                self.build.pool = self.build.pool.next();
+                self.builds.settings.pool = self.builds.settings.pool.next();
                 self.builds_changed();
             }
             KeyCode::Char('m') => {
-                self.build.use_talisman = !self.build.use_talisman;
+                self.builds.settings.use_talisman = !self.builds.settings.use_talisman;
                 self.builds_changed();
             }
             KeyCode::Char('e') => {
-                self.build.gender = match self.build.gender {
+                self.builds.settings.gender = match self.builds.settings.gender {
                     None => Some(Gender::Male),
                     Some(Gender::Male) => Some(Gender::Female),
                     _ => None,
@@ -226,7 +271,7 @@ impl App {
                 self.builds_changed();
             }
             KeyCode::Char('c') => {
-                self.build.class = match self.build.class {
+                self.builds.settings.class = match self.builds.settings.class {
                     None => Some(ArmorClass::Blademaster),
                     Some(ArmorClass::Blademaster) => Some(ArmorClass::Gunner),
                     _ => None,
@@ -234,7 +279,7 @@ impl App {
                 self.builds_changed();
             }
             _ => {
-                return match self.build_focus {
+                return match self.builds.focus {
                     BuildFocus::Skills => self.skills_key(code),
                     BuildFocus::Sets => self.sets_key(code),
                     BuildFocus::Templates => self.templates_key(code),
@@ -248,14 +293,24 @@ impl App {
         match code {
             KeyCode::Char('+' | '=') | KeyCode::Char('-') => {
                 let step = if matches!(code, KeyCode::Char('-')) { -1 } else { 1 };
-                if let Some(t) = self.build_target_state.selected().and_then(|i| self.build.targets.get_mut(i)) {
+                if let Some(t) = self
+                    .builds
+                    .target_state
+                    .selected()
+                    .and_then(|i| self.builds.settings.targets.get_mut(i))
+                {
                     t.points = (t.points + step).clamp(1, 30);
                     self.builds_changed();
                 }
             }
             KeyCode::Char('x') | KeyCode::Delete => {
-                if let Some(i) = self.build_target_state.selected().filter(|&i| i < self.build.targets.len()) {
-                    self.build.targets.remove(i);
+                if let Some(i) = self
+                    .builds
+                    .target_state
+                    .selected()
+                    .filter(|&i| i < self.builds.settings.targets.len())
+                {
+                    self.builds.settings.targets.remove(i);
                     self.builds_changed();
                 }
             }
@@ -268,9 +323,9 @@ impl App {
         match code {
             KeyCode::Char('w') => self.wish_build(),
             KeyCode::Char('s') | KeyCode::Enter => {
-                if let Some(i) = self.build_result_state.selected().filter(|&i| i < self.build_results.len()) {
-                    self.name_prompt = Some(NamePrompt {
-                        text: templates::next_name(&self.templates),
+                if let Some(i) = self.builds.result_state.selected().filter(|&i| i < self.builds.results.len()) {
+                    self.builds.name_prompt = Some(NamePrompt {
+                        text: templates::next_name(&self.builds.templates),
                         action: NameAction::SaveSet(i),
                     });
                 }
@@ -281,34 +336,35 @@ impl App {
     }
 
     pub(super) fn templates_key(&mut self, code: KeyCode) -> bool {
-        let selected = self.template_state.selected().filter(|&i| i < self.templates.len());
+        let selected = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len());
         match code {
             KeyCode::Char('n') => {
-                self.name_prompt = Some(NamePrompt {
-                    text: templates::next_name(&self.templates),
+                self.builds.name_prompt = Some(NamePrompt {
+                    text: templates::next_name(&self.builds.templates),
                     action: NameAction::FromWorn,
                 });
             }
             KeyCode::Char('r') => {
                 if let Some(i) = selected {
-                    self.name_prompt = Some(NamePrompt {
-                        text: self.templates[i].name.clone(),
+                    self.builds.name_prompt = Some(NamePrompt {
+                        text: self.builds.templates[i].name.clone(),
                         action: NameAction::Rename(i),
                     });
                 }
             }
             KeyCode::Char('x') | KeyCode::Delete => {
                 if let Some(i) = selected {
-                    let gone = self.templates.remove(i);
-                    self.template_state
-                        .select((!self.templates.is_empty()).then(|| i.min(self.templates.len() - 1)));
+                    let gone = self.builds.templates.remove(i);
+                    self.builds
+                        .template_state
+                        .select((!self.builds.templates.is_empty()).then(|| i.min(self.builds.templates.len() - 1)));
                     self.status = format!("deleted template {}", gone.name);
                     self.save_templates();
                 }
             }
-            KeyCode::Char(']') | KeyCode::Char('.') => self.template_slot = (self.template_slot + 1) % templates::SLOTS.len(),
+            KeyCode::Char(']') | KeyCode::Char('.') => self.builds.template_slot = (self.builds.template_slot + 1) % templates::SLOTS.len(),
             KeyCode::Char('[') | KeyCode::Char(',') => {
-                self.template_slot = (self.template_slot + templates::SLOTS.len() - 1) % templates::SLOTS.len();
+                self.builds.template_slot = (self.builds.template_slot + templates::SLOTS.len() - 1) % templates::SLOTS.len();
             }
             KeyCode::Enter => {
                 if selected.is_some() {
@@ -323,8 +379,10 @@ impl App {
     }
 
     pub(super) fn save_templates(&mut self) {
-        let Some(path) = &self.templates_path else { return };
-        if let Err(message) = crate::files::save(path, &templates::format(&self.templates), "templates") {
+        let Some(path) = self.files.as_ref().map(|f| &f.templates) else {
+            return;
+        };
+        if let Err(message) = crate::files::save(path, &templates::format(&self.builds.templates), "templates") {
             self.status = message;
         }
     }
@@ -359,18 +417,18 @@ impl App {
         }
         match prompt.action {
             NameAction::Rename(i) => {
-                if let Some(t) = self.templates.get_mut(i) {
+                if let Some(t) = self.builds.templates.get_mut(i) {
                     t.name = name;
                 }
             }
             NameAction::SaveSet(i) => {
-                let Some(found) = self.build_results.get(i) else { return };
-                let pieces = found.pieces.iter().map(|&p| self.template_piece_of(&self.build_pool[p])).collect();
-                self.templates.push(Template {
+                let Some(found) = self.builds.results.get(i) else { return };
+                let pieces = found.pieces.iter().map(|&p| self.template_piece_of(&self.builds.pool[p])).collect();
+                self.builds.templates.push(Template {
                     name: name.clone(),
                     pieces,
                 });
-                self.template_state.select(Some(self.templates.len() - 1));
+                self.builds.template_state.select(Some(self.builds.templates.len() - 1));
                 self.status = format!("saved template {name}; f switches to the templates");
             }
             NameAction::FromWorn => {
@@ -388,8 +446,8 @@ impl App {
                     pieces,
                 };
                 t.pieces.sort_by_key(|p| templates::SLOTS.iter().position(|&k| k == p.kind));
-                self.templates.push(t);
-                self.template_state.select(Some(self.templates.len() - 1));
+                self.builds.templates.push(t);
+                self.builds.template_state.select(Some(self.builds.templates.len() - 1));
                 self.status = format!("saved what you are wearing as {name}");
             }
         }
@@ -397,15 +455,15 @@ impl App {
     }
 
     pub(super) fn name_key(&mut self, code: KeyCode) {
-        let Some(prompt) = self.name_prompt.as_mut() else { return };
+        let Some(prompt) = self.builds.name_prompt.as_mut() else { return };
         match code {
-            KeyCode::Esc => self.name_prompt = None,
+            KeyCode::Esc => self.builds.name_prompt = None,
             KeyCode::Backspace => {
                 prompt.text.pop();
             }
             KeyCode::Char(c) => prompt.text.push(c),
             KeyCode::Enter => {
-                if let Some(prompt) = self.name_prompt.take() {
+                if let Some(prompt) = self.builds.name_prompt.take() {
                     self.finish_name(prompt);
                 }
             }
@@ -496,9 +554,9 @@ impl App {
     }
 
     pub(super) fn open_piece_picker(&mut self) {
-        let kind = templates::SLOTS[self.template_slot];
+        let kind = templates::SLOTS[self.builds.template_slot];
         let choices = self.piece_choices(kind, "");
-        self.piece_picker = Some(PiecePicker {
+        self.builds.piece_picker = Some(PiecePicker {
             kind,
             text: String::new(),
             state: ListState::default().with_selected(Some(0)),
@@ -507,12 +565,12 @@ impl App {
     }
 
     pub(super) fn piece_key(&mut self, code: KeyCode) {
-        let Some(picker) = self.piece_picker.as_ref() else { return };
+        let Some(picker) = self.builds.piece_picker.as_ref() else { return };
         let (kind, mut text) = (picker.kind, picker.text.clone());
         match code {
-            KeyCode::Esc => self.piece_picker = None,
+            KeyCode::Esc => self.builds.piece_picker = None,
             KeyCode::Down | KeyCode::Up => {
-                let picker = self.piece_picker.as_mut().expect("checked above");
+                let picker = self.builds.piece_picker.as_mut().expect("checked above");
                 let last = picker.choices.len().saturating_sub(1);
                 let at = picker.state.selected().unwrap_or(0);
                 picker.state.select(Some(if code == KeyCode::Down {
@@ -529,17 +587,17 @@ impl App {
                     }
                 }
                 let choices = self.piece_choices(kind, &text);
-                let picker = self.piece_picker.as_mut().expect("checked above");
+                let picker = self.builds.piece_picker.as_mut().expect("checked above");
                 picker.text = text;
                 picker.choices = choices;
                 picker.state.select(Some(0));
             }
             KeyCode::Enter => {
-                let picker = self.piece_picker.take().expect("checked above");
+                let picker = self.builds.piece_picker.take().expect("checked above");
                 let at = picker.state.selected().unwrap_or(0);
                 let Some(choice) = picker.choices.into_iter().nth(at) else { return };
-                if let Some(i) = self.template_state.selected().filter(|&i| i < self.templates.len()) {
-                    self.templates[i].set(kind, choice.piece);
+                if let Some(i) = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len()) {
+                    self.builds.templates[i].set(kind, choice.piece);
                     self.save_templates();
                 }
             }
@@ -549,13 +607,13 @@ impl App {
 
     /// Put the pieces of the highlighted found set that you do not own yet on the wishlist.
     pub(super) fn wish_build(&mut self) {
-        let Some(found) = self.build_result_state.selected().and_then(|i| self.build_results.get(i)) else {
+        let Some(found) = self.builds.result_state.selected().and_then(|i| self.builds.results.get(i)) else {
             return;
         };
         let missing: Vec<(u8, u16)> = found
             .pieces
             .iter()
-            .map(|&i| &self.build_pool[i])
+            .map(|&i| &self.builds.pool[i])
             .filter(|c| c.kind != 6 && !c.owned && !self.save.owns_equipment(c.kind, c.id))
             .map(|c| (c.kind, c.id))
             .collect();
@@ -564,10 +622,10 @@ impl App {
 
     /// Put the highlighted template's pieces you do not own on the wishlist: all of them, or just the highlighted slot.
     pub(super) fn wish_template(&mut self, only_slot: bool) {
-        let Some(t) = self.template_state.selected().and_then(|i| self.templates.get(i)) else {
+        let Some(t) = self.builds.template_state.selected().and_then(|i| self.builds.templates.get(i)) else {
             return;
         };
-        let slot_kind = templates::SLOTS[self.template_slot];
+        let slot_kind = templates::SLOTS[self.builds.template_slot];
         let missing: Vec<(u8, u16)> = t
             .pieces
             .iter()

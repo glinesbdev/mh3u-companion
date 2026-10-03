@@ -106,10 +106,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.tree.is_some() {
         draw_tree(f, app);
     }
-    if app.skill_picker.is_some() {
+    if app.builds.skill_picker.is_some() {
         draw_skill_picker(f, app);
     }
-    if app.piece_picker.is_some() {
+    if app.builds.piece_picker.is_some() {
         draw_piece_picker(f, app);
     }
     draw_name_prompt(f, app);
@@ -169,7 +169,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Builds => {
                 use crate::app::BuildFocus;
                 keys.push(("f", "switch list"));
-                match app.build_focus {
+                match app.builds.focus {
                     BuildFocus::Skills => keys.extend([("a", "add skill"), ("+/-", "points"), ("x", "remove")]),
                     BuildFocus::Sets => keys.extend([("s", "save as template"), ("w", "wish")]),
                     BuildFocus::Templates => keys.extend([("Enter", "swap piece"), ("n", "from worn"), ("w", "wish"), ("x", "delete")]),

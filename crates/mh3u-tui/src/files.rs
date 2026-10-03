@@ -1,6 +1,54 @@
 //! Small text files kept between sessions (wishlist, builds, templates, price ledger, unlocked pieces).
 
-use std::{io, path::Path};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
+
+const APP: &str = "mh3u-companion";
+
+/// Where the app keeps its files. The lists that belong to one hunter (wishlist, builds, templates) have a file per save slot, so
+/// switching hunters switches them. Slot 1 keeps the plain names (`wishlist.txt`), so files made before there were several are
+/// still found; the other slots are `wishlist-2.txt`, `wishlist-3.txt`. The price ledger, the pieces seen on offer (which holds all
+/// hunters) and the tracker log are shared.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Files {
+    pub wishlist: PathBuf,
+    pub builds: PathBuf,
+    pub templates: PathBuf,
+    pub prices: PathBuf,
+    pub unlocked: PathBuf,
+    pub tracker_log: PathBuf,
+    /// Where `--debug-edit` copies the saves before changing the game.
+    pub backups: PathBuf,
+}
+
+impl Files {
+    /// The usual places: the lists in the config folder (`$XDG_CONFIG_HOME` or `~/.config`), the rest in the data folder.
+    /// `None` when the system names no home folder.
+    pub fn for_slot(slot: u8) -> Option<Files> {
+        Some(Files::in_dirs(&dirs::config_dir()?.join(APP), &dirs::data_dir()?.join(APP), slot))
+    }
+
+    pub fn in_dirs(config: &Path, data: &Path, slot: u8) -> Files {
+        let per_slot = |stem: &str| {
+            config.join(if slot == 1 {
+                format!("{stem}.txt")
+            } else {
+                format!("{stem}-{slot}.txt")
+            })
+        };
+        Files {
+            wishlist: per_slot("wishlist"),
+            builds: per_slot("builds"),
+            templates: per_slot("templates"),
+            prices: data.join("prices.tsv"),
+            unlocked: data.join("unlocked.tsv"),
+            tracker_log: data.join("tracker.log"),
+            backups: data.join("backups"),
+        }
+    }
+}
 
 /// Write `text` to `path`, creating the folder first. The error is worded for the status line, e.g. `could not save wishlist: ...`.
 pub fn save(path: &Path, text: &str, what: &str) -> Result<(), String> {
@@ -17,6 +65,19 @@ fn write(path: &Path, text: &str) -> io::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn each_slot_has_its_own_lists_and_slot_one_keeps_the_original_names() {
+        let (config, data) = (Path::new("/c/app"), Path::new("/d/app"));
+        let one = Files::in_dirs(config, data, 1);
+        let two = Files::in_dirs(config, data, 2);
+        assert_eq!(one.wishlist, Path::new("/c/app/wishlist.txt"));
+        assert_eq!(two.wishlist, Path::new("/c/app/wishlist-2.txt"));
+        assert_eq!(two.builds, Path::new("/c/app/builds-2.txt"));
+        assert_eq!(two.templates, Path::new("/c/app/templates-2.txt"));
+        assert_eq!(one.prices, two.prices, "the ledger is shared");
+        assert_eq!(one.unlocked, Path::new("/d/app/unlocked.tsv"));
+    }
 
     #[test]
     fn saving_creates_the_folder_and_words_errors_for_the_status_line() {

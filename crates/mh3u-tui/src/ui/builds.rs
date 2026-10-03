@@ -6,9 +6,9 @@ use super::*;
 pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     use crate::app::BuildFocus;
     let [left, right] = theme::split(area, 42);
-    let wanted = app.build.targets.len();
+    let wanted = app.builds.settings.targets.len();
     let targets_height = (wanted as u16 + 2).clamp(4, 9);
-    let templates_height = (app.templates.len() as u16 + 2).clamp(4, 8);
+    let templates_height = (app.builds.templates.len() as u16 + 2).clamp(4, 8);
     let [top, middle, bottom] = Layout::vertical([
         Constraint::Length(targets_height),
         Constraint::Min(5),
@@ -16,10 +16,11 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     ])
     .areas(left);
 
-    let rows: Vec<ListItem> = if app.build.targets.is_empty() {
+    let rows: Vec<ListItem> = if app.builds.settings.targets.is_empty() {
         vec![ListItem::new(Line::styled("press a to add a skill", muted()))]
     } else {
-        app.build
+        app.builds
+            .settings
             .targets
             .iter()
             .map(|t| {
@@ -31,23 +32,24 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             .collect()
     };
     f.render_stateful_widget(
-        focused_list(rows, " Skills wanted ".to_string(), app.build_focus == BuildFocus::Skills),
+        focused_list(rows, " Skills wanted ".to_string(), app.builds.focus == BuildFocus::Skills),
         top,
-        &mut app.build_target_state,
+        &mut app.builds.target_state,
     );
 
-    let mut pool = String::from(app.build.pool.label());
-    if app.build.use_talisman {
+    let mut pool = String::from(app.builds.settings.pool.label());
+    if app.builds.settings.use_talisman {
         pool += " · talisman";
     }
-    if let Some(g) = app.build.gender {
+    if let Some(g) = app.builds.settings.gender {
         pool += &format!(" · {}", g.label().to_lowercase());
     }
-    if let Some(c) = app.build.class {
+    if let Some(c) = app.builds.settings.class {
         pool += &format!(" · {}", c.label().to_lowercase());
     }
     let rows: Vec<ListItem> = app
-        .build_results
+        .builds
+        .results
         .iter()
         .enumerate()
         .map(|(n, found)| {
@@ -63,16 +65,17 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         .collect();
     let len = rows.len();
     f.render_stateful_widget(
-        focused_list(rows, format!(" Sets ({len}) · {pool} "), app.build_focus == BuildFocus::Sets),
+        focused_list(rows, format!(" Sets ({len}) · {pool} "), app.builds.focus == BuildFocus::Sets),
         middle,
-        &mut app.build_result_state,
+        &mut app.builds.result_state,
     );
-    scrollbar(f, middle, len, app.build_result_state.selected());
+    scrollbar(f, middle, len, app.builds.result_state.selected());
 
-    let rows: Vec<ListItem> = if app.templates.is_empty() {
+    let rows: Vec<ListItem> = if app.builds.templates.is_empty() {
         vec![ListItem::new(Line::styled("s on a set, or n for what you wear", muted()))]
     } else {
-        app.templates
+        app.builds
+            .templates
             .iter()
             .map(|t| {
                 let have = t.pieces.iter().filter(|p| app.owns_slot(p.kind, p.id)).count();
@@ -86,14 +89,14 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             })
             .collect()
     };
-    let count = app.templates.len();
+    let count = app.builds.templates.len();
     f.render_stateful_widget(
-        focused_list(rows, format!(" Templates ({count}) "), app.build_focus == BuildFocus::Templates),
+        focused_list(rows, format!(" Templates ({count}) "), app.builds.focus == BuildFocus::Templates),
         bottom,
-        &mut app.template_state,
+        &mut app.builds.template_state,
     );
 
-    let (title, lines) = if app.build_focus == BuildFocus::Templates {
+    let (title, lines) = if app.builds.focus == BuildFocus::Templates {
         template_details(app)
     } else {
         (" The set ".to_string(), build_details(app))
@@ -152,13 +155,13 @@ pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 6], cursor: Option<us
     }
     lines.push(Line::raw(""));
     let summary = crate::worn::summarize(&parts);
-    lines.extend(totals_lines(app, &summary, &app.build.targets));
+    lines.extend(totals_lines(app, &summary, &app.builds.settings.targets));
     lines
 }
 
 /// The highlighted set that was found, in full.
 pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
-    if app.build.targets.is_empty() {
+    if app.builds.settings.targets.is_empty() {
         return vec![
             Line::styled("Pick the skills you want and the sets that reach them are listed.", muted()),
             Line::raw(""),
@@ -172,21 +175,21 @@ pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
             ]),
         ];
     }
-    let Some(found) = app.build_result_state.selected().and_then(|i| app.build_results.get(i)) else {
+    let Some(found) = app.builds.result_state.selected().and_then(|i| app.builds.results.get(i)) else {
         return vec![
             Line::styled("No set reaches all of those skills.", warn()),
             Line::raw(""),
             Line::styled(
                 format!(
                     "{} pieces were looked at. Try fewer points or skills, o to widen the pieces (on offer, everything), m for a talisman, e and c to drop the gender and class filters.",
-                    app.build_pool.len()
+                    app.builds.pool.len()
                 ),
                 muted(),
             ),
         ];
     };
     let mut slots: [Option<Shown>; 6] = Default::default();
-    for c in found.pieces.iter().map(|&i| &app.build_pool[i]) {
+    for c in found.pieces.iter().map(|&i| &app.builds.pool[i]) {
         if let Some(n) = crate::templates::SLOTS.iter().position(|&k| k == c.kind) {
             slots[n] = Some(Shown {
                 id: c.id,
@@ -205,7 +208,7 @@ pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
 
 /// The highlighted template: its slots (with the cursor), then the totals.
 pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
-    let Some(t) = app.template_state.selected().and_then(|i| app.templates.get(i)) else {
+    let Some(t) = app.builds.template_state.selected().and_then(|i| app.builds.templates.get(i)) else {
         return (
             " Template ".to_string(),
             vec![
@@ -224,7 +227,7 @@ pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
             slots[n] = Some(Shown { id: p.id, stats });
         }
     }
-    let mut lines = set_lines(app, &slots, Some(app.template_slot));
+    let mut lines = set_lines(app, &slots, Some(app.builds.template_slot));
     lines.push(Line::raw(""));
     lines.push(Line::from(theme::key_hints(&[
         ("[ ]", "slot"),
@@ -240,7 +243,7 @@ pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
 /// A one-line text prompt in the middle of the screen.
 pub(super) fn draw_name_prompt(f: &mut Frame, app: &App) {
     use crate::app::NameAction;
-    let Some(prompt) = &app.name_prompt else { return };
+    let Some(prompt) = &app.builds.name_prompt else { return };
     let area = f.area();
     let (w, h) = (50.min(area.width), 3.min(area.height));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
@@ -261,7 +264,7 @@ pub(super) fn draw_name_prompt(f: &mut Frame, app: &App) {
 
 /// The popup that picks the piece for one template slot.
 pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
-    let Some(mut picker) = app.piece_picker.take() else { return };
+    let Some(mut picker) = app.builds.piece_picker.take() else { return };
     let area = f.area();
     let (w, h) = (80.min(area.width), 22.min(area.height));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
@@ -307,12 +310,12 @@ pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
         list,
         &mut picker.state,
     );
-    app.piece_picker = Some(picker);
+    app.builds.piece_picker = Some(picker);
 }
 
 /// The popup that finds a skill by typing part of its name.
 pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
-    let Some(mut picker) = app.skill_picker.take() else { return };
+    let Some(mut picker) = app.builds.skill_picker.take() else { return };
     let matches = app.skill_matches(&picker.text);
     let area = f.area();
     let (w, h) = (44.min(area.width), 18.min(area.height));
@@ -331,7 +334,7 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
         .iter()
         .map(|&id| {
             let mut spans = vec![Span::raw(app.game.skill_name(id).unwrap_or("?").to_string())];
-            if app.build.targets.iter().any(|t| t.skill == id) {
+            if app.builds.settings.targets.iter().any(|t| t.skill == id) {
                 spans.push(Span::styled("  (already wanted)", muted()));
             }
             ListItem::new(Line::from(spans))
@@ -348,5 +351,5 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
         list,
         &mut picker.state,
     );
-    app.skill_picker = Some(picker);
+    app.builds.skill_picker = Some(picker);
 }
