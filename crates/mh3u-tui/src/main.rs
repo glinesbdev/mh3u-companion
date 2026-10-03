@@ -1,4 +1,5 @@
 mod app;
+mod builds;
 mod commands;
 mod search;
 mod theme;
@@ -41,13 +42,22 @@ fn slot_of(save: &std::path::Path) -> Option<u8> {
 /// One wishlist per save slot, in `$XDG_CONFIG_HOME/mh3u-companion` (or `~/.config/...` when that isn't set). Slot 1 keeps the
 /// original `wishlist.txt`, so lists made before there were several are still there; the others are `wishlist-2.txt`, ...
 fn wishlist_path(slot: u8) -> Option<PathBuf> {
+    per_slot_file("wishlist", slot)
+}
+
+/// The build manager's wanted skills, one file per save slot like the wishlist: `builds.txt`, `builds-2.txt`, ...
+fn builds_path(slot: u8) -> Option<PathBuf> {
+    per_slot_file("builds", slot)
+}
+
+fn per_slot_file(stem: &str, slot: u8) -> Option<PathBuf> {
     let config = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|| home().ok().map(|h| h.join(".config")))?;
     let name = if slot == 1 {
-        "wishlist.txt".to_string()
+        format!("{stem}.txt")
     } else {
-        format!("wishlist-{slot}.txt")
+        format!("{stem}-{slot}.txt")
     };
     Some(config.join("mh3u-companion").join(name))
 }
@@ -149,7 +159,13 @@ fn main() -> Result<()> {
     if debug_edit && !live_mode {
         bail!("--debug-edit works on the live game, so it needs --live\n{USAGE}");
     }
-    let mut app = App::new(game, save.clone(), wishlist_path(slot_of(&save).unwrap_or(slot)), prices_path())?;
+    let mut app = App::new(
+        game,
+        save.clone(),
+        wishlist_path(slot_of(&save).unwrap_or(slot)),
+        builds_path(slot_of(&save).unwrap_or(slot)),
+        prices_path(),
+    )?;
     if live_mode {
         let note = if debug_edit { Some(back_up_saves(&save)?) } else { None };
         app.set_live(start_live(&game_dir, &save, &cemu, debug_edit)?);

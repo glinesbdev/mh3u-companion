@@ -72,6 +72,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Monsters => draw_monsters(f, app, body),
         Tab::Crafting => draw_crafting(f, app, body),
         Tab::Wishlist => draw_wishlist(f, app, body),
+        Tab::Builds => draw_builds(f, app, body),
     }
 
     draw_footer(f, app, footer);
@@ -81,6 +82,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
     if app.tree.is_some() {
         draw_tree(f, app);
+    }
+    if app.skill_picker.is_some() {
+        draw_skill_picker(f, app);
     }
 }
 
@@ -135,6 +139,15 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
             Tab::Worn => keys.push(("i", "skill info")),
             Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
+            Tab::Builds => keys.extend([
+                ("a", "add skill"),
+                ("+/-", "points"),
+                ("x", "remove"),
+                ("f", "skills/sets"),
+                ("o", "on offer"),
+                ("m", "talisman"),
+                ("w", "wish"),
+            ]),
         }
         keys.extend([("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
@@ -256,6 +269,12 @@ Worn          totals for what you are wearing; i shows what each
                  skill does
 Monsters      what each monster drops; s sort, ★ = the wishlist
                  still needs it
+Builds        a  add a skill to look for (type to find it, Enter),
+                 + / -  its points, x  remove it, f  switch between
+                 the skills and the sets found, o  also use pieces
+                 the blacksmith offers, m  use your talisman,
+                 w  put the set's missing pieces on the wishlist.
+                 Skills and options are kept per hunter.
 Any weapon    t  upgrade tree: the line down to it and everything
                  it upgrades into (↑/↓ scroll, t or Esc close)
 
@@ -495,6 +514,73 @@ fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
     lines
 }
 
+/// Defense, gem slots, resistances and the skill points of a set of armor. Skills in `targets` show whether their goal is reached.
+fn totals_lines(app: &App, summary: &crate::worn::Summary, targets: &[crate::builds::Target]) -> Vec<Line<'static>> {
+    let mut lines: Vec<Line> = Vec::new();
+    lines.push(Line::from(vec![
+        Span::styled("Defense ", muted()),
+        Span::styled(summary.defense.to_string(), bold()),
+        Span::styled(" (base, before upgrading)", muted()),
+        Span::styled("   Gem slots ", muted()),
+        Span::styled(summary.gem_slots.to_string(), bold()),
+    ]));
+    let mut resist = Vec::new();
+    for (name, value) in ["Fire", "Water", "Thunder", "Ice", "Dragon"].into_iter().zip(summary.resist) {
+        if !resist.is_empty() {
+            resist.push(Span::raw("  "));
+        }
+        resist.push(Span::styled(name, theme::element_style(name)));
+        resist.push(Span::styled(format!(" {value:+}"), theme::signed_style(value)));
+    }
+    lines.push(Line::from(resist));
+    lines.push(Line::raw(""));
+    if summary.skills.is_empty() {
+        lines.push(Line::styled("No skill points.", muted()));
+    }
+    for t in &summary.skills {
+        let goal = targets.iter().find(|g| g.skill == t.id);
+        let (state, style) = if let Some(g) = goal {
+            if t.points >= g.points {
+                (&*format!("✔ goal {}", g.points), good())
+            } else {
+                (&*format!("✘ goal {}", g.points), bad())
+            }
+        } else if t.active() {
+            ("● active", good())
+        } else if t.penalty() {
+            ("▼ penalty", bad())
+        } else if t.points > 0 {
+            (&*format!("{} more to activate", crate::worn::ACTIVE_AT - t.points), muted())
+        } else {
+            ("", muted())
+        };
+        let parts: Vec<String> = t
+            .parts
+            .iter()
+            .map(|&(kind, p)| format!("{} {p:+}", app.game.equipment_kind_label(kind).unwrap_or("?")))
+            .collect();
+        lines.push(Line::from(vec![
+            Span::raw(format!("{:<18}", app.game.skill_name(t.id).unwrap_or("?"))),
+            Span::styled(format!("{:+4} ", t.points), theme::signed_style(t.points)),
+            Span::styled(format!("{state:<22}"), style),
+            Span::styled(parts.join(", "), muted()),
+        ]));
+        if app.skill_info
+            && let Some(text) = app.game.skill_description(t.id)
+        {
+            lines.push(Line::styled(format!("    {text}"), muted()));
+        }
+    }
+    if summary.torso_doubled {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled(
+            "Torso Up is active: the body piece's skill points count double.",
+            muted(),
+        ));
+    }
+    lines
+}
+
 /// The worn gear and what it adds up to.
 fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
@@ -557,61 +643,7 @@ fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
         .collect();
     let summary = crate::worn::summarize(&stats);
-    let mut lines: Vec<Line> = Vec::new();
-    lines.push(Line::from(vec![
-        Span::styled("Defense ", muted()),
-        Span::styled(summary.defense.to_string(), bold()),
-        Span::styled(" (base, before upgrading)", muted()),
-        Span::styled("   Gem slots ", muted()),
-        Span::styled(summary.gem_slots.to_string(), bold()),
-    ]));
-    let mut resist = Vec::new();
-    for (name, value) in ["Fire", "Water", "Thunder", "Ice", "Dragon"].into_iter().zip(summary.resist) {
-        if !resist.is_empty() {
-            resist.push(Span::raw("  "));
-        }
-        resist.push(Span::styled(name, theme::element_style(name)));
-        resist.push(Span::styled(format!(" {value:+}"), theme::signed_style(value)));
-    }
-    lines.push(Line::from(resist));
-    lines.push(Line::raw(""));
-    if summary.skills.is_empty() {
-        lines.push(Line::styled("No skill points.", muted()));
-    }
-    for t in &summary.skills {
-        let (state, style) = if t.active() {
-            ("● active", good())
-        } else if t.penalty() {
-            ("▼ penalty", bad())
-        } else if t.points > 0 {
-            (&*format!("{} more to activate", crate::worn::ACTIVE_AT - t.points), muted())
-        } else {
-            ("", muted())
-        };
-        let parts: Vec<String> = t
-            .parts
-            .iter()
-            .map(|&(kind, p)| format!("{} {p:+}", app.game.equipment_kind_label(kind).unwrap_or("?")))
-            .collect();
-        lines.push(Line::from(vec![
-            Span::raw(format!("{:<18}", app.game.skill_name(t.id).unwrap_or("?"))),
-            Span::styled(format!("{:+4} ", t.points), theme::signed_style(t.points)),
-            Span::styled(format!("{state:<22}"), style),
-            Span::styled(parts.join(", "), muted()),
-        ]));
-        if app.skill_info
-            && let Some(text) = app.game.skill_description(t.id)
-        {
-            lines.push(Line::styled(format!("    {text}"), muted()));
-        }
-    }
-    if summary.torso_doubled {
-        lines.push(Line::raw(""));
-        lines.push(Line::styled(
-            "Torso Up is active: the body piece's skill points count double.",
-            muted(),
-        ));
-    }
+    let mut lines = totals_lines(app, &summary, &[]);
     lines.push(Line::raw(""));
     lines.push(Line::styled(
         "A skill's first effect starts at 10 points and its penalty at -10. Higher tiers (15, 20) are not shown.",
@@ -623,6 +655,197 @@ fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
             .block(theme::pane(" Totals ", false)),
         right,
     );
+}
+
+/// The build manager: the skills you want, the sets that reach them, and the highlighted set in full.
+fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
+    let [left, right] = theme::split(area, 42);
+    let wanted = app.build.targets.len();
+    let targets_height = (wanted as u16 + 2).clamp(5, 12);
+    let [top, bottom] = Layout::vertical([Constraint::Length(targets_height), Constraint::Min(5)]).areas(left);
+
+    let rows: Vec<ListItem> = if app.build.targets.is_empty() {
+        vec![ListItem::new(Line::styled("press a to add a skill", muted()))]
+    } else {
+        app.build
+            .targets
+            .iter()
+            .map(|t| {
+                ListItem::new(Line::from(vec![
+                    Span::raw(format!("{:<20}", app.game.skill_name(t.skill).unwrap_or("?"))),
+                    Span::styled(format!("{:+}", t.points), good()),
+                ]))
+            })
+            .collect()
+    };
+    let focus_targets = !app.build_focus_results;
+    f.render_stateful_widget(
+        List::new(rows)
+            .block(theme::pane(" Skills wanted ", focus_targets))
+            .highlight_style(if focus_targets { theme::selection() } else { Style::new() })
+            .highlight_symbol(if focus_targets { theme::SELECTION_MARK } else { "  " }),
+        top,
+        &mut app.build_target_state,
+    );
+
+    let pool = format!(
+        "{}{}",
+        if app.build.include_offered {
+            "owned + on offer"
+        } else {
+            "owned only"
+        },
+        if app.build.use_talisman { " · talisman" } else { "" }
+    );
+    let rows: Vec<ListItem> = app
+        .build_results
+        .iter()
+        .enumerate()
+        .map(|(n, found)| {
+            ListItem::new(Line::from(vec![
+                Span::styled(format!("{:>3}  ", n + 1), muted()),
+                Span::raw(format!("Def {:>3}  ", found.defense)),
+                Span::styled(
+                    format!("{}/{} owned", found.owned, found.pieces.len()),
+                    if found.owned == found.pieces.len() { good() } else { muted() },
+                ),
+            ]))
+        })
+        .collect();
+    let len = rows.len();
+    f.render_stateful_widget(
+        List::new(rows)
+            .block(theme::pane(format!(" Sets ({len}) · {pool} "), app.build_focus_results))
+            .highlight_style(if app.build_focus_results {
+                theme::selection()
+            } else {
+                Style::new()
+            })
+            .highlight_symbol(if app.build_focus_results { theme::SELECTION_MARK } else { "  " }),
+        bottom,
+        &mut app.build_result_state,
+    );
+    scrollbar(f, bottom, len, app.build_result_state.selected());
+
+    let lines = build_details(app);
+    f.render_widget(
+        Paragraph::new(lines)
+            .wrap(Wrap { trim: false })
+            .block(theme::pane(" The set ", false)),
+        right,
+    );
+}
+
+/// The highlighted set piece by piece, then what it adds up to.
+fn build_details(app: &App) -> Vec<Line<'static>> {
+    if app.build.targets.is_empty() {
+        return vec![
+            Line::styled("Pick the skills you want and the sets that reach them are listed.", muted()),
+            Line::raw(""),
+            Line::from(vec![
+                Span::styled("a", accent().add_modifier(Modifier::BOLD)),
+                Span::styled(" add a skill (first at 10 points, + and - change it)", muted()),
+            ]),
+        ];
+    }
+    let Some(found) = app.build_result_state.selected().and_then(|i| app.build_results.get(i)) else {
+        return vec![
+            Line::styled("No set reaches all of those skills.", warn()),
+            Line::raw(""),
+            Line::styled(
+                format!(
+                    "{} pieces were looked at. Try fewer points or skills, o to include pieces on offer, m for a talisman.",
+                    app.build_pool.len()
+                ),
+                muted(),
+            ),
+        ];
+    };
+    let zenny = app.save.zenny;
+    let mut lines: Vec<Line> = Vec::new();
+    let mut parts: Vec<(u8, &mh3u_core::armor::ArmorStats)> = Vec::new();
+    for (kind, label) in [(5u8, "Head"), (1, "Body"), (2, "Arms"), (3, "Waist"), (4, "Legs"), (6, "Talisman")] {
+        let Some(c) = found.pieces.iter().map(|&i| &app.build_pool[i]).find(|c| c.kind == kind) else {
+            lines.push(Line::from(vec![
+                Span::styled(format!("{label:<9}"), muted()),
+                Span::styled("nothing", muted()),
+            ]));
+            continue;
+        };
+        parts.push((kind, &c.stats));
+        let name = app.game.equipment_name(kind, c.id).unwrap_or("?");
+        let mut spans = vec![
+            Span::styled(format!("{label:<9}"), muted()),
+            Span::styled(format!("{:<24}", fit(name, 24)), bold()),
+        ];
+        if c.owned {
+            spans.push(Span::styled("● owned", good()));
+        } else {
+            spans.push(theme::anvil());
+            if app.can_make_now(kind, c.id) {
+                spans.push(Span::styled("can make now", good()));
+            } else {
+                spans.push(Span::styled("needs materials", warn()));
+            }
+            if let Some((cost, _)) = app.cost(kind, c.id, Route::Create) {
+                spans.push(Span::styled(
+                    format!("  {} z", group_digits(u64::from(cost))),
+                    if cost <= zenny { muted() } else { bad() },
+                ));
+            }
+        }
+        lines.push(Line::from(spans));
+    }
+    lines.push(Line::raw(""));
+    let summary = crate::worn::summarize(&parts);
+    lines.extend(totals_lines(app, &summary, &app.build.targets));
+    lines.push(Line::raw(""));
+    lines.push(Line::styled(
+        "Defense is the pieces' base defense. Decorations are not counted. w puts the pieces you do not own on the wishlist.",
+        muted(),
+    ));
+    lines
+}
+
+/// The popup that finds a skill by typing part of its name.
+fn draw_skill_picker(f: &mut Frame, app: &mut App) {
+    let Some(mut picker) = app.skill_picker.take() else { return };
+    let matches = app.skill_matches(&picker.text);
+    let area = f.area();
+    let (w, h) = (44.min(area.width), 18.min(area.height));
+    let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
+    f.render_widget(Clear, popup);
+    let [input, list] = Layout::vertical([Constraint::Length(1), Constraint::Min(1)]).areas(popup.inner(Margin::new(1, 1)));
+    f.render_widget(theme::pane(" Add a skill · Enter add · Esc close ", true), popup);
+    f.render_widget(
+        Paragraph::new(Line::from(vec![
+            Span::styled("skill: ", accent()),
+            Span::raw(format!("{}_", picker.text)),
+        ])),
+        input,
+    );
+    let rows: Vec<ListItem> = matches
+        .iter()
+        .map(|&id| {
+            let mut spans = vec![Span::raw(app.game.skill_name(id).unwrap_or("?").to_string())];
+            if app.build.targets.iter().any(|t| t.skill == id) {
+                spans.push(Span::styled("  (already wanted)", muted()));
+            }
+            ListItem::new(Line::from(spans))
+        })
+        .collect();
+    let last = matches.len().saturating_sub(1);
+    if let Some(i) = picker.state.selected() {
+        picker.state.select(Some(i.min(last)));
+    }
+    f.render_stateful_widget(
+        List::new(rows)
+            .highlight_style(theme::selection())
+            .highlight_symbol(theme::SELECTION_MARK),
+        list,
+        &mut picker.state,
+    );
+    app.skill_picker = Some(picker);
 }
 
 /// A monster and what it drops, with the items the wishlist still needs picked out.

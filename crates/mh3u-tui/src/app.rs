@@ -1,3 +1,4 @@
+use crate::builds::{self, Candidate, Found, Settings, Target};
 use crate::unlocked::Unlocked;
 use crate::{commands, search};
 use anyhow::{Context, Result};
@@ -32,10 +33,19 @@ pub enum Tab {
     Crafting,
     Wishlist,
     Monsters,
+    Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 6] = [Tab::Items, Tab::Equipment, Tab::Worn, Tab::Crafting, Tab::Wishlist, Tab::Monsters];
+    pub const ALL: [Tab; 7] = [
+        Tab::Items,
+        Tab::Equipment,
+        Tab::Worn,
+        Tab::Crafting,
+        Tab::Wishlist,
+        Tab::Monsters,
+        Tab::Builds,
+    ];
 
     pub fn title(self) -> &'static str {
         match self {
@@ -45,6 +55,7 @@ impl Tab {
             Tab::Crafting => "Crafting",
             Tab::Wishlist => "Wishlist",
             Tab::Monsters => "Monsters",
+            Tab::Builds => "Builds",
         }
     }
 }
@@ -179,6 +190,13 @@ pub enum Offer {
     Rule(mh3u_core::blacksmith::Unlock),
     /// The rule says not yet, but the piece was seen on offer before (the blacksmith never takes a piece off the list).
     Earlier,
+}
+
+/// The popup for choosing a skill to add to a build: what has been typed and the highlighted match.
+#[derive(Default)]
+pub struct SkillPicker {
+    pub text: String,
+    pub state: ListState,
 }
 
 /// The upgrade tree popup for one weapon.
@@ -463,6 +481,18 @@ pub struct App {
     auto_parents: HashSet<(u8, u16)>,
     pub wish_state: ListState,
     wishlist_path: Option<PathBuf>,
+    /// The build manager: wanted skills and options (saved per hunter), the pieces it may use and the sets it found.
+    pub build: Settings,
+    pub build_pool: Vec<Candidate>,
+    pub build_results: Vec<Found>,
+    pub build_target_state: ListState,
+    pub build_result_state: ListState,
+    /// Which list the keys move on the Builds tab: the results (true) or the wanted skills.
+    pub build_focus_results: bool,
+    pub skill_picker: Option<SkillPicker>,
+    /// The save changed since the sets were searched; they are searched again when the Builds tab is next shown.
+    build_stale: bool,
+    builds_path: Option<PathBuf>,
     pub show_help: bool,
     /// Set when the TUI started Cemu and is reading its memory (`--live`).
     pub live: Option<Live>,
@@ -490,7 +520,13 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(game: GameData, save_path: PathBuf, wishlist_path: Option<PathBuf>, prices_path: Option<PathBuf>) -> Result<App> {
+    pub fn new(
+        game: GameData,
+        save_path: PathBuf,
+        wishlist_path: Option<PathBuf>,
+        builds_path: Option<PathBuf>,
+        prices_path: Option<PathBuf>,
+    ) -> Result<App> {
         let bytes = std::fs::read(&save_path).with_context(|| format!("reading {}", save_path.display()))?;
         let save = Save::parse(&bytes)?;
         let entries = wishlist_path
@@ -536,6 +572,19 @@ impl App {
             auto_parents,
             wish_state: ListState::default().with_selected(Some(0)),
             wishlist_path,
+            build: builds_path
+                .as_ref()
+                .and_then(|p| std::fs::read_to_string(p).ok())
+                .map(|t| Settings::parse(&t))
+                .unwrap_or_default(),
+            build_pool: Vec::new(),
+            build_results: Vec::new(),
+            build_target_state: ListState::default().with_selected(Some(0)),
+            build_result_state: ListState::default().with_selected(Some(0)),
+            build_focus_results: false,
+            skill_picker: None,
+            build_stale: true,
+            builds_path,
             show_help: false,
             live: None,
             prices: prices_path
@@ -804,7 +853,7 @@ impl App {
             Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
             Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
             Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
-            Tab::Items | Tab::Worn | Tab::Monsters => None,
+            Tab::Items | Tab::Worn | Tab::Monsters | Tab::Builds => None,
         }
     }
 
@@ -1151,6 +1200,10 @@ impl App {
         self.refresh_box();
         self.refresh_equipment();
         self.refresh_pieces();
+        self.build_stale = true;
+        if self.tab == Tab::Builds {
+            self.refresh_builds();
+        }
         (old != new).then(|| {
             format!(
                 "zenny {} (now {})",
@@ -1158,6 +1211,214 @@ impl App {
                 group_digits(u64::from(new))
             )
         })
+    }
+
+    /// Every armor piece and talisman the build search may use: what the equipment box holds and, if wanted, what the blacksmith
+    /// is offering.
+    fn build_pool(&self) -> Vec<Candidate> {
+        let mut pool: Vec<Candidate> = Vec::new();
+        let real = |kind: u8, id: u16| self.game.equipment_name(kind, id).is_some_and(|n| !n.is_empty() && n != "DUMMY");
+        for e in &self.save.equipment_box {
+            if (1..=5).contains(&e.kind)
+                && real(e.kind, e.id)
+                && !pool.iter().any(|c| c.kind == e.kind && c.id == e.id)
+                && let Some(stats) = self.game.armor_stats(e.kind, e.id)
+            {
+                pool.push(Candidate {
+                    kind: e.kind,
+                    id: e.id,
+                    owned: true,
+                    stats: stats.clone(),
+                });
+            }
+            if e.kind == 6 && self.build.use_talisman && !e.talisman_skills().is_empty() {
+                pool.push(Candidate {
+                    kind: 6,
+                    id: e.id,
+                    owned: true,
+                    stats: mh3u_core::armor::ArmorStats {
+                        defense: 0,
+                        rarity: 1,
+                        slots: 0,
+                        gender: None,
+                        class: None,
+                        resist: [0; 5],
+                        skills: e.talisman_skills(),
+                        price: None,
+                    },
+                });
+            }
+        }
+        if self.build.include_offered {
+            for kind in 1..=5u8 {
+                for id in 1..1000u16 {
+                    if real(kind, id)
+                        && !pool.iter().any(|c| c.kind == kind && c.id == id)
+                        && let Some(stats) = self.game.armor_stats(kind, id)
+                        && self.at_blacksmith(kind, id)
+                    {
+                        pool.push(Candidate {
+                            kind,
+                            id,
+                            owned: false,
+                            stats: stats.clone(),
+                        });
+                    }
+                }
+            }
+        }
+        pool
+    }
+
+    /// Search again for sets that reach the wanted skills.
+    pub fn refresh_builds(&mut self) {
+        const SHOWN: usize = 300;
+        self.build_stale = false;
+        self.build_pool = self.build_pool();
+        self.build_results = builds::search(&self.build_pool, &self.build.targets, SHOWN);
+        let len = self.build_results.len();
+        let at = self.build_result_state.selected().unwrap_or(0).min(len.saturating_sub(1));
+        self.build_result_state.select((len > 0).then_some(at));
+        let wanted = self.build.targets.len();
+        let at = self.build_target_state.selected().unwrap_or(0).min(wanted.saturating_sub(1));
+        self.build_target_state.select((wanted > 0).then_some(at));
+    }
+
+    fn save_builds(&mut self) {
+        let Some(path) = &self.builds_path else { return };
+        let result = path
+            .parent()
+            .map_or(Ok(()), std::fs::create_dir_all)
+            .and_then(|()| std::fs::write(path, self.build.format()));
+        if let Err(e) = result {
+            self.status = format!("could not save builds: {e}");
+        }
+    }
+
+    /// Skills whose name matches what was typed in the picker, best match first (all skills when nothing was typed).
+    pub fn skill_matches(&self, typed: &str) -> Vec<u8> {
+        let words: Vec<String> = typed.split_whitespace().map(str::to_lowercase).collect();
+        let mut scored: Vec<(u32, u8)> = self
+            .game
+            .skill_ids()
+            .filter_map(|id| {
+                let name = self.game.skill_name(id)?.to_lowercase();
+                let mut total = 0;
+                for w in &words {
+                    total += search::score(w, &name)?;
+                }
+                Some((total, id))
+            })
+            .collect();
+        scored.sort_by_key(|&(score, id)| (std::cmp::Reverse(score), id));
+        scored.into_iter().map(|(_, id)| id).collect()
+    }
+
+    fn builds_changed(&mut self) {
+        self.save_builds();
+        self.refresh_builds();
+    }
+
+    /// Keys while the skill picker is open.
+    fn picker_key(&mut self, code: KeyCode) {
+        let Some(picker) = self.skill_picker.as_mut() else { return };
+        match code {
+            KeyCode::Esc => self.skill_picker = None,
+            KeyCode::Backspace => {
+                picker.text.pop();
+                picker.state.select(Some(0));
+            }
+            KeyCode::Char(c) => {
+                picker.text.push(c);
+                picker.state.select(Some(0));
+            }
+            KeyCode::Down => picker.state.select(Some(picker.state.selected().map_or(0, |i| i + 1))),
+            KeyCode::Up => picker
+                .state
+                .select(Some(picker.state.selected().map_or(0, |i| i.saturating_sub(1)))),
+            KeyCode::Enter => {
+                let text = picker.text.clone();
+                let at = picker.state.selected().unwrap_or(0);
+                let matches = self.skill_matches(&text);
+                if let Some(&skill) = matches.get(at.min(matches.len().saturating_sub(1))) {
+                    self.skill_picker = None;
+                    if let Some(t) = self.build.targets.iter().position(|t| t.skill == skill) {
+                        self.build_target_state.select(Some(t));
+                    } else {
+                        self.build.targets.push(Target {
+                            skill,
+                            points: worn_active_points(),
+                        });
+                        self.build_target_state.select(Some(self.build.targets.len() - 1));
+                    }
+                    self.build_focus_results = false;
+                    self.builds_changed();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Keys on the Builds tab; returns whether the key was used.
+    fn builds_key(&mut self, code: KeyCode) -> bool {
+        match code {
+            KeyCode::Char('a') => {
+                self.skill_picker = Some(SkillPicker {
+                    text: String::new(),
+                    state: ListState::default().with_selected(Some(0)),
+                });
+            }
+            KeyCode::Char('f') => self.build_focus_results = !self.build_focus_results,
+            KeyCode::Char('+' | '=') | KeyCode::Char('-') if !self.build_focus_results => {
+                let step = if matches!(code, KeyCode::Char('-')) { -1 } else { 1 };
+                if let Some(t) = self.build_target_state.selected().and_then(|i| self.build.targets.get_mut(i)) {
+                    t.points = (t.points + step).clamp(1, 30);
+                    self.builds_changed();
+                }
+            }
+            KeyCode::Char('x') | KeyCode::Delete if !self.build_focus_results => {
+                if let Some(i) = self.build_target_state.selected().filter(|&i| i < self.build.targets.len()) {
+                    self.build.targets.remove(i);
+                    self.builds_changed();
+                }
+            }
+            KeyCode::Char('o') => {
+                self.build.include_offered = !self.build.include_offered;
+                self.builds_changed();
+            }
+            KeyCode::Char('m') => {
+                self.build.use_talisman = !self.build.use_talisman;
+                self.builds_changed();
+            }
+            KeyCode::Char('w') => self.wish_build(),
+            _ => return false,
+        }
+        true
+    }
+
+    /// Put the pieces of the highlighted set that you do not own yet on the wishlist.
+    fn wish_build(&mut self) {
+        let Some(found) = self.build_result_state.selected().and_then(|i| self.build_results.get(i)) else {
+            return;
+        };
+        let missing: Vec<(u8, u16)> = found
+            .pieces
+            .iter()
+            .map(|&i| &self.build_pool[i])
+            .filter(|c| c.kind != 6 && !c.owned && !self.save.owns_equipment(c.kind, c.id))
+            .map(|c| (c.kind, c.id))
+            .collect();
+        let mut added = 0;
+        for (kind, id) in missing {
+            if !self.is_wished(kind, id) {
+                self.add_wish_with_parents(kind, id);
+                added += 1;
+            }
+        }
+        self.status = match added {
+            0 => "nothing to add: you own every piece, or they are already on the wishlist".to_string(),
+            n => format!("added {n} piece(s) to the wishlist"),
+        };
     }
 
     /// Turn on the debug command line (`:`). `note` is shown in the status line.
@@ -1565,6 +1826,10 @@ impl App {
             }
             return;
         }
+        if self.skill_picker.is_some() {
+            self.picker_key(code);
+            return;
+        }
         if self.commanding {
             match code {
                 KeyCode::Esc => self.commanding = false,
@@ -1604,6 +1869,9 @@ impl App {
         }
         if self.show_help {
             self.show_help = false; // any key closes the help overlay
+            return;
+        }
+        if self.tab == Tab::Builds && self.builds_key(code) {
             return;
         }
         match code {
@@ -1705,6 +1973,9 @@ impl App {
     fn switch_tab(&mut self, step: isize) {
         let i = Tab::ALL.iter().position(|&t| t == self.tab).unwrap_or(0) as isize;
         self.tab = Tab::ALL[(i + step).rem_euclid(Tab::ALL.len() as isize) as usize];
+        if self.tab == Tab::Builds && self.build_stale {
+            self.refresh_builds();
+        }
     }
 
     fn move_selection(&mut self, step: isize) {
@@ -1726,6 +1997,8 @@ impl App {
             Tab::Equipment => (&mut self.equip_state, self.equip_view.len()),
             Tab::Crafting => (&mut self.craft_state, self.pieces.len()),
             Tab::Wishlist => (&mut self.wish_state, self.wishlist.len()),
+            Tab::Builds if self.build_focus_results => (&mut self.build_result_state, self.build_results.len()),
+            Tab::Builds => (&mut self.build_target_state, self.build.targets.len()),
         };
         state.select(Some(stepped(state.selected(), step, len)));
     }
@@ -1733,6 +2006,11 @@ impl App {
 
 /// The row to select after moving `step` rows from `current` in a list of `len` rows, staying inside the list.
 /// `isize::MIN` and `isize::MAX` therefore go to the top and the bottom.
+/// Points to ask for when a skill is first added: the point where its first effect starts.
+fn worn_active_points() -> i32 {
+    crate::worn::ACTIVE_AT
+}
+
 fn stepped(current: Option<usize>, step: isize, len: usize) -> usize {
     let next = (current.unwrap_or(0) as isize).saturating_add(step);
     next.clamp(0, len.saturating_sub(1) as isize) as usize

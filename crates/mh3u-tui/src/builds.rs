@@ -1,0 +1,403 @@
+//! The build manager's search: which head, body, arms, waist and legs pieces (and a talisman) reach the skill points you asked for.
+//!
+//! The search walks the slots one after another and gives up on a branch as soon as the points still to come cannot make up what is
+//! missing. Only pieces that touch a wanted skill are tried, plus one filler per slot (the sturdiest piece that does no harm) so
+//! the rest of the set is not left bare. The body piece goes last, because Torso Up doubles it (see `worn`).
+
+use crate::worn::{self, TORSO_UP};
+use mh3u_core::armor::ArmorStats;
+
+/// A skill and the points wanted in it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Target {
+    pub skill: u8,
+    pub points: i32,
+}
+
+/// A piece the search may use. `kind` is the equipment kind: 1 body, 2 arms, 3 waist, 4 legs, 5 head, 6 talisman.
+#[derive(Debug, Clone)]
+pub struct Candidate {
+    pub kind: u8,
+    pub id: u16,
+    /// In the equipment box now (otherwise it is only on offer at the blacksmith).
+    pub owned: bool,
+    pub stats: ArmorStats,
+}
+
+/// One set that reaches every target.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Found {
+    /// Indexes into the pool, one per filled slot (the talisman, when used, is the last).
+    pub pieces: Vec<usize>,
+    pub defense: u32,
+    pub owned: usize,
+}
+
+/// The order the slots are searched in: the body last.
+const ORDER: [u8; 6] = [5, 2, 3, 4, 6, 1];
+const BODY: u8 = 1;
+/// Pieces tried per slot, best first.
+const PER_SLOT: usize = 30;
+
+/// Sets that reach every target, sturdiest first (then those needing the fewest pieces still to be made). At most `limit`.
+pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found> {
+    if targets.is_empty() || limit == 0 {
+        return Vec::new();
+    }
+    let points_in = |c: &Candidate, skill: u8| -> i32 {
+        c.stats
+            .skills
+            .iter()
+            .filter(|&&(id, _)| id == skill)
+            .map(|&(_, p)| i32::from(p))
+            .sum()
+    };
+    let wanted = |c: &Candidate| targets.iter().any(|t| points_in(c, t.skill) != 0);
+    let hurts = |c: &Candidate| targets.iter().any(|t| points_in(c, t.skill) < 0);
+    let helps_torso = targets.iter().any(|t| t.skill != TORSO_UP);
+
+    // The pieces tried in each slot, in search order.
+    let mut slots: Vec<Vec<usize>> = Vec::new();
+    for &kind in &ORDER {
+        let of_kind: Vec<usize> = (0..pool.len()).filter(|&i| pool[i].kind == kind).collect();
+        let relevance = |i: usize| -> i32 {
+            let c = &pool[i];
+            let own: i32 = targets.iter().map(|t| points_in(c, t.skill).max(0)).sum();
+            own + if helps_torso && kind != BODY {
+                points_in(c, TORSO_UP).max(0)
+            } else {
+                0
+            }
+        };
+        let mut chosen: Vec<usize> = of_kind.iter().copied().filter(|&i| wanted(&pool[i]) || relevance(i) > 0).collect();
+        chosen.sort_by_key(|&i| (std::cmp::Reverse(relevance(i)), std::cmp::Reverse(pool[i].stats.defense), i));
+        chosen.truncate(PER_SLOT);
+        let filler = of_kind
+            .iter()
+            .copied()
+            .filter(|i| !chosen.contains(i) && !hurts(&pool[*i]))
+            .max_by_key(|&i| (pool[i].stats.defense, pool[i].owned, std::cmp::Reverse(i)));
+        chosen.extend(filler);
+        slots.push(chosen);
+    }
+    // Where a slot has nothing to offer, leave it empty; the talisman is always optional.
+    let empty = usize::MAX;
+    for (s, list) in slots.iter_mut().enumerate() {
+        if list.is_empty() || ORDER[s] == 6 {
+            list.push(empty);
+        }
+    }
+
+    // For each step, the most the slots from there on can still add to each target (the body counts twice, as Torso Up may double it).
+    let steps = ORDER.len();
+    let mut ahead = vec![vec![0i32; targets.len()]; steps + 1];
+    for s in (0..steps).rev() {
+        for (t, target) in targets.iter().enumerate() {
+            let best = slots[s]
+                .iter()
+                .filter(|&&i| i != empty)
+                .map(|&i| points_in(&pool[i], target.skill))
+                .max()
+                .unwrap_or(0)
+                .max(0);
+            let factor = if ORDER[s] == BODY && target.skill != TORSO_UP { 2 } else { 1 };
+            ahead[s][t] = ahead[s + 1][t] + best * factor;
+        }
+    }
+
+    let mut out: Vec<Found> = Vec::new();
+    let mut picked: Vec<usize> = Vec::new();
+    let mut so_far = vec![0i32; targets.len()];
+    walk(pool, targets, &slots, &ahead, 0, &mut picked, &mut so_far, empty, limit, &mut out);
+    rank(&mut out);
+    out.truncate(limit);
+    out
+}
+
+#[allow(clippy::too_many_arguments)]
+fn walk(
+    pool: &[Candidate],
+    targets: &[Target],
+    slots: &[Vec<usize>],
+    ahead: &[Vec<i32>],
+    step: usize,
+    picked: &mut Vec<usize>,
+    so_far: &mut Vec<i32>,
+    empty: usize,
+    limit: usize,
+    out: &mut Vec<Found>,
+) {
+    if step == slots.len() {
+        let parts: Vec<(u8, &ArmorStats)> = picked.iter().map(|&i| (pool[i].kind, &pool[i].stats)).collect();
+        let summary = worn::summarize(&parts);
+        let reached = targets.iter().all(|t| {
+            summary
+                .skills
+                .iter()
+                .find(|s| s.id == t.skill)
+                .is_some_and(|s| s.points >= t.points)
+        });
+        if reached {
+            out.push(Found {
+                pieces: picked.clone(),
+                defense: summary.defense,
+                owned: picked.iter().filter(|&&i| pool[i].owned).count(),
+            });
+            // keep the list from growing without bound
+            if out.len() >= limit * 8 {
+                rank(out);
+                out.truncate(limit);
+            }
+        }
+        return;
+    }
+    for &i in &slots[step] {
+        // the body is searched last, so the running totals before it carry no doubling
+        let gain: Vec<i32> = targets
+            .iter()
+            .map(|t| {
+                if i == empty {
+                    0
+                } else {
+                    pool[i]
+                        .stats
+                        .skills
+                        .iter()
+                        .filter(|&&(id, _)| id == t.skill)
+                        .map(|&(_, p)| i32::from(p))
+                        .sum()
+                }
+            })
+            .collect();
+        let is_body = ORDER[step] == BODY;
+        let reachable = targets.iter().enumerate().all(|(t, target)| {
+            let own = if is_body && target.skill != TORSO_UP {
+                2 * gain[t].max(0)
+            } else {
+                gain[t]
+            };
+            so_far[t] + own + ahead[step + 1][t] >= target.points
+        });
+        if !reachable {
+            continue;
+        }
+        for (t, g) in gain.iter().enumerate() {
+            so_far[t] += g;
+        }
+        if i != empty {
+            picked.push(i);
+        }
+        walk(pool, targets, slots, ahead, step + 1, picked, so_far, empty, limit, out);
+        if i != empty {
+            picked.pop();
+        }
+        for (t, g) in gain.iter().enumerate() {
+            so_far[t] -= g;
+        }
+    }
+}
+
+/// Sturdiest first, then the fewest pieces still to get, then the fewest pieces overall.
+fn rank(found: &mut Vec<Found>) {
+    found.sort_by_key(|f| {
+        (
+            std::cmp::Reverse(f.defense),
+            std::cmp::Reverse(f.owned),
+            f.pieces.len(),
+            f.pieces.clone(),
+        )
+    });
+    found.dedup_by(|a, b| a.pieces == b.pieces);
+}
+
+/// The wanted skills and the options, kept in a small text file per hunter: `skill ID POINTS`, `offered 0|1`, `talisman 0|1`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Settings {
+    pub targets: Vec<Target>,
+    /// Use pieces the blacksmith is offering as well as the ones you own.
+    pub include_offered: bool,
+    /// Try the talismans you own.
+    pub use_talisman: bool,
+}
+
+impl Default for Settings {
+    fn default() -> Settings {
+        Settings {
+            targets: Vec::new(),
+            include_offered: true,
+            use_talisman: true,
+        }
+    }
+}
+
+impl Settings {
+    pub fn parse(text: &str) -> Settings {
+        let mut out = Settings::default();
+        for line in text.lines() {
+            let mut words = line.split_whitespace();
+            match (words.next(), words.next(), words.next()) {
+                (Some("skill"), Some(id), Some(points)) => {
+                    if let (Ok(skill), Ok(points)) = (id.parse(), points.parse())
+                        && !out.targets.iter().any(|t: &Target| t.skill == skill)
+                    {
+                        out.targets.push(Target { skill, points });
+                    }
+                }
+                (Some("offered"), Some(v), _) => out.include_offered = v != "0",
+                (Some("talisman"), Some(v), _) => out.use_talisman = v != "0",
+                _ => {}
+            }
+        }
+        out
+    }
+
+    pub fn format(&self) -> String {
+        let mut text: String = self.targets.iter().map(|t| format!("skill {} {}\n", t.skill, t.points)).collect();
+        text += &format!(
+            "offered {}\ntalisman {}\n",
+            u8::from(self.include_offered),
+            u8::from(self.use_talisman)
+        );
+        text
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn stats(defense: u8, skills: &[(u8, i8)]) -> ArmorStats {
+        ArmorStats {
+            defense,
+            rarity: 1,
+            slots: 0,
+            gender: None,
+            class: None,
+            resist: [0; 5],
+            skills: skills.to_vec(),
+            price: None,
+        }
+    }
+
+    fn piece(kind: u8, id: u16, defense: u8, skills: &[(u8, i8)]) -> Candidate {
+        Candidate {
+            kind,
+            id,
+            owned: true,
+            stats: stats(defense, skills),
+        }
+    }
+
+    const ATTACK: u8 = 11;
+    const POISON: u8 = 2;
+
+    /// Five slots with a plain, sturdy piece each and one Attack piece in head, arms and waist.
+    fn pool() -> Vec<Candidate> {
+        let mut pool = Vec::new();
+        for kind in [5, 1, 2, 3, 4] {
+            pool.push(piece(kind, 1, 10, &[]));
+        }
+        pool.push(piece(5, 2, 8, &[(ATTACK, 4)]));
+        pool.push(piece(2, 2, 7, &[(ATTACK, 3)]));
+        pool.push(piece(3, 2, 6, &[(ATTACK, 3)]));
+        pool
+    }
+
+    fn ids(pool: &[Candidate], found: &Found) -> Vec<(u8, u16)> {
+        let mut v: Vec<(u8, u16)> = found.pieces.iter().map(|&i| (pool[i].kind, pool[i].id)).collect();
+        v.sort_unstable();
+        v
+    }
+
+    #[test]
+    fn finds_the_sets_that_reach_the_points_and_fills_the_other_slots() {
+        let pool = pool();
+        let found = search(&pool, &[Target { skill: ATTACK, points: 10 }], 10);
+        assert_eq!(found.len(), 1, "only head + arms + waist together reach 10");
+        assert_eq!(ids(&pool, &found[0]), [(1, 1), (2, 2), (3, 2), (4, 1), (5, 2)]);
+        assert_eq!(
+            found[0].defense,
+            10 + 7 + 6 + 10 + 8,
+            "the body and legs are the sturdy plain pieces"
+        );
+    }
+
+    #[test]
+    fn nothing_is_found_when_the_points_cannot_be_reached() {
+        let pool = pool();
+        assert!(search(&pool, &[Target { skill: ATTACK, points: 11 }], 10).is_empty());
+        assert!(search(&pool, &[Target { skill: POISON, points: 1 }], 10).is_empty());
+        assert!(search(&pool, &[], 10).is_empty());
+    }
+
+    #[test]
+    fn sturdier_sets_come_first() {
+        let mut pool = pool();
+        pool.push(piece(5, 3, 20, &[(ATTACK, 4)]));
+        let found = search(&pool, &[Target { skill: ATTACK, points: 10 }], 10);
+        assert_eq!(found.len(), 2);
+        assert!(found[0].defense > found[1].defense);
+        assert_eq!(pool[found[0].pieces[0]].id, 3, "the sturdier head leads");
+    }
+
+    #[test]
+    fn a_piece_that_costs_a_wanted_skill_is_not_used_as_filler() {
+        let mut pool = pool();
+        pool.push(piece(4, 9, 90, &[(ATTACK, -3)]));
+        let found = search(&pool, &[Target { skill: ATTACK, points: 10 }], 10);
+        assert_eq!(found.len(), 1);
+        assert!(!ids(&pool, &found[0]).contains(&(4, 9)));
+    }
+
+    #[test]
+    fn torso_up_doubles_the_body_piece_in_the_search() {
+        let mut pool: Vec<Candidate> = [5, 2, 3, 4].iter().map(|&kind| piece(kind, 1, 10, &[])).collect();
+        pool.push(piece(1, 2, 5, &[(ATTACK, 5)]));
+        let target = [Target { skill: ATTACK, points: 10 }];
+        // the body's 5 points alone are not enough
+        assert!(search(&pool, &target, 20).is_empty());
+        // with 10 points of Torso Up on the head the body counts double
+        pool.push(piece(5, 3, 5, &[(TORSO_UP, 10)]));
+        let found = search(&pool, &target, 20);
+        assert_eq!(found.len(), 1);
+        assert_eq!(ids(&pool, &found[0]), [(1, 2), (2, 1), (3, 1), (4, 1), (5, 3)]);
+    }
+
+    #[test]
+    fn a_talisman_adds_its_points_and_is_optional() {
+        let mut pool = pool();
+        pool.push(piece(6, 1, 0, &[(ATTACK, 10)]));
+        let found = search(&pool, &[Target { skill: ATTACK, points: 10 }], 20);
+        assert!(found.iter().any(|f| f.pieces.iter().any(|&i| pool[i].kind == 6)));
+        assert!(
+            found.iter().any(|f| f.pieces.iter().all(|&i| pool[i].kind != 6)),
+            "the armor-only set is still there"
+        );
+    }
+
+    #[test]
+    fn the_result_list_is_capped() {
+        let mut pool = pool();
+        for id in 10..20 {
+            pool.push(piece(5, id, id as u8, &[(ATTACK, 4)]));
+        }
+        assert_eq!(search(&pool, &[Target { skill: ATTACK, points: 10 }], 3).len(), 3);
+    }
+
+    #[test]
+    fn settings_round_trip_and_ignore_bad_lines() {
+        let s = Settings {
+            targets: vec![Target { skill: 11, points: 10 }, Target { skill: 37, points: 15 }],
+            include_offered: false,
+            use_talisman: true,
+        };
+        assert_eq!(Settings::parse(&s.format()), s);
+        let parsed = Settings::parse("skill x 3\nskill 5 10\nskill 5 20\nnonsense\n");
+        assert_eq!(
+            parsed.targets,
+            [Target { skill: 5, points: 10 }],
+            "bad and repeated lines are skipped"
+        );
+        assert_eq!(Settings::parse(""), Settings::default());
+    }
+}

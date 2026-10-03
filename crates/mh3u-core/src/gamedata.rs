@@ -222,6 +222,14 @@ impl GameData {
             .or_else(|| self.weapon_stats(kind, id).map(|w| w.rarity))
     }
 
+    /// The ids of the skill trees that have a name (not the placeholder entries).
+    pub fn skill_ids(&self) -> impl Iterator<Item = u8> + '_ {
+        (1..self.skills.len().min(256)).filter_map(|i| {
+            let name = self.skills[i].as_str();
+            (!name.is_empty() && !name.starts_with("DUMMY") && name != "None" && name != "NO_DATA").then_some(i as u8)
+        })
+    }
+
     pub fn skill_name(&self, id: u8) -> Option<&str> {
         self.skills.get(id as usize).map(String::as_str)
     }

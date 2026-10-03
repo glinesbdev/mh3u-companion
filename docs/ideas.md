@@ -5,6 +5,10 @@ list as ideas turn up.
 
 ## Build manager
 
+First round is built (the Builds tab): wanted skills with points, a search over owned and on-offer armor plus a talisman, sets ranked by
+base defense, totals with each goal marked, and the missing pieces to the wishlist. Skills and options are saved per hunter. What follows
+is still to do (the items below that are done are noted).
+
 Say which skills you want (for example Attack Up (S), Perception and a gem slot) and get the armor pieces to wear.
 
 - Pick skills and the points you want; search head, body, arms, waist and legs (and a talisman) for sets that reach them.
