@@ -7,7 +7,7 @@
 //!
 //! Layout of a live block's header (host address `B`, guest address `G = B - 0xc - base` where `base` is where guest
 //! memory starts in the host): u32 at 0x08 is a guest pointer `P`, u32 at 0x24 is `P + 0x34`, and the hunter's name
-//! starts at 0x2b, preceded by `00 01 00`.
+//! starts at 0x2b.
 
 use crate::save::SAVE_LEN;
 use crate::{edit::Patch, procmem::ProcMem};
@@ -23,8 +23,9 @@ use std::{
 };
 
 const PROBE_LEN: usize = 0x30;
-/// Where the `00 01 00` that precedes the hunter's name starts in a block.
-const NAME_PREFIX_OFFSET: u64 = 0x28;
+/// Where the hunter's name starts in a block. The three bytes before it differ between hunters (`00 01 00` for one,
+/// `00 00 00` for another), so the search is for the name alone.
+const NAME_OFFSET: u64 = 0x2b;
 
 fn be32(d: &[u8], o: usize) -> u64 {
     u32::from_be_bytes([d[o], d[o + 1], d[o + 2], d[o + 3]]) as u64
@@ -47,11 +48,10 @@ pub fn validate_block(head: &[u8], addr: u64) -> Option<u64> {
 /// Search the emulator's memory for the live save block of one of the hunters in `names`. Returns its host address.
 pub fn find_live_block(mem: &ProcMem, names: &[String]) -> io::Result<Option<u64>> {
     for name in names.iter().filter(|n| !n.is_empty()) {
-        let mut pattern = vec![0, 1, 0];
-        pattern.extend(name.as_bytes());
+        let mut pattern = name.as_bytes().to_vec();
         pattern.push(0);
         for hit in mem.scan(&pattern)? {
-            let Some(block) = hit.checked_sub(NAME_PREFIX_OFFSET) else {
+            let Some(block) = hit.checked_sub(NAME_OFFSET) else {
                 continue;
             };
             if mem.read(block, PROBE_LEN).is_ok_and(|head| validate_block(&head, block).is_some()) {
@@ -60,6 +60,33 @@ pub fn find_live_block(mem: &ProcMem, names: &[String]) -> io::Result<Option<u64
         }
     }
     Ok(None)
+}
+
+/// Why a search found nothing, as text for a log: every place a hunter name appears in memory, with the header there and
+/// whether it passed. Used when `MH3U_LIVE_LOG` names a file.
+fn diagnose(mem: &ProcMem, names: &[String]) -> String {
+    let mut out = String::new();
+    for name in names.iter().filter(|n| !n.is_empty()) {
+        let mut pattern = name.as_bytes().to_vec();
+        pattern.push(0);
+        match mem.scan(&pattern) {
+            Err(e) => out += &format!("{name}: scan failed: {e}\n"),
+            Ok(hits) => {
+                out += &format!("{name}: {} hit(s)\n", hits.len());
+                for hit in hits.iter().take(20) {
+                    let block = hit.saturating_sub(NAME_OFFSET);
+                    match mem.read(block, PROBE_LEN) {
+                        Ok(head) => {
+                            let hex: String = head.iter().map(|b| format!("{b:02x}")).collect();
+                            out += &format!("  {block:#x} {} {hex}\n", validate_block(&head, block).is_some());
+                        }
+                        Err(e) => out += &format!("  {block:#x} unreadable: {e}\n"),
+                    }
+                }
+            }
+        }
+    }
+    out
 }
 
 pub enum LiveEvent {
@@ -147,6 +174,13 @@ pub fn spawn(mut mem: ProcMem, names: Vec<String>) -> LiveReader {
                         if tx.send(LiveEvent::Connected(addr)).is_err() {
                             return;
                         }
+                    } else if let Some(path) = std::env::var_os("MH3U_LIVE_LOG") {
+                        let text = format!("-- search at {:?}\n{}", Instant::now(), diagnose(&mem, &names));
+                        let _ = std::fs::OpenOptions::new()
+                            .create(true)
+                            .append(true)
+                            .open(path)
+                            .and_then(|mut f| std::io::Write::write_all(&mut f, text.as_bytes()));
                     }
                 }
                 None => {}

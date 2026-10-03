@@ -43,8 +43,8 @@ The live copy's header (the first `0x28` bytes of the file are the checksummed f
 has a guest pointer `P` at offset `0x08` and `P + 0x34` at `0x24`, and the guest memory base derived from it
 (`block - 0x0c - P`) is 64 KiB aligned. That is how it is told apart from the other two copies.
 
-To find it, a background thread searches Cemu's writable memory for `00 01 00` + a hunter name from the save slots + `00`
-(about a second per search, repeated every few seconds until found), then reads the 35,364-byte block four times a second and
+To find it, a background thread searches Cemu's writable memory for a hunter name from the save slots + `00`
+(the three bytes before the name differ per hunter, so they are not part of the search; about a second per search, repeated every few seconds until found), then reads the 35,364-byte block four times a second and
 sends it to the app whenever it changes. While live data is flowing, changes to the save file are ignored.
 
 Only the hunter currently loaded in the game is live; the save slot you opened with `--slot` / `--save` is used for the
@@ -84,6 +84,10 @@ items follow immediately), crafting at the blacksmith (the new piece appears in 
 change, e.g. -300 for a Piscine Mask), equipping gear (the new `worn` pointer), and unloading a hunter without saving (back to the
 save file). Edits made with `--debug-edit` are seen by the game itself: `zenny 5000` showed in the blacksmith's shop, and
 `give` / `set` items appeared and disappeared in the in-game item box.
+
+## Troubleshooting
+
+Start with `MH3U_LIVE_LOG=<file>` to get a log of every search: each hunter name's hits in memory and the header found there.
 
 ## Limits
 
