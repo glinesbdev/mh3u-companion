@@ -16,6 +16,10 @@ const WORN_WEAPON_OFFSET: usize = 0xc0;
 /// Five u16 pointers (body, arms, waist, legs, head) into the equipment box slots; 0xffff = nothing worn.
 const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
+/// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
+const HUNTED_OFFSET: usize = 0x57a0;
+const HUNTED_FIRST_MONSTER: u16 = 6;
+const HUNTED_COUNT: usize = 90;
 
 /// A stack of items: `id` indexes the game's item table, `count` is the quantity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -61,6 +65,8 @@ pub struct Save {
     pub pouch: Vec<ItemStack>,
     pub item_box: Vec<ItemStack>,
     pub equipment_box: Vec<Equipment>,
+    /// Monsters hunted, from monster 6 on (see `times_hunted`).
+    pub hunted: Vec<u16>,
     /// Equipment box slots currently worn: the weapon first, then armor.
     pub worn_slots: Vec<u16>,
 }
@@ -112,6 +118,16 @@ impl Save {
         self.equipment_box.iter().any(|e| e.kind == kind && e.id == id)
     }
 
+    /// How many times the monster with this name id (the index in the game's monster names) has been killed or captured. Zero
+    /// for monsters the table does not cover.
+    pub fn times_hunted(&self, monster: u16) -> u16 {
+        monster
+            .checked_sub(HUNTED_FIRST_MONSTER)
+            .and_then(|i| self.hunted.get(usize::from(i)))
+            .copied()
+            .unwrap_or(0)
+    }
+
     /// Total quantity of an item across the pouch and the item box.
     pub fn item_count(&self, id: u16) -> u32 {
         self.pouch
@@ -135,6 +151,7 @@ impl Save {
             pouch: read_stacks(d, POUCH_OFFSET, POUCH_SLOTS),
             item_box: read_stacks(d, BOX_OFFSET, BOX_SLOTS),
             equipment_box: read_equipment(d),
+            hunted: (0..HUNTED_COUNT).map(|i| be16(d, HUNTED_OFFSET + 2 * i)).collect(),
             worn_slots: std::iter::once(be16(d, WORN_WEAPON_OFFSET))
                 .chain((0..WORN_SLOTS).map(|i| be16(d, WORN_OFFSET + i * 2)))
                 .filter(|&s| s != 0xffff)
@@ -159,6 +176,7 @@ mod tests {
             pouch,
             item_box,
             equipment_box: Vec::new(),
+            hunted: Vec::new(),
             worn_slots: Vec::new(),
         }
     }
@@ -176,6 +194,19 @@ mod tests {
         };
         assert_eq!(e(6).talisman_skills(), vec![(0x25, 10)]);
         assert!(e(1).talisman_skills().is_empty(), "armor has no talisman skills");
+    }
+
+    #[test]
+    fn hunt_counts_are_indexed_by_monster_name_id() {
+        let mut d = vec![0u8; SAVE_LEN];
+        d[HUNTED_OFFSET + 2 * 6 + 1] = 1; // entry 6: monster 12, Great Jaggi
+        d[HUNTED_OFFSET + 2 * 36 + 1] = 3; // entry 36: monster 42, Arzuros
+        let save = Save::parse(&d).unwrap();
+        assert_eq!(save.times_hunted(12), 1);
+        assert_eq!(save.times_hunted(42), 3);
+        assert_eq!(save.times_hunted(10), 0);
+        assert_eq!(save.times_hunted(3), 0, "below the first monster in the table");
+        assert_eq!(save.times_hunted(500), 0, "past the table");
     }
 
     #[test]

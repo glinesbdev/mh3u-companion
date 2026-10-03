@@ -97,8 +97,10 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
 
 Not features, but they would settle open questions in the notes. Each takes a few minutes in front of the game.
 
-- **Blacksmith rule for weapons and late game.** The first-material rule was checked on one early save, for armor only. Compare the
-  app's `b` filter with the blacksmith's list on a save with more progress, and for weapons.
+- **Blacksmith rule at high rank and G rank.** The hunt rule was seen on one hunter in low rank. A hunter in high rank (6 stars and
+  up, solo) should show whether the S sets need only a hunt in that rank, and G rank (after the Hunter Rank 5 urgent quest "Throne of
+  the Abyss") whether it opens the X sets with Jaggi X, Wroggi X, Volvidon X, Rathalos X and Brachydios X. Compare the app's `b` filter
+  with the blacksmith's list, for weapons too.
 - **Armor prices that differ** between the game's table and a published list: the Qurupeco set, Yukumo, Rathian X, Rath Heart Z and
   Silhouette Casque (about 24 pieces). Read the price off the forge list; a price recorded that way already wins over the table.
 - **Weapon attack numbers.** The decoded attack matches a published list for about 97% of weapons but was not compared with the game's

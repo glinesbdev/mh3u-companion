@@ -259,11 +259,13 @@ Monsters      what each monster drops; s sort, ★ = the wishlist
 Any weapon    t  upgrade tree: the line down to it and everything
                  it upgrades into (↑/↓ scroll, t or Esc close)
 
-The blacksmith line is inferred, not read from the game: a piece is on
-offer once you hold 1 of the first material in its recipe (starting gear
-always is), and the game never takes it off the list, so the app
+The blacksmith line follows what the save shows: a piece is on offer
+once a monster that drops its first material has been hunted (killed
+or captured) at least once; materials you only hold do not count.
+Pieces made from high-rank drops (the S, X... sets) need a hunt in
+that rank. The game never takes a piece off the list, so the app
 remembers every piece it has seen on offer. An anvil marks those in the
-crafting list, and the unowned ones on the wishlist. It matched the one early save checked.
+crafting list, and the unowned ones on the wishlist.
 
 A piece is craftable if you have the materials to create it, or to
 upgrade it and you own a parent weapon. Upgrading uses up the parent,
@@ -916,24 +918,42 @@ fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
     lines
 }
 
-/// Whether the blacksmith offers a piece. Inferred from the recipe (see `Recipe::unlock`) and from pieces seen on offer
-/// before, so it says "not seen on offer yet" and not "locked".
+/// Whether the blacksmith offers a piece, by the rule in `mh3u_core::blacksmith` and from pieces seen on offer before.
 fn unlock_line(app: &App, kind: u8, id: u16) -> Option<Line<'static>> {
+    use mh3u_core::{blacksmith::Unlock, drops::Rank};
     let label = |text: &str, style: Style| -> Line<'static> {
         Line::from(vec![Span::styled("Blacksmith  ", muted()), Span::styled(text.to_string(), style)])
     };
+    let rank = |rank: Rank| match rank {
+        Rank::Low => "low rank",
+        Rank::High => "high rank (6★+ quests when playing alone)",
+        Rank::G => "G rank (after Throne of the Abyss)",
+    };
+    let monsters = |ids: &[u16]| {
+        let mut names: Vec<&str> = ids.iter().filter_map(|&m| app.game.monster_name(m)).collect();
+        names.dedup();
+        let more = names.len().saturating_sub(4);
+        names.truncate(4);
+        let mut text = names.join(", ");
+        if more > 0 {
+            text += &format!(" and {more} more");
+        }
+        text
+    };
     Some(match app.offer(kind, id)? {
-        Offer::Starter => label("✔ starting gear, always on offer", good()),
-        Offer::Holding => label("✔ on offer (you hold its first material)", good()),
         Offer::Earlier => label("✔ on offer (seen earlier; the list never shrinks)", good()),
-        Offer::Needs(item) => label(
+        Offer::Rule(Unlock::Starter) => label("✔ starting gear, always on offer", good()),
+        Offer::Rule(Unlock::Hunted(m)) => label(
             &format!(
-                "not seen on offer yet: hold 1 {} (pouch or box) to unlock it for good",
-                app.game.item_name(item).unwrap_or("?")
+                "✔ on offer (you have hunted {}, which drops its first material)",
+                app.game.monster_name(m).unwrap_or("?")
             ),
-            warn(),
+            good(),
         ),
-        Offer::Special => label("a special piece, unlocked some other way", muted()),
+        Offer::Rule(Unlock::NeedsHunt(r, ids)) => label(&format!("not on offer yet: hunt {} in {}", monsters(&ids), rank(r)), warn()),
+        Offer::Rule(Unlock::NeedsRank(r)) => label(&format!("not on offer yet: its first material drops only in {}", rank(r)), warn()),
+        Offer::Rule(Unlock::Special) => label("a special piece, unlocked some other way", muted()),
+        Offer::Rule(Unlock::Unknown(_)) => label("unknown how this is unlocked (its first material is not a monster drop)", muted()),
     })
 }
 

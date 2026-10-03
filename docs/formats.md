@@ -95,24 +95,33 @@ monsters: 106 of the 108 capture and break lists (three ranks) are exactly where
 probably disagreements in that list. The grouping is inferred, not read from a table, so a monster with generic items only could be
 misplaced. Quest rewards are in the `.quest` files (`QTDS` format: multilingual text followed by binary data), which are not decoded.
 
-## Blacksmith unlock (inferred)
+## Blacksmith unlock (worked out from play, 2026-10-03)
 
-Nothing in the save or the recipe tables says outright which pieces the blacksmith offers. The recipe records do carry two
-small fields: `flag` (header byte 0) is 1 only on starting gear, and `tier` (tail byte 0) is 1 on starting gear, 2 on ordinary
-pieces and 0 on special village and event pieces (Yukumo armor and a few earrings). For the ordinary pieces the app uses the rule a
-published database states: **at least 1 of the first material in the recipe, in the pouch or box**. Support: the game's material
-order matches that database's, and on a save from the start of the game (one Jaggi Hide in the box) the rule picks out exactly
-Jaggi Greaves and Jaggi Leggings, which were the only pieces the blacksmith offered beyond the starting gear. That is one
-observation. Unchecked: weapons (the rule also fires for Jaggid Shotels on that save, with no observation either way) and a late-game
-save. The game never removes a piece from the blacksmith's list, so holding the material is only a way to find out a piece is on
-offer; the app remembers each piece it has seen on offer in `unlocked.tsv` next to the price ledger, and treats a piece as on offer from
-then on. `recipes.rs` has the rule and a test for the early-game save.
+A piece is on offer once **a monster that drops the first material of its recipe has been hunted** (killed or captured) at least once.
+The count is in the save (see "Monsters hunted" below); the monster comes from the drop tables (`drops.rs`). Holding the material
+does not count: on a test hunter, Great Jaggi pieces stayed off the list while 94 Great Jaggi Hides sat in the box (put there with
+the debug `give` command) and appeared when the first Great Jaggi quest was done. In play on that hunter: Jaggi, Ludroth and Bone
+pieces came with their monsters (Jaggi, Ludroth, Kelbi), the Sponge Gear I bow with Ludroth, and all ten Arzuros pieces and the
+Jawblade right after a captured Arzuros; Lagiacrus, Wroggi and Zinogre pieces were absent. On an early save of the main hunter the
+rule predicts the two Jaggi legs.
+
+Recipe `flag` is 1 only on starting gear (always on offer) and `tier` (tail byte 0) is 0 on special village and event pieces (Yukumo
+armor, a few earrings), which the rule does not cover.
+
+The higher-rank sets (S, X, ...) want first materials that drop only in high rank (6 stars and up in solo play) or G rank (opened by
+the Hunter Rank 5 urgent quest "Throne of the Abyss", which brings sets like Jaggi X, Wroggi X, Volvidon X, Rathalos X and Brachydios X).
+The count is per monster, not per rank, so the app can only say a hunt in that rank is needed. Whether the game needs the rank or
+something else for those is not observed: no hunter in the saves has reached high rank. Pieces whose first material is not a monster
+drop (ores, bugs, fish) are not covered either.
+
+The game never removes a piece from the blacksmith's list, so the app remembers each piece it has seen on offer in `unlocked.tsv`
+next to the price ledger. `blacksmith.rs` has the rule and tests on the saves before and after the Arzuros quest.
 
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
 - Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is; quest rewards.
-- Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).
+- How the game stores which pieces the blacksmith has unlocked, and what the high-rank (S, X...) sets need. The app uses the hunt rule.
 
 ## Per-piece flag tables (partly understood)
 
@@ -134,6 +143,6 @@ and the Jawblade right after a captured Arzuros. Higher-rank variants (S, X, ...
 rank) and are not explained. The five per-piece flag tables above did NOT change when the Arzuros pieces appeared, so they are not the
 blacksmith's list.
 
-Not solved: the drop tables do not line up with the name table past about monster 36 (Arzuros' drops sit in the row the name table
-calls Sand Barioth, 11 rows later than its name), so the Monsters tab shows later monsters' drops under the wrong name. Rows from
-Arzuros on are the name table plus 11.
+The drop tables are not in the order of the name table: their rows are the name table's order with small creatures slipped in
+between (and no row for the fish), so a row number is not a name id. `drops.rs` maps the rows by their contents (`ROW_RUNS`); rows that
+belong to no named monster are left out. Earlier versions showed the later monsters' drops under the wrong names.

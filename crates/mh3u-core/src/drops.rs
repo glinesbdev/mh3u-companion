@@ -28,6 +28,19 @@ const MAX_LIST: usize = 12;
 /// Start of each rank's flat table of capture and part-break list pointers, and how many entries each has.
 const FLAT_STARTS: [usize; 3] = [0x78fd8, 0x79304, 0x79630];
 const FLAT_LEN: usize = 203;
+/// The rows of the tables are not in the order of the name table: rows for small creatures sit between the monsters (and the
+/// fish has none), so later monsters' rows are further down than their names. Worked out from the contents (a row of Arzuros Pelt
+/// and Arzuros Shell is Arzuros; a row with Popo Tongue is Popo, ...). Each entry is (first row, last row, name id of the first
+/// row); a row in none of them belongs to no named monster.
+const ROW_RUNS: [(u16, u16, u16); 7] = [
+    (1, 27, 1),     // Rathian .. Aptonoth
+    (29, 32, 28),   // Popo, Rhenoplos, Felyne, Melynx
+    (33, 39, 33),   // Altaroth .. the Bnahabra
+    (52, 53, 41),   // Zinogre, Arzuros
+    (56, 63, 43),   // Lagombi .. Gargwa
+    (66, 93, 51),   // Crimson Qurupeco .. Slagtoth
+    (100, 100, 85), // Hallowed Jhen Mohran
+];
 /// What it costs to move on to the next monster when assigning lists; keeps the assignment from flickering between monsters.
 const SWITCH_COST: f64 = 0.05;
 
@@ -152,7 +165,25 @@ pub fn parse(data: &[u8], data_addr: u32) -> Result<Drops> {
             }
         }
     }
-    Ok(Drops { lists })
+    Ok(Drops {
+        lists: lists_by_name(lists),
+    })
+}
+
+/// The name id of a table row, or `None` if the row belongs to no named monster.
+fn monster_of_row(row: u16) -> Option<u16> {
+    ROW_RUNS
+        .iter()
+        .find(|&&(first, last, _)| (first..=last).contains(&row))
+        .map(|&(first, _, name)| name + (row - first))
+}
+
+/// Re-key the lists from table rows to name ids, dropping the rows that no named monster owns.
+fn lists_by_name(lists: HashMap<(u16, Rank, Method), Vec<Drop>>) -> HashMap<(u16, Rank, Method), Vec<Drop>> {
+    lists
+        .into_iter()
+        .filter_map(|((row, rank, method), list)| Some(((monster_of_row(row)?, rank, method), list)))
+        .collect()
 }
 
 /// The items each monster is known to drop, from its carve lists in every rank.
@@ -339,8 +370,13 @@ mod tests {
                 }][..]
             )
         );
-        assert_eq!(d.list(100, Rank::G, Method::Shiny).unwrap()[0].item, 200);
-        assert_eq!(d.monsters().len(), 100);
+        assert_eq!(
+            d.list(85, Rank::G, Method::Shiny).unwrap()[0].item,
+            200,
+            "row 100 is the monster named 85"
+        );
+        assert_eq!(d.list(100, Rank::G, Method::Shiny), None);
+        assert_eq!(d.monsters().len(), 77, "rows without a named monster are left out");
         assert!(
             d.list(1, Rank::Low, Method::Capture).is_none(),
             "no capture or break lists in the fake section"
@@ -462,6 +498,35 @@ mod real_data {
                 (1, Rank::High, Method::TailCarve, 7),
             ]
         );
+    }
+
+    #[test]
+    fn rows_after_the_small_monsters_map_to_their_names() {
+        assert_eq!(monster_of_row(27), Some(27));
+        assert_eq!(monster_of_row(28), None);
+        assert_eq!(monster_of_row(29), Some(28), "Popo");
+        assert_eq!(monster_of_row(33), Some(33));
+        assert_eq!(monster_of_row(40), None);
+        assert_eq!(monster_of_row(52), Some(41));
+        assert_eq!(monster_of_row(53), Some(42));
+        assert_eq!(monster_of_row(54), None);
+        assert_eq!(monster_of_row(56), Some(43));
+        assert_eq!(monster_of_row(66), Some(51));
+        assert_eq!(monster_of_row(93), Some(78));
+        assert_eq!(monster_of_row(100), Some(85));
+    }
+
+    /// From the extracted data section: Arzuros' items are Arzuros' own, not Sand Barioth's.
+    #[test]
+    fn later_monsters_keep_their_own_drops() {
+        let Ok(data) = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/live/rpx_data.bin")) else {
+            return;
+        };
+        let d = parse(&data, DATA_SECTION_ADDR).unwrap();
+        let pelt = d.list(42, Rank::Low, Method::BodyCarve).unwrap();
+        assert_eq!(pelt.len(), 3);
+        assert_eq!(pelt[0].percent, 65, "Arzuros Pelt 65%");
+        assert!(d.list(53, Rank::Low, Method::BodyCarve).is_none() || d.list(53, Rank::Low, Method::BodyCarve).unwrap()[0].percent != 65);
     }
 
     /// Capture and part-break rewards for Rathian and Ceadeus, from the extracted data section. They match a published list

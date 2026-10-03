@@ -265,8 +265,9 @@ fn main() -> Result<()> {
                                 .map(|d| format!("{}:{}:{}", game.item_name(d.item).unwrap_or("?"), d.quantity, d.percent))
                                 .collect();
                             println!(
-                                "{}\t{}\t{}\t{}",
+                                "{}\t{}\t{}\t{}\t{}",
                                 game.monster_name(monster).unwrap_or("?"),
+                                monster,
                                 rank.label(),
                                 method.label(),
                                 items.join(",")

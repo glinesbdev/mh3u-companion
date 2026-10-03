@@ -498,6 +498,7 @@ mod tests {
             zenny,
             pouch: Vec::new(),
             item_box: items.iter().map(|&(i, c)| stack(i, c)).filter(|s| s.count > 0).collect(),
+            hunted: Vec::new(),
             equipment_box: pieces.iter().enumerate().map(|(n, &(k, i))| piece(n as u16, k, i)).collect(),
             worn_slots: Vec::new(),
         }
