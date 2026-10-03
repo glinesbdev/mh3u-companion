@@ -456,8 +456,8 @@ fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
         let total = rows.len();
         for ((monster, method), chances) in rows.into_iter().take(SHOWN) {
             let mut spans = vec![
-                Span::raw(format!("  {:<16}", fit(app.game.monster_name(monster).unwrap_or("?"), 16))),
-                Span::styled(format!("{:<12}", method.label()), muted()),
+                Span::raw(format!("  {:<19}", fit(app.game.monster_name(monster).unwrap_or("?"), 18))),
+                Span::styled(format!("{:<15}", method.label()), muted()),
             ];
             for (label, chance) in ["Low", "High", "G"].into_iter().zip(chances) {
                 spans.push(Span::styled(format!("{label} "), muted()));
