@@ -1,6 +1,7 @@
 mod app;
 mod commands;
 mod search;
+mod theme;
 mod ui;
 
 use anyhow::{Context, Result, bail};

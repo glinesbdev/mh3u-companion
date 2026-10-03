@@ -31,6 +31,10 @@ what you own and what you need to craft or upgrade gear.
   piece it plans "create from scratch" whenever that is possible, because upgrading uses up the parent weapon, and plans an
   upgrade only for pieces that have no create recipe. The wishlist is saved in
   `~/.config/mh3u-companion/wishlist.txt` (or under `$XDG_CONFIG_HOME`).
+- **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
+  small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
+  line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set
+  `NO_COLOR=1` for plain text. Below 100 columns the panes stack instead of sitting side by side.
 - **Sorting**: `s` on the Items tab sorts the item box by box order, name or quantity.
 - `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
