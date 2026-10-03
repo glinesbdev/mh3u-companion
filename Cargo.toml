@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Unlicense"
+
+[workspace.dependencies]
+anyhow = "1"
+mh3u-core = { path = "crates/mh3u-core" }
+flate2 = "1"

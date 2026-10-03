@@ -1,0 +1,10 @@
+[package]
+name = "mh3u-tools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+memchr = "2.8.3"
+mh3u-core.workspace = true

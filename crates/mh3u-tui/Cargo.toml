@@ -1,0 +1,10 @@
+[package]
+name = "mh3u-tui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+mh3u-core.workspace = true
+ratatui = "0.30.2"
