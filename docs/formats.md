@@ -113,3 +113,13 @@ then on. `recipes.rs` has the rule and a test for the early-game save.
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
 - Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is; quest rewards.
 - Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).
+
+## Per-piece flag tables (partly understood)
+
+Five tables of one byte per piece sit in the save at `0x61a0`, `0x6320`, `0x6480`, `0x6600` and `0x6770` (about `0x160-0x170` bytes
+apart, so one per armor slot; which table is which slot is not settled). A new hunter has a single `01` in each (at offsets 5, 3, 14, 1
+and 10). Finishing quests and receiving items sets runs of neighbouring entries to `06` (bits 1 and 2), and the first of a run to `07`;
+after a visit to the blacksmith's screen the `06`/`07` became `02`/`03` (bit 2 cleared, as for a "new" marker). Seen in saves of two
+hunters. They look like "this piece has turned up" flags, but they do **not** match what the blacksmith offers: on slot 2 before the
+Great Jaggi quest, one table was already flagged while the Jaggi pieces were not offered, and Bone Helm was offered with its table
+unflagged. Do not use them for the blacksmith until a controlled before/after test (one action between two saves) explains them.
