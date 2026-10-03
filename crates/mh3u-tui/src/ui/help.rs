@@ -43,7 +43,7 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ),
     (
         "Quests",
-        "every quest in the game: its goal, client, time limit, monsters and both reward boxes with the chance of each item;  /  search by name, goal, monster or reward item;  s  sort (game order, name, stars, wishlist first);  ★ = it gives something the wishlist is short of;  PageUp/PageDown  scroll",
+        "every quest in the game: its goal, client, time limit, monsters and both reward boxes with the chance of each item;  /  search by name, goal, monster or reward item;  m  show the quest's monster on the Monsters tab (a list to choose from when there are several);  s  sort (game order, name, stars, wishlist first);  ★ = it gives something the wishlist is short of;  PageUp/PageDown  scroll",
     ),
     (
         "Families",

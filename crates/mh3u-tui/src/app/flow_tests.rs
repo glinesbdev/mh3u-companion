@@ -379,3 +379,40 @@ fn the_hunt_plan_sends_you_to_a_quest_for_what_no_monster_drops() {
     assert!(app.hunts.plan.steps.iter().all(|s| matches!(s.origin, Origin::Monster { .. })));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn m_on_a_quest_shows_its_monster_and_asks_which_when_there_are_several() {
+    let dir = temp_dir("questmonster");
+    let Some(mut app) = app_in(&dir) else { return };
+
+    // one monster: straight to the Monsters tab
+    app.show_quest(1204);
+    press(&mut app, "m");
+    assert_eq!(app.tab, Tab::Monsters);
+    assert_eq!(app.monsters.selected, Some(42), "Arzuros");
+
+    // two monsters (a Barroth and a Great Jaggi): a list to choose from
+    app.show_quest(1403);
+    press(&mut app, "m");
+    assert_eq!(app.tab, Tab::Quests, "still on the quest while choosing");
+    let choice = app.quests.choosing.as_ref().expect("a list of monsters");
+    assert_eq!(choice.monsters, [8, 12]);
+    key(&mut app, KeyCode::Down);
+    key(&mut app, KeyCode::Enter);
+    assert!(app.quests.choosing.is_none());
+    assert_eq!((app.tab, app.monsters.selected), (Tab::Monsters, Some(12)));
+
+    // Esc closes the list without going anywhere
+    app.show_quest(1403);
+    press(&mut app, "m");
+    key(&mut app, KeyCode::Esc);
+    assert!(app.quests.choosing.is_none());
+    assert_eq!(app.tab, Tab::Quests);
+
+    // a quest with no large monster says so
+    app.show_quest(1308);
+    press(&mut app, "m");
+    assert_eq!(app.tab, Tab::Quests);
+    assert!(app.status.contains("no large monster"), "{}", app.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}

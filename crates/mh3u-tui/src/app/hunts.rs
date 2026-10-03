@@ -79,11 +79,7 @@ impl App {
                     return true;
                 };
                 match origin {
-                    Origin::Monster { monster, .. } => {
-                        self.monsters.selected = Some(monster);
-                        self.monsters.scroll = 0;
-                        self.tab = Tab::Monsters;
-                    }
+                    Origin::Monster { monster, .. } => self.show_monster(monster),
                     Origin::Quest(id) => self.show_quest(id),
                 }
             }

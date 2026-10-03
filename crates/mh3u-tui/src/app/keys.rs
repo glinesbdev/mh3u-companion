@@ -23,6 +23,8 @@ impl App {
             self.confirm_quit = false;
         } else if self.tree.is_some() {
             self.tree_key(code);
+        } else if self.quests.choosing.is_some() {
+            self.monster_choice_key(code);
         } else if self.builds.skill_picker.is_some() {
             self.picker_key(code);
         } else if self.builds.name_prompt.is_some() {

@@ -60,6 +60,7 @@ pub(super) fn draw_quests(f: &mut Frame, app: &mut App, area: Rect) {
         right,
     );
     scrollbar(f, right, total, Some(scroll));
+    draw_monster_choice(f, app);
 }
 
 /// `3★`, or `-` for a quest with no star rank.
@@ -115,4 +116,27 @@ fn quest_lines(app: &App, q: &Quest) -> Vec<Line<'static>> {
         }
     }
     lines
+}
+
+/// The popup that asks which of a quest's monsters to show.
+fn draw_monster_choice(f: &mut Frame, app: &mut App) {
+    let Some(mut choice) = app.quests.choosing.take() else { return };
+    let area = f.area();
+    let rows: Vec<ListItem> = choice
+        .monsters
+        .iter()
+        .map(|&m| ListItem::new(app.game.monster_name(m).unwrap_or("?").to_string()))
+        .collect();
+    let (w, h) = (36.min(area.width), (rows.len() as u16 + 2).min(area.height));
+    let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
+    f.render_widget(Clear, popup);
+    f.render_stateful_widget(
+        List::new(rows)
+            .block(theme::pane(" Show which monster? · Enter · Esc ", true))
+            .highlight_style(theme::selection())
+            .highlight_symbol(theme::SELECTION_MARK),
+        popup,
+        &mut choice.state,
+    );
+    app.quests.choosing = Some(choice);
 }

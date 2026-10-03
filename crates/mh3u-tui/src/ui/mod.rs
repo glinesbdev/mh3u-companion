@@ -181,7 +181,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 if clear {
                     keys.push(("x", "clear"));
                 }
-                keys.extend([("s", "sort"), ("PgUp/PgDn", "scroll")]);
+                keys.extend([("m", "monster"), ("s", "sort"), ("PgUp/PgDn", "scroll")]);
             }
             Tab::Families => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);

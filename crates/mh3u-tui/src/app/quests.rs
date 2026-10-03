@@ -52,8 +52,17 @@ struct QuestText {
     items: Vec<String>,
 }
 
+/// The popup that asks which of a quest's monsters to show.
+pub struct MonsterChoice {
+    /// Monster ids (name table), in the order the quest lists them.
+    pub monsters: Vec<u16>,
+    pub state: ListState,
+}
+
 pub struct QuestTab {
     pub rows: Vec<QuestRow>,
+    /// Open while choosing among a quest's monsters.
+    pub choosing: Option<MonsterChoice>,
     pub state: ListState,
     pub search: String,
     pub sort: QuestSort,
@@ -84,6 +93,7 @@ impl QuestTab {
             .collect();
         QuestTab {
             rows: Vec::new(),
+            choosing: None,
             state: ListState::default().with_selected(Some(0)),
             search: String::new(),
             sort: QuestSort::default(),
@@ -165,6 +175,58 @@ impl App {
         self.tab = Tab::Quests;
     }
 
+    /// Go to the Monsters tab for the highlighted quest's monster; with several, ask which.
+    fn show_quest_monster(&mut self) {
+        let monsters: Vec<u16> = self
+            .quests
+            .selected(self.game.quests())
+            .map(|q| {
+                q.monsters
+                    .iter()
+                    .copied()
+                    .filter(|&m| self.game.monster_name(m).is_some())
+                    .collect()
+            })
+            .unwrap_or_default();
+        match monsters.as_slice() {
+            [] => self.status = "this quest has no large monster to show".to_string(),
+            &[only] => self.show_monster(only),
+            _ => {
+                self.quests.choosing = Some(MonsterChoice {
+                    monsters,
+                    state: ListState::default().with_selected(Some(0)),
+                });
+            }
+        }
+    }
+
+    /// Open the Monsters tab on one monster.
+    pub(super) fn show_monster(&mut self, monster: u16) {
+        self.monsters.selected = Some(monster);
+        self.monsters.scroll = 0;
+        self.tab = Tab::Monsters;
+    }
+
+    /// Keys while the monster popup is open: move, Enter shows the monster, Esc closes.
+    pub(super) fn monster_choice_key(&mut self, code: KeyCode) {
+        let Some(choice) = self.quests.choosing.as_mut() else { return };
+        let last = choice.monsters.len().saturating_sub(1);
+        let at = choice.state.selected().unwrap_or(0);
+        match code {
+            KeyCode::Down | KeyCode::Char('j') => choice.state.select(Some((at + 1).min(last))),
+            KeyCode::Up | KeyCode::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
+            KeyCode::Enter => {
+                let monster = choice.monsters.get(at).copied();
+                self.quests.choosing = None;
+                if let Some(monster) = monster {
+                    self.show_monster(monster);
+                }
+            }
+            KeyCode::Esc | KeyCode::Char('q') => self.quests.choosing = None,
+            _ => {}
+        }
+    }
+
     pub(super) fn quests_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('/') => self.searching = true,
@@ -173,6 +235,7 @@ impl App {
                 self.refresh_quests();
             }
             KeyCode::Char('x') => self.clear_search(),
+            KeyCode::Char('m') => self.show_quest_monster(),
             KeyCode::PageDown => self.quests.scroll = self.quests.scroll.saturating_add(10),
             KeyCode::PageUp => self.quests.scroll = self.quests.scroll.saturating_sub(10),
             _ => return false,
