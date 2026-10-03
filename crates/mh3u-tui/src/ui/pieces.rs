@@ -1,0 +1,236 @@
+//! What the Crafting, Equipment and Wishlist tabs say about a piece: stats, blacksmith status and cost.
+
+use super::*;
+
+/// A section heading with the forging cost beside it: `Create from scratch · 300 z (seen)`.
+/// The cost is green when the hunter can pay it, and red with the shortfall when not.
+pub(super) fn cost_heading(title: &str, cost: Option<(u32, Source)>, zenny: u32) -> Line<'static> {
+    let mut spans = vec![Span::styled(title.to_string(), bold())];
+    match cost {
+        Some((c, source)) => {
+            let from = match source {
+                Source::Seen => "seen",
+                Source::Notes => "from your notes",
+                Source::Learned => "recipe and cost learned from your game",
+                Source::Game => "game data",
+            };
+            spans.push(Span::raw(" · "));
+            spans.extend(cost_spans(c, zenny));
+            spans.push(Span::styled(format!(" ({from})"), muted()));
+        }
+        None => spans.push(Span::styled(" · cost not seen yet", muted())),
+    }
+    Line::from(spans)
+}
+
+/// `1,150 z` in green if affordable, or `1,150 z` in red followed by `(short 400 z)`.
+pub(super) fn cost_spans(cost: u32, zenny: u32) -> Vec<Span<'static>> {
+    let amount = format!("{} z", group_digits(u64::from(cost)));
+    if cost <= zenny {
+        vec![Span::styled(amount, good())]
+    } else {
+        vec![
+            Span::styled(amount, bad()),
+            Span::styled(format!(" (short {} z)", group_digits(u64::from(cost - zenny))), bad()),
+        ]
+    }
+}
+
+/// An armor piece's stats, one fact per line with the colors the rest of the screen uses.
+pub(super) fn armor_lines(app: &App, a: &mh3u_core::armor::ArmorStats) -> Vec<Line<'static>> {
+    let mut lines = vec![Line::from(vec![
+        theme::rarity_badge(a.rarity),
+        Span::raw(" "),
+        Span::styled(theme::gems(a.slots), accent()),
+        Span::styled(format!("  Defense {}", a.defense), bold()),
+        Span::styled(" (base)", muted()),
+    ])];
+    let class = match a.class {
+        Some(mh3u_core::armor::ArmorClass::Both) => "Blademaster & Gunner",
+        Some(c) => c.label(),
+        None => "?",
+    };
+    let gender = match a.gender {
+        Some(mh3u_core::armor::Gender::Both) => "Male & Female",
+        Some(g) => g.label(),
+        None => "?",
+    };
+    lines.push(Line::from(vec![
+        Span::styled("For ", muted()),
+        Span::raw(class),
+        Span::styled(" · ", muted()),
+        Span::raw(gender),
+    ]));
+    let [fire, water, thunder, ice, dragon] = a.resist;
+    let mut resist = Vec::new();
+    for (name, value) in [
+        ("Fire", fire),
+        ("Water", water),
+        ("Ice", ice),
+        ("Thunder", thunder),
+        ("Dragon", dragon),
+    ] {
+        if !resist.is_empty() {
+            resist.push(Span::raw("  "));
+        }
+        resist.push(Span::styled(name, theme::element_style(name)));
+        resist.push(Span::styled(format!(" {value:+}"), theme::signed_style(i32::from(value))));
+    }
+    lines.push(Line::from(resist));
+    for &(id, pts) in &a.skills {
+        lines.push(Line::from(vec![
+            Span::raw(format!("  {:<18}", app.game.skill_name(id).unwrap_or("?"))),
+            Span::styled(format!("{pts:+}"), theme::signed_style(i32::from(pts))),
+        ]));
+        if app.skill_info
+            && let Some(text) = app.game.skill_description(id)
+        {
+            lines.push(Line::styled(format!("    {text}"), muted()));
+        }
+    }
+    lines
+}
+
+/// A weapon's stats: rarity, gem slots, attack and affinity.
+pub(super) fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
+    let mut lines = vec![Line::from(vec![
+        theme::rarity_badge(w.rarity),
+        Span::raw(" "),
+        Span::styled(theme::gems(w.slots), accent()),
+        Span::styled(format!("  Attack {}", w.attack), bold()),
+    ])];
+    if w.affinity != 0 {
+        lines.push(Line::from(vec![
+            Span::styled("Affinity ", muted()),
+            Span::styled(format!("{:+}%", w.affinity), theme::signed_style(i32::from(w.affinity))),
+        ]));
+    }
+    lines
+}
+
+/// Whether the blacksmith offers a piece, by the rule in `mh3u_core::blacksmith` and from pieces seen on offer before.
+pub(super) fn unlock_line(app: &App, kind: u8, id: u16) -> Option<Line<'static>> {
+    use mh3u_core::{blacksmith::Unlock, drops::Rank};
+    let label = |text: &str, style: Style| -> Line<'static> {
+        Line::from(vec![Span::styled("Blacksmith  ", muted()), Span::styled(text.to_string(), style)])
+    };
+    let rank = |rank: Rank| match rank {
+        Rank::Low => "low rank",
+        Rank::High => "high rank (6★+ quests when playing alone)",
+        Rank::G => "G rank (after Throne of the Abyss)",
+    };
+    let monsters = |ids: &[u16]| {
+        let mut names: Vec<&str> = ids.iter().filter_map(|&m| app.game.monster_name(m)).collect();
+        names.dedup();
+        let more = names.len().saturating_sub(4);
+        names.truncate(4);
+        let mut text = names.join(", ");
+        if more > 0 {
+            text += &format!(" and {more} more");
+        }
+        text
+    };
+    Some(match app.offer(kind, id)? {
+        Offer::Earlier => label("✔ on offer (seen earlier; the list never shrinks)", good()),
+        Offer::Rule(Unlock::Starter) => label("✔ starting gear, always on offer", good()),
+        Offer::Rule(Unlock::Hunted(m)) => label(
+            &format!(
+                "✔ on offer (you have hunted {}, which drops its first material)",
+                app.game.monster_name(m).unwrap_or("?")
+            ),
+            good(),
+        ),
+        Offer::Rule(Unlock::NeedsHunt(r, ids)) => label(&format!("not on offer yet: hunt {} in {}", monsters(&ids), rank(r)), warn()),
+        Offer::Rule(Unlock::NeedsRank(r)) => label(&format!("not on offer yet: its first material drops only in {}", rank(r)), warn()),
+        Offer::Rule(Unlock::Special) => label("a special piece, unlocked some other way", muted()),
+        Offer::Rule(Unlock::Unknown(_)) => label("unknown how this is unlocked (its first material is not a monster drop)", muted()),
+    })
+}
+
+/// The details of one piece of equipment: stats, then what it takes to create or upgrade it with the materials you have.
+/// `craftable` is `Some` on the Crafting tab, where the piece may not be owned; `None` on the Equipment tab.
+pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<bool>) -> Vec<Line<'static>> {
+    let zenny = app.save.zenny;
+    let mut lines: Vec<Line> = vec![
+        Line::styled(name.to_string(), bold()),
+        Line::styled(app.game.equipment_kind_label(kind).unwrap_or("?").to_string(), muted()),
+    ];
+    if let Some(text) = app.game.equipment_description(kind, id) {
+        lines.push(Line::styled(text.to_string(), muted()));
+    }
+    if let Some(a) = app.game.armor_stats(kind, id) {
+        lines.extend(armor_lines(app, a));
+    } else if let Some(w) = app.game.weapon_stats(kind, id) {
+        lines.extend(weapon_lines(w));
+    }
+    lines.extend(unlock_line(app, kind, id));
+    lines.push(Line::raw(""));
+    if let Some(recipe) = app.create_recipe(kind, id) {
+        lines.push(cost_heading("Create from scratch", app.cost(kind, id, Route::Create), zenny));
+        for m in &recipe.materials {
+            lines.push(theme::material_line(
+                app.game.item_name(m.id).unwrap_or("?"),
+                app.save.item_count(m.id),
+                u32::from(m.count),
+            ));
+        }
+        lines.push(Line::raw(""));
+    }
+    if let Some(up) = app.upgrade_recipe(kind, id) {
+        lines.push(cost_heading("Upgrade from", app.cost(kind, id, Route::Upgrade), zenny));
+        for &parent in &up.parents {
+            let parent_name = app.game.equipment_name(kind, parent).unwrap_or("?");
+            let (mark, style) = if app.save.owns_equipment(kind, parent) {
+                ("● owned", good())
+            } else {
+                ("○ not owned", bad())
+            };
+            lines.push(Line::from(vec![
+                Span::raw(format!("  {parent_name:<24}")),
+                Span::styled(mark, style),
+            ]));
+        }
+        for m in &up.materials {
+            lines.push(theme::material_line(
+                app.game.item_name(m.id).unwrap_or("?"),
+                app.save.item_count(m.id),
+                u32::from(m.count),
+            ));
+        }
+        lines.push(Line::raw(""));
+    }
+    let children = app.upgrade_children(kind, id);
+    if !children.is_empty() {
+        lines.push(Line::from(vec![
+            Span::styled("Upgrades into", bold()),
+            Span::styled("  (t for the tree)", muted()),
+        ]));
+        for child in children {
+            let child_name = app.game.equipment_name(kind, child).unwrap_or("?");
+            let (mark, style) = if app.save.owns_equipment(kind, child) {
+                ("● owned", good())
+            } else {
+                ("", muted())
+            };
+            lines.push(Line::from(vec![
+                Span::raw(format!("  {child_name:<24}")),
+                Span::styled(mark, style),
+            ]));
+        }
+        lines.push(Line::raw(""));
+    }
+    if let Some(craftable) = craftable {
+        lines.push(if craftable {
+            Line::styled("✔ You can make this now.", good())
+        } else {
+            Line::styled("✘ Not available yet.", bad())
+        });
+    }
+    let any_cost_missing = (app.create_recipe(kind, id).is_some() && app.cost(kind, id, Route::Create).is_none())
+        || (app.upgrade_recipe(kind, id).is_some() && app.cost(kind, id, Route::Upgrade).is_none());
+    if any_cost_missing {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled("Costs are learned by watching you craft in live mode.", muted()));
+    }
+    lines
+}

@@ -1,0 +1,165 @@
+//! The Items and Equipment tabs: the pouch, the item box, the equipment box and the worn gear.
+
+use super::*;
+
+/// The upgrade tree popup for one weapon.
+pub struct TreeView {
+    pub kind: u8,
+    pub tree: crate::tree::Tree,
+    /// First visible line; the drawing code keeps it inside the tree.
+    pub scroll: u16,
+}
+
+impl App {
+    /// Items whose names match the item search, best match first (or unfiltered, in their given order).
+    pub(super) fn filter_items(&self, stacks: &[ItemStack]) -> Vec<(u32, ItemStack)> {
+        let words: Vec<String> = self.item_search.split_whitespace().map(str::to_lowercase).collect();
+        stacks
+            .iter()
+            .filter_map(|&stack| {
+                let name = self.game.item_name(stack.id).unwrap_or("?").to_lowercase();
+                let mut total = 0;
+                for w in &words {
+                    total += search::score(w, &name)?;
+                }
+                let phrase = words.join(" ");
+                if name == phrase {
+                    total += 6000;
+                } else if words.len() > 1 && name.contains(&phrase) {
+                    total += 3000;
+                }
+                Some((total, stack))
+            })
+            .collect()
+    }
+
+    /// Rebuild the pouch and item box lists for the current search and sort order.
+    pub(super) fn refresh_box(&mut self) {
+        let searching = !self.item_search.trim().is_empty();
+        let mut pouch = self.filter_items(&self.save.pouch);
+        if searching {
+            pouch.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
+        }
+        self.pouch_view = pouch.into_iter().map(|(_, s)| s).collect();
+
+        let mut view = self.filter_items(&self.save.item_box);
+        match self.box_sort {
+            BoxSort::BoxOrder if searching => view.sort_by_key(|(score, _)| std::cmp::Reverse(*score)),
+            BoxSort::BoxOrder => {}
+            BoxSort::Name => view.sort_by_key(|(_, s)| self.game.item_name(s.id).unwrap_or("?").to_lowercase()),
+            BoxSort::Quantity => view.sort_by_key(|(_, s)| std::cmp::Reverse(s.count)),
+        }
+        self.box_view = view.into_iter().map(|(_, s)| s).collect();
+        let sel = self.box_state.selected().unwrap_or(0).min(self.box_view.len().saturating_sub(1));
+        self.box_state.select(Some(sel));
+        let sel = self
+            .pouch_state
+            .selected()
+            .unwrap_or(0)
+            .min(self.pouch_view.len().saturating_sub(1));
+        self.pouch_state.select(Some(sel));
+    }
+
+    /// Put the equipment box in display order, keeping the same item selected when it is still there.
+    pub(super) fn refresh_equipment(&mut self) {
+        let kept = self.equip_state.selected().and_then(|i| self.equip_view.get(i)).copied();
+        let boxed = &self.save.equipment_box;
+        let name = |i: usize| self.game.equipment_name(boxed[i].kind, boxed[i].id).unwrap_or("?").to_lowercase();
+        let rarity = |i: usize| self.game.equipment_rarity(boxed[i].kind, boxed[i].id).unwrap_or(0);
+        let mut view: Vec<usize> = (0..boxed.len()).collect();
+        match self.equip_sort {
+            EquipSort::BoxOrder => {}
+            EquipSort::Name => view.sort_by_key(|&i| (name(i), kind_rank(boxed[i].kind))),
+            EquipSort::Rarity => view.sort_by_key(|&i| (std::cmp::Reverse(rarity(i)), kind_rank(boxed[i].kind), name(i))),
+            EquipSort::Type => view.sort_by_key(|&i| (kind_rank(boxed[i].kind), name(i))),
+            EquipSort::WornFirst => view.sort_by_key(|&i| (!self.save.is_worn(&boxed[i]), kind_rank(boxed[i].kind), name(i))),
+        }
+        let at = kept
+            .and_then(|k| view.iter().position(|&i| i == k))
+            .unwrap_or_else(|| self.equip_state.selected().unwrap_or(0).min(view.len().saturating_sub(1)));
+        self.equip_view = view;
+        self.equip_state.select(Some(at));
+    }
+
+    /// Whether the Items tab's highlight is on the pouch: when asked for with `p`, or when the box list has nothing to highlight.
+    pub fn items_on_pouch(&self) -> bool {
+        !self.pouch_view.is_empty() && (self.pouch_focus || self.box_view.is_empty())
+    }
+
+    /// The worn armor pieces as (equipment kind, box entry), in the order head, body, arms, waist, legs.
+    pub fn worn_armor(&self) -> Vec<(u8, &mh3u_core::save::Equipment)> {
+        [5u8, 1, 2, 3, 4]
+            .into_iter()
+            .filter_map(|kind| {
+                let e = self.save.equipment_box.iter().find(|e| e.kind == kind && self.save.is_worn(e))?;
+                Some((kind, e))
+            })
+            .collect()
+    }
+
+    /// The worn weapon, if any.
+    pub fn worn_weapon(&self) -> Option<&mh3u_core::save::Equipment> {
+        self.save
+            .equipment_box
+            .iter()
+            .find(|e| (7..=19).contains(&e.kind) && self.save.is_worn(e))
+    }
+
+    /// The equipment-box entry that is highlighted on the Equipment tab.
+    pub fn selected_equipment(&self) -> Option<&mh3u_core::save::Equipment> {
+        let i = *self.equip_view.get(self.equip_state.selected()?)?;
+        self.save.equipment_box.get(i)
+    }
+
+    /// The weapon highlighted on the current tab, as (kind, id). `None` on tabs with no selection.
+    pub fn highlighted_equipment(&self) -> Option<(u8, u16)> {
+        match self.tab {
+            Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
+            Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
+            Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
+            Tab::Items | Tab::Worn | Tab::Monsters | Tab::Builds => None,
+        }
+    }
+
+    /// The weapons (same kind) that `id` is upgraded from, from the game data or learned in play.
+    pub fn upgrade_parents(&self, kind: u8, id: u16) -> Vec<u16> {
+        self.upgrade_recipe(kind, id)
+            .map(|u| u.parents.iter().copied().filter(|&p| p != 0).collect())
+            .unwrap_or_default()
+    }
+
+    /// The weapons (same kind) that `id` can be upgraded into, from the game data or learned in play.
+    pub fn upgrade_children(&self, kind: u8, id: u16) -> Vec<u16> {
+        let mut kids = self.game.upgrade_children(kind, id);
+        kids.extend(
+            self.learned_upgrade
+                .iter()
+                .filter(|((k, child), u)| *k == kind && *child != id && u.parents.contains(&id))
+                .map(|((_, child), _)| *child),
+        );
+        kids.sort_unstable();
+        kids.dedup();
+        kids
+    }
+
+    /// Open the upgrade tree for the highlighted weapon. Armor has no upgrade line in the game data, so nothing opens for it.
+    pub(super) fn open_tree(&mut self) {
+        let Some((kind, id)) = self.highlighted_equipment() else { return };
+        if !(7..=19).contains(&kind) || kind == 12 {
+            self.status = "Only weapons have an upgrade tree.".to_string();
+            return;
+        }
+        let tree = crate::tree::build(id, &|w| self.upgrade_parents(kind, w), &|w| self.upgrade_children(kind, w), 400);
+        let scroll = tree.selected_row.saturating_sub(3) as u16;
+        self.tree = Some(TreeView { kind, tree, scroll });
+    }
+
+    /// The sort label for the item box: with a search, the default order is "best match".
+    pub fn box_sort_label(&self) -> &'static str {
+        if self.box_sort == BoxSort::BoxOrder && !self.item_search.trim().is_empty() {
+            "best match"
+        } else {
+            self.box_sort.label()
+        }
+    }
+}
