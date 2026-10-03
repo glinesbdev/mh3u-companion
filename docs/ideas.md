@@ -100,5 +100,4 @@ Not features, but they would settle open questions in the notes. Each takes a fe
 
 - Screen-drawing tests with ratatui's `TestBackend`, so a layout change that breaks a tab is caught without running the app (today
   `scripts/screenshots.sh` does this by hand).
-- Release builds for Linux attached to a GitHub release; a `cargo install` line in the README. The repository is private for now;
-  making it public needs a look through the history and docs for anything personal first.
+- Release builds for Linux attached to a GitHub release; a `cargo install` line in the README.

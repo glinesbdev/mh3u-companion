@@ -11,7 +11,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SAVE=${SAVE:-snapshots/03-latest/user1}
-NAME=${NAME:-Shamus}
+# the hunter's name as the save has it (21 bytes at 0x2b), replaced with "Hunter" in the pictures
+NAME=${NAME:-$(dd if="$SAVE" bs=1 skip=43 count=21 2>/dev/null | tr -d '\0')}
 COLS=${COLS:-118}
 ROWS=${ROWS:-34}
 SESSION=mh3u-shots
