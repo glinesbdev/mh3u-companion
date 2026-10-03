@@ -70,6 +70,9 @@ keys Right Right Right    # Monsters (Crafting, Wishlist, Monsters)
 keys s s                  # the ones the wishlist needs first
 shot monsters
 
+keys Right                # Hunt plan
+shot hunts
+
 keys Right                # Builds
 keys a
 keys 'psychic'

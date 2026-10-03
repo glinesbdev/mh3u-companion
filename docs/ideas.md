@@ -22,9 +22,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Where to get things
 
-- **Farming plan:** for the wishlist's missing materials, list the monsters that drop them, with the best chance, rank and kind of
-  drop, and group them so one hunt covers several items. The Monsters tab already stars what the wishlist needs; this would go
-  further and say "hunt X in high rank for 4 of your 7 missing materials".
+- **Smarter hunt plans.** The Hunt plan tab picks the monsters that cover the most missing materials, but not yet: how many hunts a
+  material is likely to take (from the chances and the number of carves), limiting the plan to the ranks the hunter has reached
+  (**Needs:** the save's hunter rank found), or including quests that give the materials as rewards (**Needs:** the quest files).
 - **Quest finder:** which quests have a monster (or a reward). **Needs:** the `.quest` files decoded (QTDS: text, then binary data;
   monsters, rewards and the quest rank are in the binary part). Quests are spread over several folders (`quest/us`, `quest/btl`,
   `quest/support` and `DLC/us`); the finder should cover them all and say which come from downloadable content.

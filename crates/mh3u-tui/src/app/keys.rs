@@ -113,6 +113,7 @@ impl App {
             Tab::Wishlist => self.wishlist_key(code),
             Tab::Equipment => self.equipment_key(code),
             Tab::Monsters => self.monsters_key(code),
+            Tab::Hunts => self.hunts_key(code),
             Tab::Worn | Tab::Builds => false,
         }
     }

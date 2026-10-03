@@ -13,6 +13,7 @@ mod builds;
 mod crafting;
 mod equipment;
 mod help;
+mod hunts;
 mod items;
 mod monsters;
 mod pieces;
@@ -25,6 +26,7 @@ use builds::{draw_builds, draw_name_prompt, draw_piece_picker, draw_skill_picker
 use crafting::draw_crafting;
 use equipment::draw_equipment;
 use help::draw_help;
+use hunts::draw_hunts;
 use items::{draw_items, wrap_items};
 use monsters::draw_monsters;
 use pieces::{cost_spans, piece_details, unlock_line};
@@ -95,6 +97,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Monsters => draw_monsters(f, app, body),
         Tab::Crafting => draw_crafting(f, app, body),
         Tab::Wishlist => draw_wishlist(f, app, body),
+        Tab::Hunts => draw_hunts(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
     }
 
@@ -166,6 +169,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
             Tab::Worn => keys.push(("i", "skill info")),
             Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
+            Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
             Tab::Builds => {
                 use crate::app::BuildFocus;
                 keys.push(("f", "switch list"));

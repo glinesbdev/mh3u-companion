@@ -30,6 +30,18 @@ changing them. When a rule here stops being true, change the rule in the same co
 | A colour, symbol or shared widget | `theme.rs`, so the screen keeps one visual language |
 | A command-line option | the `Cli` struct (clap); an explorer command goes in `mh3u-tools` |
 
+## Words
+
+Use the same word for the same thing, in the code, the docs and on screen.
+
+- **Not "farm" or "farming".** The game has a farm (the village's), so a feature about getting materials is a **hunt plan**, a monster
+  is **hunted**, a drop comes from a **carve**, a **capture** or a **part break**.
+- **"On offer"** is what the blacksmith lists; **"owned"** is in the equipment box; **"seen on offer"** is what the app remembers
+  (the blacksmith never takes a piece off). Do not use "unlocked" for a piece, the app only infers it.
+- A **slot** is a save slot (hunter) on the command line and a **gear slot** (head, body...) in a set. Say which when it could be
+  either; in code `slot` is the save slot and `SLOTS` in `templates` are the gear slots.
+- **Template** is a saved set; **set** is a found or worn set of armor; **build** is the feature.
+
 ## Size and shape
 
 These are limits to notice, not to game. If you hit one, split by meaning, not by line count.

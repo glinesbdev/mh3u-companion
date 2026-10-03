@@ -114,3 +114,47 @@ fn a_build_is_searched_saved_as_a_template_edited_and_remembered_for_the_hunter(
     assert!(dir.join("config/builds-2.txt").exists() && !dir.join("config/builds.txt").exists());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_hunt_plan_follows_the_wishlist_and_opens_the_monsters_drops() {
+    let dir = temp_dir("hunts");
+    let Some(mut app) = app_in(&dir) else { return };
+    // a few head pieces with a material the hunter lacks and a monster drops
+    let lacking: Vec<(u8, u16)> = app
+        .game
+        .piece_ids(5)
+        .filter(|&id| {
+            !app.save.owns_equipment(5, id)
+                && app.plan(5, id).is_some_and(|p| {
+                    p.materials
+                        .iter()
+                        .any(|m| app.save.item_count(m.id) < u32::from(m.count) && !app.game.drops().sources(m.id).is_empty())
+                })
+        })
+        .take(3)
+        .map(|id| (5, id))
+        .collect();
+    assert!(!lacking.is_empty());
+    app.wish.items = lacking;
+    app.after_wishlist_change();
+    for _ in 0..6 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert_eq!(app.tab, Tab::Hunts);
+    assert!(
+        !app.hunts.stale && !app.hunts.plan.steps.is_empty(),
+        "a plan was made when the tab opened"
+    );
+    let first = app.hunts.plan.steps[0].monster;
+    press(&mut app, "r");
+    assert_eq!(app.hunts.filter.label(), "Low rank");
+    let shown = app.hunts.plan.steps.first().map(|s| s.monster);
+    key(&mut app, KeyCode::Enter);
+    assert_eq!(app.tab, Tab::Monsters, "Enter shows the monster");
+    assert_eq!(app.monsters.selected, shown);
+    let _ = first;
+    app.wish.items.clear();
+    app.after_wishlist_change();
+    assert!(app.hunts.stale, "a wishlist change makes the plan stale");
+    let _ = std::fs::remove_dir_all(&dir);
+}

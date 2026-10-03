@@ -85,7 +85,7 @@ impl App {
             .into_iter()
             .filter_map(|(item, n)| {
                 let have = self.save.item_count(item);
-                (have < n).then_some((item, n - have))
+                n.checked_sub(have).filter(|&short| short > 0).map(|short| (item, short))
             })
             .collect()
     }
@@ -182,6 +182,7 @@ impl App {
         let sel = self.wish.state.selected().unwrap_or(0).min(self.wish.items.len().saturating_sub(1));
         self.wish.state.select(Some(sel));
         self.save_wishlist();
+        self.hunts.stale = true;
     }
 
     pub(super) fn save_wishlist(&mut self) {

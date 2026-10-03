@@ -25,6 +25,10 @@ impl App {
         self.refresh_equipment();
         self.refresh_pieces();
         self.builds.stale = true;
+        self.hunts.stale = true;
+        if self.tab == Tab::Hunts {
+            self.refresh_hunts();
+        }
         if self.tab == Tab::Builds {
             self.refresh_builds();
         }

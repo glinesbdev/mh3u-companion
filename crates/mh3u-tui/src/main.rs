@@ -2,6 +2,7 @@ mod app;
 mod builds;
 mod commands;
 mod files;
+mod hunts;
 mod search;
 mod templates;
 mod theme;

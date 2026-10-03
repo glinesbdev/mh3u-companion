@@ -32,6 +32,7 @@ mod build_manager;
 mod crafting;
 #[cfg(test)]
 mod flow_tests;
+mod hunts;
 mod inventory;
 mod keys;
 mod live;
@@ -45,6 +46,7 @@ pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
 pub use crafting::Crafting;
 pub use crafting::Via;
+pub use hunts::HuntTab;
 pub use inventory::Inventory;
 pub use inventory::TreeView;
 pub use live::EditConsole;
@@ -67,17 +69,19 @@ pub enum Tab {
     Crafting,
     Wishlist,
     Monsters,
+    Hunts,
     Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 7] = [
+    pub const ALL: [Tab; 8] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
         Tab::Crafting,
         Tab::Wishlist,
         Tab::Monsters,
+        Tab::Hunts,
         Tab::Builds,
     ];
 
@@ -89,6 +93,7 @@ impl Tab {
             Tab::Crafting => "Crafting",
             Tab::Wishlist => "Wishlist",
             Tab::Monsters => "Monsters",
+            Tab::Hunts => "Hunt plan",
             Tab::Builds => "Builds",
         }
     }
@@ -123,6 +128,8 @@ pub struct App {
     pub craft: Crafting,
     pub wish: WishList,
     pub monsters: MonsterTab,
+    /// The Hunt plan tab.
+    pub hunts: HuntTab,
     /// The Builds tab.
     pub builds: BuildManager,
     /// Forging costs seen in the game and the watcher that finds them.
@@ -179,6 +186,7 @@ impl App {
             craft: Crafting::default(),
             wish: WishList::new(wishlist, auto_parents),
             monsters: MonsterTab::default(),
+            hunts: HuntTab::default(),
             builds,
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
@@ -225,6 +233,9 @@ impl App {
         if self.tab == Tab::Builds && self.builds.stale {
             self.refresh_builds();
         }
+        if self.tab == Tab::Hunts && self.hunts.stale {
+            self.refresh_hunts();
+        }
     }
 
     fn move_selection(&mut self, step: isize) {
@@ -246,6 +257,7 @@ impl App {
             Tab::Equipment => (&mut self.inv.equip_state, self.inv.equip_view.len()),
             Tab::Crafting => (&mut self.craft.state, self.craft.pieces.len()),
             Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
+            Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
             Tab::Builds => match self.builds.focus {
                 BuildFocus::Sets => (&mut self.builds.result_state, self.builds.results.len()),
                 BuildFocus::Skills => (&mut self.builds.target_state, self.builds.settings.targets.len()),

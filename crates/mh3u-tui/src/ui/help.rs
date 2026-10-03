@@ -34,6 +34,10 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ("Worn", "totals for what you are wearing; i shows what each skill does"),
     ("Monsters", "what each monster drops; s sort, ★ = the wishlist still needs it"),
     (
+        "Hunt plan",
+        "the monsters to hunt, best first, for the materials the wishlist is short of: each hunt covers as many as it can and the next picks up the rest; r  limit it to one rank;  Enter  show that monster's drops",
+    ),
+    (
         "Builds",
         "a  add a skill to look for (type to find it, Enter);  + / -  its points;  x  remove it;  f  switch between the skills, the sets found and your templates",
     ),

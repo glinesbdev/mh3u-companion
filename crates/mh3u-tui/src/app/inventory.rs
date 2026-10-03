@@ -164,7 +164,7 @@ impl App {
                 .map(|p| (p.kind, p.id)),
             Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
             Tab::Wishlist => self.wish.state.selected().and_then(|i| self.wish.items.get(i)).copied(),
-            Tab::Items | Tab::Worn | Tab::Monsters | Tab::Builds => None,
+            Tab::Items | Tab::Worn | Tab::Monsters | Tab::Hunts | Tab::Builds => None,
         }
     }
 
