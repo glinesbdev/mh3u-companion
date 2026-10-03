@@ -161,7 +161,8 @@ fn draw_tree(f: &mut Frame, app: &mut App) {
             spans.push(theme::rarity_badge(r));
         }
         if let Some(w) = app.game.weapon_stats(kind, row.id) {
-            spans.push(Span::styled(format!("atk {}", w.attack), muted()));
+            // the rarity badge is three cells wide (`R4 `, `R10`), so this space keeps `R10` off the attack
+            spans.push(Span::styled(format!(" atk {}", w.attack), muted()));
         }
         if !owned && app.can_make_now(kind, row.id) {
             spans.push(Span::styled("  ✔ can make", good()));
