@@ -36,6 +36,7 @@ app/
   hunts.rs          Hunt plan tab (state, refresh, keys)
   families.rs       Families tab (armor grouped by set name)
   quests.rs         Quests tab (search, sort, wishlist stars)
+  compare.rs        Compare tab (the weapons being compared)
   wishlist.rs       the wishlist, parent weapons, the shopping list
   blacksmith.rs     what is on offer, and the pieces remembered as seen on offer
   build_manager.rs  Builds tab: BuildManager (its state), templates, the popups that edit them
@@ -47,7 +48,7 @@ ui/
   one file per tab, plus pieces.rs (what is said about a piece), help.rs, tree.rs
 ```
 
-Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `templates`
+Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
 `unlocked` and `files` (what is kept on disk, and where).
 

@@ -62,6 +62,10 @@ pub(super) const HELP: &[(&str, &str)] = &[
         "s on a set saves it as a template;  w  put the missing pieces on the wishlist.  In the templates: [ ] pick a slot (head... talisman, weapon), Enter swaps its piece (type to find one), n saves what you wear, W wishes only the slot's piece, r rename, x delete. Skills, options and templates are kept per hunter.",
     ),
     (
+        "Compare",
+        "v  (on a weapon in Crafting, Equipment or Wishlist) put it in the comparison, again to take it out: up to four weapons side by side with rarity, attack, affinity, gem slots and what getting it costs, the best of each row marked (attack only between weapons of one type);  x  take the highlighted one out;  c  clear;  Enter  look it up in Crafting",
+    ),
+    (
         "Any weapon",
         "t  upgrade tree: the line down to it and everything it upgrades into (↑/↓ scroll, t or Esc close). A weapon you do not own also shows its cheapest way (forging fees) from what you hold.",
     ),

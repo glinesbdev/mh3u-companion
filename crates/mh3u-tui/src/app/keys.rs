@@ -113,6 +113,7 @@ impl App {
             Tab::Hunts => self.hunts_key(code),
             Tab::Families => self.families_key(code),
             Tab::Quests => self.quests_key(code),
+            Tab::Compare => self.compare_key(code),
             Tab::Worn | Tab::Builds => false,
         }
     }
@@ -207,6 +208,8 @@ impl App {
                 }
             }
             KeyCode::Char('?') => self.show_help = true,
+            // put the highlighted weapon in the comparison
+            KeyCode::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
             KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
             KeyCode::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
             KeyCode::Char(':') if self.console.enabled => {

@@ -10,6 +10,7 @@ use ratatui::{
 };
 
 mod builds;
+mod compare;
 mod crafting;
 mod equipment;
 mod families;
@@ -25,6 +26,7 @@ mod worn;
 
 // the pieces of the screen that the submodules share (their `use super::*` picks these up)
 use builds::{draw_builds, draw_name_prompt, draw_piece_picker, draw_skill_picker};
+use compare::draw_compare;
 use crafting::draw_crafting;
 use equipment::draw_equipment;
 use families::draw_families;
@@ -104,6 +106,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Hunts => draw_hunts(f, app, body),
         Tab::Quests => draw_quests(f, app, body),
         Tab::Families => draw_families(f, app, body),
+        Tab::Compare => draw_compare(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
     }
 
@@ -162,6 +165,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                     ("s", "sort"),
                     ("w", "wish"),
                     ("t", "tree"),
+                    ("v", "compare"),
                 ]);
             }
             Tab::Items => {
@@ -171,8 +175,8 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.push(("s", "sort"));
             }
-            Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree")]),
-            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
+            Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree"), ("v", "compare")]),
+            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("v", "compare"), ("i", "skill info")]),
             Tab::Worn => keys.push(("i", "skill info")),
             Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
             Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
@@ -183,6 +187,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([("m", "monster"), ("s", "sort"), ("PgUp/PgDn", "scroll")]);
             }
+            Tab::Compare => keys.extend([("↑/↓", "move"), ("x", "remove"), ("c", "clear"), ("Enter", "craft")]),
             Tab::Families => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {

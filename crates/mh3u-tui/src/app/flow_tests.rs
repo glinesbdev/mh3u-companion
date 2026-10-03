@@ -468,3 +468,50 @@ fn live_mode_follows_the_hunter_the_game_loads_to_that_slots_lists() {
     assert_eq!(app.wish.items, [(4, 11), (4, 12)]);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
+    let dir = temp_dir("compare");
+    let Some(mut app) = app_in(&dir) else { return };
+    // Crafting tab, a great sword
+    for _ in 0..3 {
+        key(&mut app, KeyCode::Right);
+    }
+    press(&mut app, "/great sword");
+    key(&mut app, KeyCode::Enter);
+    press(&mut app, "v");
+    assert_eq!(app.compare.weapons.len(), 1);
+    key(&mut app, KeyCode::Down);
+    press(&mut app, "v");
+    assert_eq!(app.compare.weapons.len(), 2);
+    press(&mut app, "v"); // the same one again takes it out
+    assert_eq!(app.compare.weapons.len(), 1);
+
+    // armor cannot be compared
+    press(&mut app, "x");
+    press(&mut app, "/jaggi helm");
+    key(&mut app, KeyCode::Enter);
+    press(&mut app, "v");
+    assert_eq!(app.compare.weapons.len(), 1);
+    assert!(app.status.contains("only weapons"), "{}", app.status);
+
+    // the tab holds at most four, x removes one, c clears
+    press(&mut app, "x");
+    press(&mut app, "/sword");
+    key(&mut app, KeyCode::Enter);
+    for _ in 0..8 {
+        press(&mut app, "v");
+        key(&mut app, KeyCode::Down);
+    }
+    assert_eq!(app.compare.weapons.len(), crate::app::MAX_COMPARED);
+    assert!(app.status.contains("holds 4"), "{}", app.status);
+    for _ in 0..6 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert_eq!(app.tab, Tab::Compare);
+    press(&mut app, "x");
+    assert_eq!(app.compare.weapons.len(), crate::app::MAX_COMPARED - 1);
+    press(&mut app, "c");
+    assert!(app.compare.weapons.is_empty());
+    let _ = std::fs::remove_dir_all(&dir);
+}

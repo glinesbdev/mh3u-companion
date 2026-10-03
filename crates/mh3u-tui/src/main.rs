@@ -1,6 +1,7 @@
 mod app;
 mod builds;
 mod commands;
+mod compare;
 mod families;
 mod files;
 mod hunts;

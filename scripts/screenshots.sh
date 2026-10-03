@@ -48,6 +48,7 @@ keys Escape               # clear the search
 keys '/' 'ravager blade' Enter
 keys Home
 shot crafting-weapon
+keys v Down v Up          # two weapons for the comparison, highlight back on the first
 
 keys t                    # upgrade tree
 shot upgrade-tree
@@ -82,6 +83,9 @@ keys Right                # Families
 keys '/' 'jaggi' Enter
 shot families
 keys Escape
+
+keys Right                # Compare
+shot compare
 
 keys Right                # Builds
 keys a

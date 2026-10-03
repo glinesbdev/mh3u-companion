@@ -29,6 +29,7 @@ use std::{
 
 mod blacksmith;
 mod build_manager;
+mod compare;
 mod crafting;
 mod families;
 #[cfg(test)]
@@ -46,6 +47,7 @@ mod wishlist;
 
 pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
+pub use compare::{CompareTab, MAX_COMPARED};
 pub use crafting::Crafting;
 pub use crafting::Via;
 pub use families::FamiliesTab;
@@ -76,11 +78,12 @@ pub enum Tab {
     Hunts,
     Quests,
     Families,
+    Compare,
     Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 10] = [
+    pub const ALL: [Tab; 11] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
@@ -90,6 +93,7 @@ impl Tab {
         Tab::Hunts,
         Tab::Quests,
         Tab::Families,
+        Tab::Compare,
         Tab::Builds,
     ];
 
@@ -104,6 +108,7 @@ impl Tab {
             Tab::Hunts => "Hunt plan",
             Tab::Quests => "Quests",
             Tab::Families => "Families",
+            Tab::Compare => "Compare",
             Tab::Builds => "Builds",
         }
     }
@@ -144,6 +149,8 @@ pub struct App {
     pub families: FamiliesTab,
     /// The Quests tab.
     pub quests: QuestTab,
+    /// The Compare tab.
+    pub compare: CompareTab,
     /// The Builds tab.
     pub builds: BuildManager,
     /// Forging costs seen in the game and the watcher that finds them.
@@ -203,6 +210,7 @@ impl App {
             hunts: HuntTab::default(),
             families: FamiliesTab::new(families),
             quests: quest_tab,
+            compare: CompareTab::default(),
             builds,
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
@@ -280,6 +288,7 @@ impl App {
             Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
             Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
             Tab::Families => (&mut self.families.state, self.families.rows.len()),
+            Tab::Compare => (&mut self.compare.state, self.compare.weapons.len()),
             Tab::Quests => {
                 self.quests.scroll = 0;
                 (&mut self.quests.state, self.quests.rows.len())

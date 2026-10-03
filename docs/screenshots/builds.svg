@@ -32,8 +32,10 @@
 <text x="841.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="860.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Families</text>
 <text x="947.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="966.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Builds</text>
-<line x1="966.4" y1="53.4" x2="1024.0" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="966.4" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
+<text x="1043.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="1062.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Builds</text>
+<line x1="1062.4" y1="53.4" x2="1120.0" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>
