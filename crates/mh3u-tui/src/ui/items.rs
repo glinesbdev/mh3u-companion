@@ -131,9 +131,9 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
         lines.push(Line::styled("Dropped by", bold()));
         // one row per monster and kind of drop, with the chance at each rank
         let mut rows: std::collections::BTreeMap<(u16, mh3u_core::drops::Method), [Option<u8>; 3]> = Default::default();
-        for (monster, rank, method, percent) in sources {
-            let slot = mh3u_core::drops::Rank::ALL.iter().position(|&r| r == rank).unwrap_or(0);
-            rows.entry((monster, method)).or_default()[slot] = Some(percent);
+        for s in sources {
+            let slot = mh3u_core::drops::Rank::ALL.iter().position(|&r| r == s.rank).unwrap_or(0);
+            rows.entry((s.monster, s.method)).or_default()[slot] = Some(s.percent);
         }
         const SHOWN: usize = 12;
         let total = rows.len();

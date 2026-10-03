@@ -96,9 +96,24 @@ pub struct Drop {
     pub percent: u8,
 }
 
+/// One way to get an item: this monster drops it in this rank by this method, with this chance (percent).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Source {
+    pub monster: u16,
+    pub rank: Rank,
+    pub method: Method,
+    pub percent: u8,
+}
+
+/// Every drop list, with the lookups by item and by monster worked out once up front (the app asks for them every frame).
 #[derive(Debug, Default)]
 pub struct Drops {
     lists: HashMap<(u16, Rank, Method), Vec<Drop>>,
+    /// Monster ids that have at least one list, ascending.
+    monsters: Vec<u16>,
+    by_item: HashMap<u16, Vec<Source>>,
+    /// A monster's lists as (method, rank), in display order.
+    by_monster: HashMap<u16, Vec<(Method, Rank)>>,
 }
 
 /// Read the list `ptr` points at, if it is a real drop list.
@@ -165,9 +180,7 @@ pub fn parse(data: &[u8], data_addr: u32) -> Result<Drops> {
             }
         }
     }
-    Ok(Drops {
-        lists: lists_by_name(lists),
-    })
+    Ok(Drops::new(lists_by_name(lists)))
 }
 
 /// The name id of a table row, or `None` if the row belongs to no named monster.
@@ -295,39 +308,53 @@ fn split_group(mut group: Vec<Vec<Drop>>) -> (Option<Vec<Drop>>, Vec<Vec<Drop>>)
 }
 
 impl Drops {
+    fn new(lists: HashMap<(u16, Rank, Method), Vec<Drop>>) -> Drops {
+        let mut by_item: HashMap<u16, Vec<Source>> = HashMap::new();
+        let mut by_monster: HashMap<u16, Vec<(Method, Rank)>> = HashMap::new();
+        for (&(monster, rank, method), list) in &lists {
+            by_monster.entry(monster).or_default().push((method, rank));
+            for d in list {
+                by_item.entry(d.item).or_default().push(Source {
+                    monster,
+                    rank,
+                    method,
+                    percent: d.percent,
+                });
+            }
+        }
+        by_item.values_mut().for_each(|v| v.sort_unstable());
+        by_monster.values_mut().for_each(|v| v.sort_unstable());
+        let mut monsters: Vec<u16> = by_monster.keys().copied().collect();
+        monsters.sort_unstable();
+        Drops {
+            lists,
+            monsters,
+            by_item,
+            by_monster,
+        }
+    }
+
     pub fn list(&self, monster: u16, rank: Rank, method: Method) -> Option<&[Drop]> {
         self.lists.get(&(monster, rank, method)).map(Vec::as_slice)
     }
 
     /// All of a monster's lists as (method, rank, list), ordered by kind of drop and then rank.
-    pub fn lists_for(&self, monster: u16) -> Vec<(Method, Rank, &[Drop])> {
-        let mut out: Vec<(Method, Rank, &[Drop])> = self
-            .lists
-            .iter()
-            .filter(|((m, ..), _)| *m == monster)
-            .map(|((_, rank, method), list)| (*method, *rank, list.as_slice()))
-            .collect();
-        out.sort_unstable_by_key(|&(method, rank, _)| (method, rank));
-        out
+    pub fn lists_for(&self, monster: u16) -> impl Iterator<Item = (Method, Rank, &[Drop])> + '_ {
+        self.by_monster
+            .get(&monster)
+            .into_iter()
+            .flatten()
+            .filter_map(move |&(method, rank)| Some((method, rank, self.list(monster, rank, method)?)))
     }
 
     /// Monster ids that have at least one drop list, ascending.
-    pub fn monsters(&self) -> Vec<u16> {
-        let mut ids: Vec<u16> = self.lists.keys().map(|&(m, ..)| m).collect();
-        ids.sort_unstable();
-        ids.dedup();
-        ids
+    pub fn monsters(&self) -> &[u16] {
+        &self.monsters
     }
 
-    /// Every (monster, rank, method, chance) that can drop `item`, ordered by monster, then rank and method.
-    pub fn sources(&self, item: u16) -> Vec<(u16, Rank, Method, u8)> {
-        let mut out: Vec<(u16, Rank, Method, u8)> = self
-            .lists
-            .iter()
-            .flat_map(|(&(m, r, me), list)| list.iter().filter(move |d| d.item == item).map(move |d| (m, r, me, d.percent)))
-            .collect();
-        out.sort_unstable();
-        out
+    /// Every way to get `item`, ordered by monster, then rank and method.
+    pub fn sources(&self, item: u16) -> &[Source] {
+        self.by_item.get(&item).map_or(&[], Vec::as_slice)
     }
 }
 
@@ -389,8 +416,16 @@ mod tests {
         let d = parse(&section(), ADDR).unwrap();
         let sources = d.sources(105);
         assert_eq!(sources.len(), 9, "monster 5 in 3 ranks x 3 methods");
-        assert!(sources.iter().all(|s| s.0 == 5 && s.3 == 100));
-        assert_eq!(sources[0], (5, Rank::Low, Method::BodyCarve, 100));
+        assert!(sources.iter().all(|s| s.monster == 5 && s.percent == 100));
+        assert_eq!(
+            sources[0],
+            Source {
+                monster: 5,
+                rank: Rank::Low,
+                method: Method::BodyCarve,
+                percent: 100
+            }
+        );
     }
 
     #[test]
@@ -486,16 +521,21 @@ mod real_data {
         );
         // Rathian Shard first in G rank
         assert_eq!(pairs(Rank::G, Method::BodyCarve)[0], (565, 38));
-        let scale: Vec<_> = d.sources(563).into_iter().filter(|s| s.0 == 1).collect();
+        let scale: Vec<_> = d
+            .sources(563)
+            .iter()
+            .filter(|s| s.monster == 1)
+            .map(|s| (s.rank, s.method, s.percent))
+            .collect();
         assert_eq!(
             scale,
             [
-                (1, Rank::Low, Method::BodyCarve, 40),
-                (1, Rank::Low, Method::TailCarve, 62),
-                (1, Rank::Low, Method::Shiny, 15),
-                (1, Rank::Low, Method::Capture, 25),
-                (1, Rank::Low, Method::Break(1), 25),
-                (1, Rank::High, Method::TailCarve, 7),
+                (Rank::Low, Method::BodyCarve, 40),
+                (Rank::Low, Method::TailCarve, 62),
+                (Rank::Low, Method::Shiny, 15),
+                (Rank::Low, Method::Capture, 25),
+                (Rank::Low, Method::Break(1), 25),
+                (Rank::High, Method::TailCarve, 7),
             ]
         );
     }
@@ -563,7 +603,7 @@ mod real_data {
         let talon = d
             .sources(597)
             .iter()
-            .filter(|s| s.1 == Rank::Low && s.2 == Method::Break(2))
+            .filter(|s| s.rank == Rank::Low && s.method == Method::Break(2))
             .count();
         assert!(talon >= 2, "Rath Talon: Rathian and Rathalos");
     }

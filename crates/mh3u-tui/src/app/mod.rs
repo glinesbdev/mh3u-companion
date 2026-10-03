@@ -40,7 +40,7 @@ mod sorting;
 mod wishlist;
 
 pub use blacksmith::Offer;
-pub use build_manager::{BuildFocus, BuildManager, NameAction};
+pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
 pub use crafting::{Piece, Via};
 pub use inventory::TreeView;
 pub use money::{group_digits, signed_zenny};

@@ -1,6 +1,6 @@
 mod ansi2svg;
 use anyhow::{Context, Result, bail};
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use mh3u_core::{
     arc::Arc,
     diff,
@@ -27,6 +27,12 @@ fn hex(b: &[u8]) -> String {
 struct Cli {
     #[command(subcommand)]
     command: Tool,
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+enum RouteArg {
+    Create,
+    Upgrade,
 }
 
 #[derive(Subcommand)]
@@ -72,8 +78,7 @@ enum Tool {
     PricesAdd {
         game_dir: PathBuf,
         ledger: PathBuf,
-        /// `create` or `upgrade`.
-        route: String,
+        route: RouteArg,
         cost: String,
         /// The exact name of the piece.
         piece: Vec<String>,
@@ -121,7 +126,7 @@ fn main() -> Result<()> {
             route,
             cost,
             piece,
-        } => prices_add(&game_dir, &ledger, &route, &cost, &piece.join(" ")),
+        } => prices_add(&game_dir, &ledger, route, &cost, &piece.join(" ")),
         Tool::PricesHint { game_dir, ledger } => prices_hint(&game_dir, &ledger),
         Tool::ArmorTodo { game_dir, ledger } => armor_todo(&game_dir, &ledger),
         Tool::Drops { game_dir } => drops(&game_dir),
@@ -192,7 +197,7 @@ fn unlock_monsters(save: &Path, game_dir: &Path) -> Result<()> {
                 continue;
             }
             let first = recipe.materials[0].id;
-            let mut sources: Vec<u16> = data.drops().sources(first).iter().map(|s| s.0).collect();
+            let mut sources: Vec<u16> = data.drops().sources(first).iter().map(|s| s.monster).collect();
             sources.sort_unstable();
             sources.dedup();
             let any = sources.iter().any(|&m| save.times_hunted(m) > 0);
@@ -335,7 +340,7 @@ fn drops(game_dir: &Path) -> Result<()> {
         .chain([Method::Capture])
         .collect();
     methods.sort();
-    for monster in game.drops().monsters() {
+    for &monster in game.drops().monsters() {
         for rank in Rank::ALL {
             for &method in &methods {
                 let Some(list) = game.drops().list(monster, rank, method) else {
@@ -499,12 +504,11 @@ fn hex_string(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect::<Vec<_>>().join(" ")
 }
 
-fn prices_add(game_dir: &Path, ledger_path: &Path, route: &str, cost: &str, name: &str) -> Result<()> {
+fn prices_add(game_dir: &Path, ledger_path: &Path, route: RouteArg, cost: &str, name: &str) -> Result<()> {
     let game = GameData::load(game_dir)?;
     let route = match route {
-        "create" => Route::Create,
-        "upgrade" => Route::Upgrade,
-        other => bail!("route must be create or upgrade, not '{other}'"),
+        RouteArg::Create => Route::Create,
+        RouteArg::Upgrade => Route::Upgrade,
     };
     let cost: u32 = cost.replace(',', "").parse().context("cost must be a number")?;
     let matches: Vec<_> = game

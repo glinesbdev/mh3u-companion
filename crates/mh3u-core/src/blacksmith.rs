@@ -38,10 +38,10 @@ pub fn unlock(recipe: &Recipe, drops: &Drops, hunted: impl Fn(u16) -> u16) -> Un
     };
     // The lowest rank each monster drops the item in.
     let mut sources: Vec<(u16, Rank)> = Vec::new();
-    for (monster, rank, ..) in drops.sources(first) {
-        match sources.iter_mut().find(|(m, _)| *m == monster) {
-            Some((_, r)) => *r = (*r).min(rank),
-            None => sources.push((monster, rank)),
+    for source in drops.sources(first) {
+        match sources.iter_mut().find(|(m, _)| *m == source.monster) {
+            Some((_, r)) => *r = (*r).min(source.rank),
+            None => sources.push((source.monster, source.rank)),
         }
     }
     if sources.is_empty() {

@@ -69,12 +69,20 @@ pub struct NamePrompt {
     pub action: NameAction,
 }
 
+/// How near a piece is to being worn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Availability {
+    Owned,
+    OnOffer,
+    Unavailable,
+}
+
 /// One entry of the piece popup: a piece to put in a template slot, or `None` to empty the slot.
 pub struct Choice {
     pub piece: Option<templates::Piece>,
     pub name: String,
-    /// What the hunter has to do to get it: "owned", "on offer" or "".
-    pub status: &'static str,
+    /// Whether the hunter has it, can get it from the blacksmith, or has to wait.
+    pub availability: Availability,
     /// Skills, for the talisman (and a hint for armor).
     pub detail: String,
 }
@@ -476,24 +484,24 @@ impl App {
     pub(super) fn piece_choices(&self, kind: u8, typed: &str) -> Vec<Choice> {
         let words: Vec<String> = typed.split_whitespace().map(str::to_lowercase).collect();
         let mut scored: Vec<(u32, Choice)> = Vec::new();
-        let mut consider = |name: String, detail: String, status: &'static str, piece: templates::Piece| {
+        let mut consider = |name: String, detail: String, availability: Availability, piece: templates::Piece| {
             let lower = format!("{} {}", name.to_lowercase(), detail.to_lowercase());
             let mut total = 0;
             for w in &words {
                 let Some(s) = search::score(w, &lower) else { return };
                 total += s;
             }
-            let order = match status {
-                "owned" => 2000,
-                "on offer" => 1000,
-                _ => 0,
+            let order = match availability {
+                Availability::Owned => 2000,
+                Availability::OnOffer => 1000,
+                Availability::Unavailable => 0,
             };
             scored.push((
                 total + order,
                 Choice {
                     piece: Some(piece),
                     name,
-                    status,
+                    availability,
                     detail,
                 },
             ));
@@ -507,19 +515,19 @@ impl App {
                     .collect::<Vec<_>>()
                     .join(", ");
                 let name = self.game.equipment_name(6, e.id).unwrap_or("Talisman").to_string();
-                consider(name, detail, "owned", templates::Piece { kind: 6, id: e.id, skills });
+                consider(name, detail, Availability::Owned, templates::Piece { kind: 6, id: e.id, skills });
             }
         } else {
             for id in self.game.piece_ids(kind) {
                 let (Some(name), Some(stats)) = (self.game.piece_name(kind, id), self.game.armor_stats(kind, id)) else {
                     continue;
                 };
-                let status = if self.owns_slot(kind, id) {
-                    "owned"
+                let availability = if self.owns_slot(kind, id) {
+                    Availability::Owned
                 } else if self.at_blacksmith(kind, id) {
-                    "on offer"
+                    Availability::OnOffer
                 } else {
-                    ""
+                    Availability::Unavailable
                 };
                 let detail = stats
                     .skills
@@ -530,7 +538,7 @@ impl App {
                 consider(
                     name.to_string(),
                     detail,
-                    status,
+                    availability,
                     templates::Piece {
                         kind,
                         id,
@@ -545,7 +553,7 @@ impl App {
             out.push(Choice {
                 piece: None,
                 name: "(empty this slot)".to_string(),
-                status: "",
+                availability: Availability::Unavailable,
                 detail: String::new(),
             });
         }
@@ -565,12 +573,11 @@ impl App {
     }
 
     pub(super) fn piece_key(&mut self, code: KeyCode) {
-        let Some(picker) = self.builds.piece_picker.as_ref() else { return };
+        let Some(picker) = self.builds.piece_picker.as_mut() else { return };
         let (kind, mut text) = (picker.kind, picker.text.clone());
         match code {
             KeyCode::Esc => self.builds.piece_picker = None,
             KeyCode::Down | KeyCode::Up => {
-                let picker = self.builds.piece_picker.as_mut().expect("checked above");
                 let last = picker.choices.len().saturating_sub(1);
                 let at = picker.state.selected().unwrap_or(0);
                 picker.state.select(Some(if code == KeyCode::Down {
@@ -587,13 +594,14 @@ impl App {
                     }
                 }
                 let choices = self.piece_choices(kind, &text);
-                let picker = self.builds.piece_picker.as_mut().expect("checked above");
-                picker.text = text;
-                picker.choices = choices;
-                picker.state.select(Some(0));
+                if let Some(picker) = self.builds.piece_picker.as_mut() {
+                    picker.text = text;
+                    picker.choices = choices;
+                    picker.state.select(Some(0));
+                }
             }
             KeyCode::Enter => {
-                let picker = self.builds.piece_picker.take().expect("checked above");
+                let Some(picker) = self.builds.piece_picker.take() else { return };
                 let at = picker.state.selected().unwrap_or(0);
                 let Some(choice) = picker.choices.into_iter().nth(at) else { return };
                 if let Some(i) = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len()) {

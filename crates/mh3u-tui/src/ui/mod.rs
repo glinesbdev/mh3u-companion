@@ -1,4 +1,4 @@
-use crate::app::{App, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
+use crate::app::{App, Availability, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
 use mh3u_core::prices::{Route, Source};
 use ratatui::{

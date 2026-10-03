@@ -9,12 +9,12 @@ impl App {
         let drops = self.game.drops();
         let mut view: Vec<(u16, usize)> = drops
             .monsters()
-            .into_iter()
+            .iter()
+            .copied()
             .filter(|&m| self.game.monster_name(m).is_some())
             .map(|m| {
-                let wanted: std::collections::HashSet<u16> = drops
+                let wanted: HashSet<u16> = drops
                     .lists_for(m)
-                    .into_iter()
                     .flat_map(|(_, _, list)| list.iter().map(|d| d.item))
                     .filter(|item| missing.contains_key(item))
                     .collect();

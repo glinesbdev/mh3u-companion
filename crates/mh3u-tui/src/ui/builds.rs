@@ -291,10 +291,10 @@ pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
         .choices
         .iter()
         .map(|c| {
-            let status = match c.status {
-                "owned" => Span::styled("● owned   ", good()),
-                "on offer" => Span::styled("on offer ", warn()),
-                _ => Span::raw("         "),
+            let status = match c.availability {
+                Availability::Owned => Span::styled("● owned   ", good()),
+                Availability::OnOffer => Span::styled("on offer ", warn()),
+                Availability::Unavailable => Span::raw("         "),
             };
             ListItem::new(Line::from(vec![
                 status,
