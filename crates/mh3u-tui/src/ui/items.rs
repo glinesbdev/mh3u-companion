@@ -211,6 +211,29 @@ pub(super) fn wrap_items(label: &str, items: Vec<Vec<Span<'static>>>, width: usi
     lines
 }
 
+/// How many of an item can go, and what the rest is kept for.
+fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
+    use crate::surplus::Why;
+    let Some(p) = app.inv.spare.get(&id) else { return Vec::new() };
+    let have = app.save.item_count(id);
+    let (count, style) = if p.spare > 0 {
+        (format!("{} of {have}, pouch and box together", p.spare), good())
+    } else {
+        (format!("none, keep all {have}"), warn())
+    };
+    let why = match p.why {
+        Why::NoRecipe => "No recipe uses it.".to_string(),
+        Why::OnlyOwnedPieces => "Only pieces you already own use it.".to_string(),
+        Why::Wishlist => format!("Keep {}: the wishlist needs that many.", p.keep),
+        Why::OnePiece => format!("Keep {}: the most one piece you do not own takes.", p.keep),
+    };
+    vec![
+        Line::raw(""),
+        Line::from(vec![Span::styled("Spare ", muted()), Span::styled(count, style)]),
+        Line::styled(why, muted()),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -234,27 +257,4 @@ mod tests {
         let lines = wrap_items("Low ", vec![item("a"), item("a very long item name 99%")], 10);
         assert_eq!(lines.len(), 2);
     }
-}
-
-/// How many of an item can go, and what the rest is kept for.
-fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
-    use crate::surplus::Why;
-    let Some(p) = app.inv.spare.get(&id) else { return Vec::new() };
-    let have = app.save.item_count(id);
-    let (count, style) = if p.spare > 0 {
-        (format!("{} of {have}, pouch and box together", p.spare), good())
-    } else {
-        (format!("none, keep all {have}"), warn())
-    };
-    let why = match p.why {
-        Why::NoRecipe => "No recipe uses it.".to_string(),
-        Why::OnlyOwnedPieces => "Only pieces you already own use it.".to_string(),
-        Why::Wishlist => format!("Keep {}: the wishlist needs that many.", p.keep),
-        Why::OnePiece => format!("Keep {}: the most one piece you do not own takes.", p.keep),
-    };
-    vec![
-        Line::raw(""),
-        Line::from(vec![Span::styled("Spare ", muted()), Span::styled(count, style)]),
-        Line::styled(why, muted()),
-    ]
 }
