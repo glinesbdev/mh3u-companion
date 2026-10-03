@@ -1,96 +1,168 @@
-//! The help screen.
+//! The help screen: the whole screen, as short sections of keys laid out in columns.
 
 use super::*;
+use ratatui::widgets::Padding;
 
-/// What the help screen says: (label, text). A label starts a row whose text wraps under itself; an empty label continues the
-/// row above it with a new line; `"¶"` is a paragraph across the full width; both empty is a blank line.
-pub(super) const HELP: &[(&str, &str)] = &[
-    ("Move", "↑/↓ or j/k · PageUp/PageDown"),
-    ("Top / bottom", "Home/End or g/G"),
-    ("Switch tab", "←/→ or h/l · Tab"),
-    ("Quit", "q"),
-    ("", ""),
-    ("Items", "/  fuzzy search the pouch and box by item name"),
-    ("", "s  sort the item box (box order, name, quantity)"),
-    (
-        "",
-        "u  only items with some to spare: more than the wishlist and any one piece you still lack take",
-    ),
-    (
-        "Crafting",
-        "/  fuzzy search: name, type, skill, material, male / female / blademaster / gunner, or a rarity number 1-10 (armor only), e.g. 'attack 3'. Several words must all match.",
-    ),
-    ("Esc or x", "clear the search on the current tab"),
-    ("", "c  only what you can make now"),
-    ("", "o  hide pieces you already own"),
-    ("", "b  only pieces the blacksmith is offering (see below)"),
-    ("", "u  only pieces you own that have no price recorded yet"),
-    ("", "s  sort (game order, name, craftable first, owned first)"),
-    (
-        "",
-        "w  add to the wishlist (★), with the weapons in between that its cheapest way needs; press again to remove it",
-    ),
-    (
-        "Wishlist",
-        "w or x  remove the selected piece, and the parents that were added for it if nothing else needs them",
-    ),
-    ("Equipment", "s  sort (box order, name, rarity, type, worn first)"),
-    ("Worn", "totals for what you are wearing; i shows what each skill does"),
-    ("Monsters", "what each monster drops; s sort, ★ = the wishlist still needs it"),
-    (
-        "Hunt plan",
-        "the monsters to hunt and the quests to do, best first, for the materials the wishlist is short of: each step covers as many as it can and the next picks up the rest; r  limit it to one rank (quests only count with every rank);  Enter  show that monster's drops or that quest",
-    ),
-    (
-        "Quests",
-        "every quest in the game: its goal, client, time limit, monsters and both reward boxes with the chance of each item;  /  search by name, goal, monster or reward item;  m  show the quest's monster on the Monsters tab (a list to choose from when there are several);  s  sort (game order, name, stars, wishlist first);  ★ = it gives something the wishlist is short of;  PageUp/PageDown  scroll",
-    ),
-    (
-        "Families",
-        "armor grouped by family (Agnaktor, Zinogre...), with a table of which variants (base, S, U, X, Z) of each piece you own or the blacksmith offers;  /  search;  o  only sets you own a piece of;  Enter  show the family on the Crafting tab",
-    ),
-    (
-        "Builds",
-        "a  add a skill to look for (type to find it, Enter);  + / -  its points;  x  remove it;  f  switch between the skills, the sets found and your templates",
-    ),
-    (
-        "",
-        "o  which pieces to use: owned only, plus what the blacksmith offers, or everything in the game (to plan ahead);  m  use your talisman;  e  gender and c  blademaster/gunner filters (pieces for both always pass);  p  choose the weapon the set is for: its type picks the class (bows and bowguns wear gunner armor), and it goes into a saved template",
-    ),
-    (
-        "",
-        "s on a set saves it as a template;  w  put the missing pieces on the wishlist.  In the templates: [ ] pick a slot (head... talisman, weapon), Enter swaps its piece (type to find one), n saves what you wear, W wishes only the slot's piece, r rename, x delete. Skills, options and templates are kept per hunter.",
-    ),
-    (
-        "Compare",
-        "v  (on a weapon in Crafting, Equipment or Wishlist) put it in the comparison, again to take it out: up to four weapons side by side with rarity, attack, affinity, gem slots and what getting it costs, the best of each row marked (attack only between weapons of one type);  x  take the highlighted one out;  c  clear;  Enter  look it up in Crafting",
-    ),
-    (
-        "Any weapon",
-        "t  upgrade tree: the line down to it and everything it upgrades into (↑/↓ scroll, t or Esc close). A weapon you do not own also shows its cheapest way (forging fees) from what you hold.",
-    ),
-    ("", ""),
-    (
-        "¶",
-        "The blacksmith line follows what the save shows: a piece is on offer once a monster that drops its first material has been hunted (killed or captured) at least once; materials you only hold do not count. Pieces made from high-rank drops (the S, X... sets) need a hunt in that rank. The game never takes a piece off the list, so the app remembers every piece it has seen on offer. An anvil marks those in the crafting list, and the unowned ones on the wishlist.",
-    ),
-    ("", ""),
-    (
-        "¶",
-        "A piece is craftable if you have the materials to create it, or to upgrade it and you own a parent weapon. Upgrading uses up the parent. The wishlist plans a weapon by its cheapest way (fees only): making it, or upgrading it from the weapon before it, adding the weapons in between that you do not own.",
-    ),
+/// One part of the help: a heading and rows of (keys, what they do). A row with no keys is a plain line of text.
+pub(super) struct Section {
+    title: &'static str,
+    rows: &'static [(&'static str, &'static str)],
+}
+
+pub(super) const SECTIONS: &[Section] = &[
+    Section {
+        title: "Everywhere",
+        rows: &[
+            ("↑ ↓  j k", "move"),
+            ("PgUp PgDn", "move ten rows"),
+            ("Home End  g G", "top, bottom"),
+            ("← →  h l  Tab", "switch tab"),
+            ("/", "search (Items, Crafting, Quests, Families)"),
+            ("x  Esc", "clear the search"),
+            ("t", "upgrade tree of a weapon (↑ ↓ scroll, t closes)"),
+            ("i", "what each skill does"),
+            ("?", "this help"),
+            ("q", "quit"),
+        ],
+    },
+    Section {
+        title: "Items",
+        rows: &[
+            ("p", "pouch or box"),
+            ("s", "sort the box"),
+            (
+                "u",
+                "only items with some to spare (more than the wishlist and any one piece you lack take)",
+            ),
+        ],
+    },
+    Section {
+        title: "Equipment, Worn",
+        rows: &[
+            ("s", "sort the equipment box"),
+            ("v", "put a weapon in the comparison"),
+            ("Worn", "totals for what you wear"),
+        ],
+    },
+    Section {
+        title: "Crafting",
+        rows: &[
+            ("c", "only what you can make now"),
+            ("o", "hide pieces you own"),
+            ("b", "only what the blacksmith offers"),
+            ("u", "only owned pieces with no price yet"),
+            ("s", "sort"),
+            ("w", "wishlist ★, with the weapons in between its cheapest way needs; again removes"),
+            ("v", "put a weapon in the comparison"),
+            (
+                "",
+                "Search takes name, type, skill, material, male / female / blademaster / gunner and rarity 1-10: 'attack 3'.",
+            ),
+        ],
+    },
+    Section {
+        title: "Wishlist",
+        rows: &[
+            ("w  x", "remove a piece and the parents added for it"),
+            (
+                "",
+                "The right side shows what the piece needs and one shopping list for everything.",
+            ),
+        ],
+    },
+    Section {
+        title: "Monsters",
+        rows: &[
+            ("s", "sort"),
+            ("PgUp PgDn", "scroll the drops"),
+            ("★", "the wishlist still needs it"),
+        ],
+    },
+    Section {
+        title: "Hunt plan",
+        rows: &[
+            (
+                "",
+                "The monsters to hunt and quests to do for the materials the wishlist lacks, best first.",
+            ),
+            ("r", "one rank only (quests only count with every rank)"),
+            ("Enter", "that monster's drops, or that quest"),
+        ],
+    },
+    Section {
+        title: "Quests",
+        rows: &[
+            ("m", "the quest's monster (a list if there are several)"),
+            ("s", "sort: game order, name, stars, wishlist first"),
+            ("PgUp PgDn", "scroll"),
+            ("★", "it gives something the wishlist lacks"),
+        ],
+    },
+    Section {
+        title: "Families",
+        rows: &[
+            ("", "Armor grouped by name, with which variants (base, S, U, X, Z) you have."),
+            ("o", "only families you own a piece of"),
+            ("Enter", "look the family up in Crafting"),
+        ],
+    },
+    Section {
+        title: "Compare",
+        rows: &[
+            ("v", "(on a weapon elsewhere) add or remove, up to four"),
+            ("x  c", "remove the highlighted weapon, clear all"),
+            ("Enter", "look it up in Crafting"),
+        ],
+    },
+    Section {
+        title: "Builds",
+        rows: &[
+            ("a", "add a skill (type to find it, Enter)"),
+            ("+  -  x", "its points, remove"),
+            ("f", "switch: skills, sets found, templates"),
+            ("o", "pieces: owned, plus on offer, or everything"),
+            ("m  e  c", "talisman, gender, blademaster or gunner"),
+            ("p", "the weapon the set is for (its type sets the class)"),
+            ("s  w", "save a set as a template, wish its missing pieces"),
+        ],
+    },
+    Section {
+        title: "Templates (Builds, f)",
+        rows: &[
+            ("[ ]", "pick a slot (head ... talisman, weapon)"),
+            ("Enter", "swap its piece (type to find one)"),
+            ("n  r  x", "save what you wear, rename, delete"),
+            ("w  W", "wish all the missing pieces, only the slot's"),
+        ],
+    },
+    Section {
+        title: "What the app tells you",
+        rows: &[
+            (
+                "",
+                "On offer: the blacksmith lists a piece once a monster that drops its first material has been hunted. The app remembers what it has seen, since the blacksmith never takes a piece off.",
+            ),
+            (
+                "",
+                "Craftable: you hold the materials, or (a weapon) its parent. Upgrading uses the parent up.",
+            ),
+            (
+                "",
+                "Files are kept per hunter. With --live the app follows the hunter the game loads.",
+            ),
+        ],
+    },
 ];
 
-pub(super) const HELP_EDIT: &[(&str, &str)] = &[
-    ("", ""),
-    (
-        "¶",
-        "EDIT MODE (--debug-edit): changes go into the running game, not the file. If you save in the game they are saved too.",
-    ),
-    ("", ""),
-    (":", "zenny 50000 | zenny +500 | give iron ore [n] | set honey 5"),
-    (":", "stock (covers the wishlist) | stock all (also pieces you own)"),
-];
+pub(super) const EDIT_SECTION: Section = Section {
+    title: "Edit mode (--debug-edit)",
+    rows: &[
+        ("", "Changes go into the running game; saving in the game keeps them."),
+        (":", "zenny 50000 | zenny +500"),
+        (":", "give iron ore [n] | set honey 5"),
+        (":", "stock | stock all (cover the wishlist)"),
+    ],
+};
 
 /// Break `text` into lines of at most `width` cells at word boundaries (a word longer than a line is left whole).
 pub(super) fn wrap_words(text: &str, width: usize) -> Vec<String> {
@@ -112,24 +184,26 @@ pub(super) fn wrap_words(text: &str, width: usize) -> Vec<String> {
     lines
 }
 
-/// The help rows laid out for a text width: labels in a column, their text wrapped under itself.
-pub(super) fn help_lines(rows: &[(&str, &str)], width: usize) -> Vec<Line<'static>> {
-    const LABEL: usize = 14;
-    let mut out: Vec<Line> = Vec::new();
-    for &(label, text) in rows {
-        if label == "¶" {
-            out.extend(wrap_words(text, width).into_iter().map(Line::from));
+/// The width of the keys column in a section.
+const KEYS: usize = 15;
+
+/// A section laid out for a column of `width` cells: its heading, then each row with the keys in a column and the text wrapped
+/// under itself. A row with no keys is text across the full width.
+pub(super) fn section_lines(section: &Section, width: usize) -> Vec<Line<'static>> {
+    let mut out = vec![Line::styled(
+        section.title,
+        accent().add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
+    )];
+    for &(keys, text) in section.rows {
+        if keys.is_empty() {
+            out.extend(wrap_words(text, width).into_iter().map(|l| Line::styled(l, muted())));
             continue;
         }
-        if label.is_empty() && text.is_empty() {
-            out.push(Line::raw(""));
-            continue;
-        }
-        let body = width.saturating_sub(LABEL).max(10);
+        let body = width.saturating_sub(KEYS).max(10);
         for (n, piece) in wrap_words(text, body).into_iter().enumerate() {
-            let head = if n == 0 { label } else { "" };
+            let head = if n == 0 { keys } else { "" };
             out.push(Line::from(vec![
-                Span::styled(format!("{head:<LABEL$}"), accent().add_modifier(Modifier::BOLD)),
+                Span::styled(format!("{head:<KEYS$}"), accent().add_modifier(Modifier::BOLD)),
                 Span::raw(piece),
             ]));
         }
@@ -137,34 +211,90 @@ pub(super) fn help_lines(rows: &[(&str, &str)], width: usize) -> Vec<Line<'stati
     out
 }
 
-pub(super) fn draw_help(f: &mut Frame, app: &mut App) {
-    use ratatui::widgets::Padding;
-    let area = f.area();
-    let w = area.width.min(89);
-    let text_width = usize::from(w).saturating_sub(2 + 4); // borders and two cells of padding on each side
-    let mut lines = help_lines(HELP, text_width);
-    if app.console.enabled {
-        lines.extend(help_lines(HELP_EDIT, text_width));
+/// Put the sections into `columns` columns in order, never splitting one, so that the tallest column is as short as it can be.
+/// Returns the lines of each column.
+pub(super) fn arrange(sections: &[Vec<Line<'static>>], columns: usize) -> Vec<Vec<Line<'static>>> {
+    let columns = columns.max(1);
+    // a section takes its lines and, after the first in a column, one blank line before it
+    let height =
+        |from: usize, to: usize| -> usize { sections[from..to].iter().map(|s| s.len()).sum::<usize>() + to.saturating_sub(from + 1) };
+    let n = sections.len();
+    // best[c][i]: the least possible tallest column when the first `i` sections go into `c` columns; cut[c][i]: where the last starts
+    let mut best = vec![vec![usize::MAX; n + 1]; columns + 1];
+    let mut cut = vec![vec![0usize; n + 1]; columns + 1];
+    best[0][0] = 0;
+    for c in 1..=columns {
+        for i in 0..=n {
+            for j in 0..=i {
+                if best[c - 1][j] == usize::MAX {
+                    continue;
+                }
+                let tallest = best[c - 1][j].max(if j == i { 0 } else { height(j, i) });
+                if tallest < best[c][i] {
+                    best[c][i] = tallest;
+                    cut[c][i] = j;
+                }
+            }
+        }
     }
-    lines.push(Line::raw(""));
-    lines.push(Line::styled("↑/↓ PageUp/PageDown scroll · any other key closes", muted()));
-    let h = area.height.min(lines.len() as u16 + 2);
-    let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
-    let room = usize::from(h.saturating_sub(2));
-    let max_scroll = lines.len().saturating_sub(room) as u16;
-    app.help_scroll = app.help_scroll.min(max_scroll);
-    f.render_widget(Clear, popup);
-    f.render_widget(
-        Paragraph::new(lines)
-            .scroll((app.help_scroll, 0))
-            .block(theme::pane(" Help ", true).padding(Padding::horizontal(2))),
-        popup,
-    );
+    let mut ends = vec![n];
+    for c in (2..=columns).rev() {
+        ends.push(cut[c][*ends.last().unwrap_or(&n)]);
+    }
+    ends.push(0);
+    ends.reverse();
+    ends.windows(2)
+        .map(|w| {
+            let mut column: Vec<Line> = Vec::new();
+            for section in &sections[w[0]..w[1]] {
+                if !column.is_empty() {
+                    column.push(Line::raw(""));
+                }
+                column.extend(section.iter().cloned());
+            }
+            column
+        })
+        .collect()
+}
+
+/// A column is about this wide; the screen gets as many as fit, up to three.
+const COLUMN: usize = 50;
+
+pub(super) fn draw_help(f: &mut Frame, app: &mut App) {
+    let area = f.area();
+    f.render_widget(Clear, area);
+    let block = theme::pane(" Help · ↑ ↓ PageUp PageDown scroll · any other key closes ", true).padding(Padding::new(2, 2, 1, 0));
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let columns = (usize::from(inner.width) / COLUMN).clamp(1, 3);
+    let gap = 3;
+    let width = (usize::from(inner.width) + gap) / columns - gap;
+    let mut sections: Vec<&Section> = SECTIONS.iter().collect();
+    if app.console.enabled {
+        sections.push(&EDIT_SECTION);
+    }
+    let laid_out: Vec<Vec<Line>> = sections.iter().map(|s| section_lines(s, width)).collect();
+    let cols = arrange(&laid_out, columns);
+
+    let tallest = cols.iter().map(Vec::len).max().unwrap_or(0);
+    let room = usize::from(inner.height);
+    app.help_scroll = app.help_scroll.min(tallest.saturating_sub(room) as u16);
+    let rects = Layout::horizontal(vec![Constraint::Length(width as u16); columns])
+        .spacing(gap as u16)
+        .split(inner);
+    for (rect, lines) in rects.iter().zip(cols) {
+        f.render_widget(Paragraph::new(lines).scroll((app.help_scroll, 0)), *rect);
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn text(lines: &[Line]) -> Vec<String> {
+        lines.iter().map(|l| l.to_string()).collect()
+    }
 
     #[test]
     fn words_wrap_at_the_width_and_long_words_stay_whole() {
@@ -175,19 +305,46 @@ mod tests {
     }
 
     #[test]
-    fn help_rows_wrap_under_their_label_and_fill_the_width() {
-        let lines = help_lines(&[("Key", "one two three four five six seven")], 24);
-        let text: Vec<String> = lines.iter().map(|l| l.to_string()).collect();
-        assert_eq!(text[0], "Key           one two");
+    fn a_section_has_its_heading_keys_in_a_column_and_text_wrapped_under_itself() {
+        let section = Section {
+            title: "Demo",
+            rows: &[("s", "one two three four five six seven"), ("", "a note")],
+        };
+        let lines = text(&section_lines(&section, 28));
+        assert_eq!(lines[0], "Demo");
+        assert_eq!(lines[1], "s              one two three");
         assert!(
-            text.iter().all(|l| l.starts_with("Key") || l.starts_with("              ")),
-            "{text:?}"
+            lines[2].starts_with("               "),
+            "wrapped text lines up under the first: {lines:?}"
         );
-        assert!(text.iter().all(|l| l.trim_end().chars().count() <= 24));
-        let para = help_lines(&[("¶", "alpha beta gamma delta")], 12);
-        assert_eq!(
-            para.iter().map(|l| l.to_string()).collect::<Vec<_>>(),
-            ["alpha beta", "gamma delta"]
-        );
+        assert_eq!(lines.last().map(String::as_str), Some("a note"), "a row with no keys is plain text");
+        assert!(lines.iter().all(|l| l.chars().count() <= 28));
+    }
+
+    #[test]
+    fn sections_go_into_columns_in_order_and_are_never_split() {
+        let sections: Vec<Vec<Line>> = [3, 3, 3, 3]
+            .iter()
+            .map(|&n| (0..n).map(|i| Line::raw(format!("l{i}"))).collect())
+            .collect();
+        let cols = arrange(&sections, 2);
+        assert_eq!(cols.len(), 2);
+        assert_eq!(cols[0].len(), 7, "two sections and the blank line between them");
+        assert_eq!(cols[1].len(), 7);
+        let one = arrange(&sections, 1);
+        assert_eq!(one[0].len(), 15, "four sections and three blank lines");
+        assert!(arrange(&[], 3).iter().all(Vec::is_empty));
+        // uneven sections: the split that keeps the tallest column shortest (8+1+2 = 11 would be worse than 8 | 2+1+2+1+2)
+        let uneven: Vec<Vec<Line>> = [8, 2, 2, 2].iter().map(|&n| (0..n).map(|_| Line::raw("x")).collect()).collect();
+        let heights: Vec<usize> = arrange(&uneven, 2).iter().map(Vec::len).collect();
+        assert_eq!(heights, [8, 8]);
+    }
+
+    #[test]
+    fn the_help_fits_a_normal_screen_in_three_columns() {
+        // 180 columns of text and a 45-row terminal should show all of it without scrolling
+        let sections: Vec<Vec<Line>> = SECTIONS.iter().map(|s| section_lines(s, 56)).collect();
+        let tallest = arrange(&sections, 3).iter().map(Vec::len).max().unwrap();
+        assert!(tallest <= 42, "the tallest of three columns is {tallest} lines");
     }
 }
