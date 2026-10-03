@@ -2,6 +2,7 @@ mod app;
 mod commands;
 mod search;
 mod theme;
+mod tree;
 mod ui;
 
 use anyhow::{Context, Result, bail};

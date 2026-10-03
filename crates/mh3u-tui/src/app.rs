@@ -107,6 +107,46 @@ impl BoxSort {
     }
 }
 
+/// Ordering of the equipment box list.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum EquipSort {
+    BoxOrder,
+    Name,
+    Rarity,
+    Type,
+    WornFirst,
+}
+
+impl EquipSort {
+    fn next(self) -> EquipSort {
+        match self {
+            EquipSort::BoxOrder => EquipSort::Name,
+            EquipSort::Name => EquipSort::Rarity,
+            EquipSort::Rarity => EquipSort::Type,
+            EquipSort::Type => EquipSort::WornFirst,
+            EquipSort::WornFirst => EquipSort::BoxOrder,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            EquipSort::BoxOrder => "box order",
+            EquipSort::Name => "name",
+            EquipSort::Rarity => "rarity",
+            EquipSort::Type => "type",
+            EquipSort::WornFirst => "worn first",
+        }
+    }
+}
+
+/// The upgrade tree popup for one weapon.
+pub struct TreeView {
+    pub kind: u8,
+    pub tree: crate::tree::Tree,
+    /// First visible line; the drawing code keeps it inside the tree.
+    pub scroll: u16,
+}
+
 /// How a piece would be obtained.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Via {
@@ -350,6 +390,11 @@ pub struct App {
     pub unpriced_only: bool,
     pub piece_sort: PieceSort,
     pub box_sort: BoxSort,
+    pub equip_sort: EquipSort,
+    /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
+    pub equip_view: Vec<usize>,
+    /// The upgrade tree popup, when open.
+    pub tree: Option<TreeView>,
     /// The item box in display order (see `box_sort`).
     pub box_view: Vec<ItemStack>,
     /// The item pouch, filtered by the item search.
@@ -414,6 +459,9 @@ impl App {
             unpriced_only: false,
             piece_sort: PieceSort::GameOrder,
             box_sort: BoxSort::BoxOrder,
+            equip_sort: EquipSort::BoxOrder,
+            equip_view: Vec::new(),
+            tree: None,
             box_view: Vec::new(),
             pouch_view: Vec::new(),
             pieces: Vec::new(),
@@ -444,6 +492,7 @@ impl App {
         app.rebuild_learned();
         app.catalog = app.build_catalog();
         app.refresh_box();
+        app.refresh_equipment();
         app.refresh_pieces();
         Ok(app)
     }
@@ -571,6 +620,76 @@ impl App {
         self.box_view = view.into_iter().map(|(_, s)| s).collect();
         let sel = self.box_state.selected().unwrap_or(0).min(self.box_view.len().saturating_sub(1));
         self.box_state.select(Some(sel));
+    }
+
+    /// Put the equipment box in display order, keeping the same item selected when it is still there.
+    fn refresh_equipment(&mut self) {
+        let kept = self.equip_state.selected().and_then(|i| self.equip_view.get(i)).copied();
+        let boxed = &self.save.equipment_box;
+        let name = |i: usize| self.game.equipment_name(boxed[i].kind, boxed[i].id).unwrap_or("?").to_lowercase();
+        let rarity = |i: usize| self.game.equipment_rarity(boxed[i].kind, boxed[i].id).unwrap_or(0);
+        let mut view: Vec<usize> = (0..boxed.len()).collect();
+        match self.equip_sort {
+            EquipSort::BoxOrder => {}
+            EquipSort::Name => view.sort_by_key(|&i| (name(i), kind_rank(boxed[i].kind))),
+            EquipSort::Rarity => view.sort_by_key(|&i| (std::cmp::Reverse(rarity(i)), kind_rank(boxed[i].kind), name(i))),
+            EquipSort::Type => view.sort_by_key(|&i| (kind_rank(boxed[i].kind), name(i))),
+            EquipSort::WornFirst => view.sort_by_key(|&i| (!self.save.is_worn(&boxed[i]), kind_rank(boxed[i].kind), name(i))),
+        }
+        let at = kept
+            .and_then(|k| view.iter().position(|&i| i == k))
+            .unwrap_or_else(|| self.equip_state.selected().unwrap_or(0).min(view.len().saturating_sub(1)));
+        self.equip_view = view;
+        self.equip_state.select(Some(at));
+    }
+
+    /// The equipment-box entry that is highlighted on the Equipment tab.
+    pub fn selected_equipment(&self) -> Option<&mh3u_core::save::Equipment> {
+        let i = *self.equip_view.get(self.equip_state.selected()?)?;
+        self.save.equipment_box.get(i)
+    }
+
+    /// The weapon highlighted on the current tab, as (kind, id). `None` on tabs with no selection.
+    pub fn highlighted_equipment(&self) -> Option<(u8, u16)> {
+        match self.tab {
+            Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
+            Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
+            Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
+            Tab::Items => None,
+        }
+    }
+
+    /// The weapons (same kind) that `id` is upgraded from, from the game data or learned in play.
+    pub fn upgrade_parents(&self, kind: u8, id: u16) -> Vec<u16> {
+        self.upgrade_recipe(kind, id)
+            .map(|u| u.parents.iter().copied().filter(|&p| p != 0).collect())
+            .unwrap_or_default()
+    }
+
+    /// The weapons (same kind) that `id` can be upgraded into, from the game data or learned in play.
+    pub fn upgrade_children(&self, kind: u8, id: u16) -> Vec<u16> {
+        let mut kids = self.game.upgrade_children(kind, id);
+        kids.extend(
+            self.learned_upgrade
+                .iter()
+                .filter(|((k, child), u)| *k == kind && *child != id && u.parents.contains(&id))
+                .map(|((_, child), _)| *child),
+        );
+        kids.sort_unstable();
+        kids.dedup();
+        kids
+    }
+
+    /// Open the upgrade tree for the highlighted weapon. Armor has no upgrade line in the game data, so nothing opens for it.
+    fn open_tree(&mut self) {
+        let Some((kind, id)) = self.highlighted_equipment() else { return };
+        if !(7..=19).contains(&kind) || kind == 12 {
+            self.status = "Only weapons have an upgrade tree.".to_string();
+            return;
+        }
+        let tree = crate::tree::build(id, &|w| self.upgrade_parents(kind, w), &|w| self.upgrade_children(kind, w), 400);
+        let scroll = tree.selected_row.saturating_sub(3) as u16;
+        self.tree = Some(TreeView { kind, tree, scroll });
     }
 
     /// The sort label for the item box: with a search, the default order is "best match".
@@ -814,6 +933,7 @@ impl App {
         self.zenny_change = next_zenny_change(self.zenny_change, old, new, Instant::now());
         self.save = save;
         self.refresh_box();
+        self.refresh_equipment();
         self.refresh_pieces();
         (old != new).then(|| {
             format!(
@@ -1216,6 +1336,19 @@ impl App {
             self.confirm_quit = false;
             return;
         }
+        if let Some(view) = &mut self.tree {
+            match code {
+                KeyCode::Esc | KeyCode::Char('t' | 'q') => self.tree = None,
+                KeyCode::Down | KeyCode::Char('j') => view.scroll = view.scroll.saturating_add(1),
+                KeyCode::Up | KeyCode::Char('k') => view.scroll = view.scroll.saturating_sub(1),
+                KeyCode::PageDown => view.scroll = view.scroll.saturating_add(10),
+                KeyCode::PageUp => view.scroll = view.scroll.saturating_sub(10),
+                KeyCode::Home | KeyCode::Char('g') => view.scroll = 0,
+                KeyCode::End | KeyCode::Char('G') => view.scroll = u16::MAX, // the drawing code clamps it
+                _ => {}
+            }
+            return;
+        }
         if self.commanding {
             match code {
                 KeyCode::Esc => self.commanding = false,
@@ -1268,6 +1401,7 @@ impl App {
                 }
             }
             KeyCode::Char('?') => self.show_help = true,
+            KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
             KeyCode::Char(':') if self.edit_mode => {
                 self.commanding = true;
                 self.command.clear();
@@ -1301,6 +1435,10 @@ impl App {
                 Tab::Crafting => {
                     self.piece_sort = self.piece_sort.next();
                     self.refresh_pieces();
+                }
+                Tab::Equipment => {
+                    self.equip_sort = self.equip_sort.next();
+                    self.refresh_equipment();
                 }
                 _ => {}
             },
@@ -1346,7 +1484,7 @@ impl App {
     fn move_selection(&mut self, step: isize) {
         let (state, len) = match self.tab {
             Tab::Items => (&mut self.box_state, self.box_view.len()),
-            Tab::Equipment => (&mut self.equip_state, self.save.equipment_box.len()),
+            Tab::Equipment => (&mut self.equip_state, self.equip_view.len()),
             Tab::Crafting => (&mut self.craft_state, self.pieces.len()),
             Tab::Wishlist => (&mut self.wish_state, self.wishlist.len()),
         };

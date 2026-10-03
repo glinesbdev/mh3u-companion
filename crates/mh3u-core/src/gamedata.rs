@@ -143,6 +143,18 @@ impl GameData {
         self.upgrades.get(&(kind, id)).filter(|u| !u.materials.is_empty())
     }
 
+    /// The weapons (same kind) that `id` can be upgraded into, in id order.
+    pub fn upgrade_children(&self, kind: u8, id: u16) -> Vec<u16> {
+        let mut kids: Vec<u16> = self
+            .upgrades
+            .iter()
+            .filter(|((k, child), u)| *k == kind && !u.materials.is_empty() && *child != id && u.parents.contains(&id))
+            .map(|((_, child), _)| *child)
+            .collect();
+        kids.sort_unstable();
+        kids
+    }
+
     /// All (kind, id, name) whose name contains `needle`, case-insensitively.
     pub fn find_equipment(&self, needle: &str) -> Vec<(u8, u16, &str)> {
         let needle = needle.to_lowercase();

@@ -1,10 +1,10 @@
-use crate::app::{App, Tab, Via, group_digits, signed_zenny};
+use crate::app::{App, Tab, TreeView, Via, group_digits, signed_zenny};
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
 use mh3u_core::prices::{Route, Source};
 use ratatui::{
     Frame,
     layout::{Constraint, Layout, Margin, Rect},
-    style::Modifier,
+    style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Clear, List, ListItem, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Tabs, Wrap},
 };
@@ -77,6 +77,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.show_help {
         draw_help(f, app);
     }
+    if app.tree.is_some() {
+        draw_tree(f, app);
+    }
 }
 
 /// The key hints for the current tab, or the prompt while typing a search or command.
@@ -110,7 +113,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 if clear {
                     keys.push(("x", "clear"));
                 }
-                keys.extend([("c", "craftable"), ("o", "hide owned"), ("s", "sort"), ("w", "wish")]);
+                keys.extend([("c", "craftable"), ("o", "hide owned"), ("s", "sort"), ("w", "wish"), ("t", "tree")]);
             }
             Tab::Items => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
@@ -119,8 +122,8 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.push(("s", "sort"));
             }
-            Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove")]),
-            Tab::Equipment => keys.push(("↑/↓", "move")),
+            Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree")]),
+            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree")]),
         }
         keys.extend([("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
@@ -128,6 +131,89 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
     spans.push(Span::raw("   "));
     spans.push(Span::styled(app.status.clone(), muted()));
     f.render_widget(Paragraph::new(Line::from(spans)), area);
+}
+
+/// The upgrade tree popup: the line down to the weapon, then everything it upgrades into.
+fn draw_tree(f: &mut Frame, app: &mut App) {
+    let Some(view) = app.tree.take() else { return };
+    let kind = view.kind;
+    let kind_label = app.game.equipment_kind_label(kind).unwrap_or("Weapon");
+    let mut lines: Vec<Line> = Vec::new();
+    for row in &view.tree.rows {
+        let name = app.game.equipment_name(kind, row.id).unwrap_or("?");
+        let owned = app.save.owns_equipment(kind, row.id);
+        let mut spans = vec![Span::styled(row.prefix.clone(), theme::faint())];
+        let marker = if owned { "● " } else { "○ " };
+        let name_style = if row.selected {
+            theme::selection()
+        } else if owned {
+            good()
+        } else {
+            Style::new()
+        };
+        spans.push(Span::styled(marker, if owned { good() } else { muted() }));
+        spans.push(Span::styled(name.to_string(), name_style));
+        if row.selected {
+            spans.push(Span::styled(" ◀", accent()));
+        }
+        if let Some(r) = app.game.equipment_rarity(kind, row.id) {
+            spans.push(Span::raw(" "));
+            spans.push(theme::rarity_badge(r));
+        }
+        if let Some(w) = app.game.weapon_stats(kind, row.id) {
+            spans.push(Span::styled(format!("atk {}", w.attack), muted()));
+        }
+        if !owned && app.can_make_now(kind, row.id) {
+            spans.push(Span::styled("  ✔ can make", good()));
+        }
+        if row.repeat {
+            spans.push(Span::styled("  (shown above)", muted()));
+        }
+        if row.other_branches > 0 {
+            spans.push(Span::styled(format!("  +{} other upgrade(s)", row.other_branches), muted()));
+        }
+        if !row.also_from.is_empty() {
+            let names: Vec<&str> = row
+                .also_from
+                .iter()
+                .map(|&p| app.game.equipment_name(kind, p).unwrap_or("?"))
+                .collect();
+            spans.push(Span::styled(format!("  also from {}", names.join(", ")), muted()));
+        }
+        lines.push(Line::from(spans));
+    }
+    if view.tree.omitted > 0 {
+        lines.push(Line::styled(format!("… and {} more", view.tree.omitted), muted()));
+    }
+    let area = f.area();
+    let wanted = lines.len() as u16 + 2;
+    let (w, h) = (area.width.min(96), wanted.clamp(5, area.height.saturating_sub(2).max(5)));
+    let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
+    let visible = usize::from(h.saturating_sub(2));
+    let max_scroll = lines.len().saturating_sub(visible) as u16;
+    let scroll = view.scroll.min(max_scroll);
+    let title = format!(" {kind_label} upgrade tree ");
+    f.render_widget(Clear, popup);
+    f.render_widget(
+        Paragraph::new(lines)
+            .scroll((scroll, 0))
+            .block(theme::pane(title, true).title_bottom(Line::from(key_line(&[("↑/↓", "scroll"), ("t", "close")])).right_aligned())),
+        popup,
+    );
+    scrollbar(
+        f,
+        popup,
+        view.tree.rows.len() + usize::from(view.tree.omitted > 0),
+        Some(usize::from(scroll)),
+    );
+    app.tree = Some(TreeView { scroll, ..view });
+}
+
+fn key_line(pairs: &[(&str, &str)]) -> Vec<Span<'static>> {
+    let mut spans = vec![Span::raw(" ")];
+    spans.extend(theme::key_hints(pairs));
+    spans.push(Span::raw(" "));
+    spans
 }
 
 fn draw_help(f: &mut Frame, app: &App) {
@@ -152,6 +238,9 @@ Esc or x      clear the search on the current tab
                  it needs; press again to remove it
 Wishlist      w or x  remove the selected piece, and the parents
                  that were added for it if nothing else needs them
+Equipment     s  sort (box order, name, rarity, type, worn first)
+Any weapon    t  upgrade tree: the line down to it and everything
+                 it upgrades into (↑/↓ scroll, t or Esc close)
 
 A piece is craftable if you have the materials to create it, or to
 upgrade it and you own a parent weapon. Upgrading uses up the parent,
@@ -271,10 +360,10 @@ fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
 fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
     let rows: Vec<ListItem> = app
-        .save
-        .equipment_box
+        .equip_view
         .iter()
-        .map(|e| {
+        .map(|&i| {
+            let e = &app.save.equipment_box[i];
             let worn = if app.save.is_worn(e) {
                 Span::styled("●", good())
             } else {
@@ -293,7 +382,7 @@ fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             ]))
         })
         .collect();
-    let title = format!(" Equipment Box ({}/1000) ", rows.len());
+    let title = format!(" Equipment Box ({}/1000) · {} ", rows.len(), app.equip_sort.label());
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("The equipment box is empty.", muted())]);
         f.render_widget(Paragraph::new(Vec::<Line>::new()).block(theme::pane(" Details ", false)), right);
@@ -310,8 +399,7 @@ fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
     );
     scrollbar(f, left, len, app.equip_state.selected());
 
-    let selected = app.equip_state.selected().and_then(|i| app.save.equipment_box.get(i));
-    let lines = match selected {
+    let lines = match app.selected_equipment() {
         Some(e) => {
             let name = app.game.equipment_name(e.kind, e.id).unwrap_or("?").to_string();
             let mut lines = piece_details(app, e.kind, e.id, &name, None);
@@ -476,6 +564,26 @@ fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<boo
                 app.save.item_count(m.id),
                 u32::from(m.count),
             ));
+        }
+        lines.push(Line::raw(""));
+    }
+    let children = app.upgrade_children(kind, id);
+    if !children.is_empty() {
+        lines.push(Line::from(vec![
+            Span::styled("Upgrades into", bold()),
+            Span::styled("  (t for the tree)", muted()),
+        ]));
+        for child in children {
+            let child_name = app.game.equipment_name(kind, child).unwrap_or("?");
+            let (mark, style) = if app.save.owns_equipment(kind, child) {
+                ("● owned", good())
+            } else {
+                ("", muted())
+            };
+            lines.push(Line::from(vec![
+                Span::raw(format!("  {child_name:<24}")),
+                Span::styled(mark, style),
+            ]));
         }
         lines.push(Line::raw(""));
     }

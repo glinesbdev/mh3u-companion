@@ -7,7 +7,7 @@ what you own and what you need to craft or upgrade gear.
 
 - **Items**: item pouch and item box, with names and quantities. The header shows your hunter name and zenny. `/` is a fuzzy
   search by item name over both lists (typos are fine: `hny` finds Honey).
-- **Equipment**: your equipment box. The weapon and armor you are wearing are marked `worn`.
+- **Equipment**: your equipment box, with the same details panel as the Crafting tab (stats, recipes and costs, and what a weapon upgrades into). The weapon and armor you are wearing are marked `●`. `s` cycles the sort: box order, name, rarity, type, worn first.
 - **Crafting**: every armor piece and weapon that has a recipe, with have/need counts for each material (pouch and box together).
   - Armor shows rarity, gem slots, base defense, resistances and skills.
   - Weapons show rarity, gem slots, attack and affinity (read from the game files), a "Create from scratch" recipe and an "Upgrade from" recipe, and whether you own the parent weapon.
@@ -31,6 +31,7 @@ what you own and what you need to craft or upgrade gear.
   piece it plans "create from scratch" whenever that is possible, because upgrading uses up the parent weapon, and plans an
   upgrade only for pieces that have no create recipe. The wishlist is saved in
   `~/.config/mh3u-companion/wishlist.txt` (or under `$XDG_CONFIG_HOME`).
+- **Upgrade tree**: `t` on a weapon (in Crafting, Equipment or Wishlist) opens its tree: the line of weapons from the first one down to it, a note where other branches leave that line, and everything it can be upgraded into, each marked owned or not with rarity and attack. `↑`/`↓` scroll, `t` or `Esc` close. Armor has no upgrade line in the game data, so it has no tree.
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
   line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set
