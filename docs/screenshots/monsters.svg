@@ -66,7 +66,7 @@
 <text x="44.8" y="150.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Great</text>
 <text x="102.4" y="150.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Jaggi</text>
 <text x="256.0" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">★︎</text>
-<text x="275.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">2</text>
+<text x="275.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">3</text>
 <text x="380.8" y="150.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">█│</text>
 <text x="1139.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -104,12 +104,11 @@
 <text x="256.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">★︎</text>
 <text x="275.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">1</text>
 <text x="380.8" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">█│</text>
-<text x="400.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
-<text x="428.8" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">★︎</text>
-<text x="448.0" y="210.4" textLength="67.2" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">Monster</text>
-<text x="524.8" y="210.4" textLength="38.4" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">Bone</text>
-<text x="572.8" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">S</text>
-<text x="592.0" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">8%</text>
+<text x="515.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">★︎</text>
+<text x="534.4" y="210.4" textLength="67.2" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">Monster</text>
+<text x="611.2" y="210.4" textLength="38.4" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">Bone</text>
+<text x="659.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">S</text>
+<text x="678.4" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">8%</text>
 <text x="1139.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="44.8" y="230.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Popo</text>
@@ -131,7 +130,6 @@
 <text x="956.8" y="230.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Jaggi</text>
 <text x="1014.4" y="230.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Scale+</text>
 <text x="1081.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">18%</text>
-<text x="1129.6" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
 <text x="1139.2" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="44.8" y="250.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Lucent</text>
@@ -139,9 +137,9 @@
 <text x="256.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">★︎</text>
 <text x="275.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">1</text>
 <text x="380.8" y="250.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
-<text x="409.6" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Avian</text>
-<text x="467.2" y="250.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Finebone</text>
-<text x="553.6" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">37%</text>
+<text x="515.2" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Avian</text>
+<text x="572.8" y="250.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Finebone</text>
+<text x="659.2" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">37%</text>
 <text x="1139.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="44.8" y="270.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Gold</text>
@@ -159,101 +157,104 @@
 <text x="755.2" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Jaggi</text>
 <text x="812.8" y="270.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Scale+</text>
 <text x="880.0" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">24%</text>
-<text x="928.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
-<text x="956.8" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Avian</text>
-<text x="1014.4" y="270.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Stoutbone</text>
-<text x="1110.4" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">51%</text>
 <text x="1139.2" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="290.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Rathian</text>
+<text x="44.8" y="290.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Stygian</text>
+<text x="121.6" y="290.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Zinogre</text>
+<text x="256.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">★︎</text>
+<text x="275.2" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">1</text>
 <text x="380.8" y="290.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
+<text x="515.2" y="290.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Avian</text>
+<text x="572.8" y="290.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Stoutbone</text>
+<text x="668.8" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">51%</text>
 <text x="1139.2" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="310.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Rathalos</text>
+<text x="44.8" y="310.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Rathian</text>
 <text x="380.8" y="310.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
-<text x="400.0" y="310.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Capture</text>
-<text x="476.8" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">and</text>
-<text x="515.2" y="310.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">part-break</text>
-<text x="620.8" y="310.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">rewards</text>
-<text x="697.6" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">are</text>
-<text x="736.0" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
-<text x="774.4" y="310.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">decoded</text>
-<text x="851.2" y="310.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">yet,</text>
-<text x="899.2" y="310.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">so</text>
-<text x="928.0" y="310.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">they</text>
-<text x="976.0" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">are</text>
-<text x="1014.4" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
-<text x="1052.8" y="310.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">listed.</text>
 <text x="1139.2" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="330.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="330.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Qurupeco</text>
+<text x="44.8" y="330.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Rathalos</text>
 <text x="380.8" y="330.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
+<text x="400.0" y="330.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Part</text>
+<text x="448.0" y="330.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">breaks</text>
+<text x="515.2" y="330.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">are</text>
+<text x="553.6" y="330.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">numbered</text>
+<text x="640.0" y="330.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">in</text>
+<text x="668.8" y="330.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
+<text x="707.2" y="330.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">game's</text>
+<text x="774.4" y="330.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">order;</text>
+<text x="841.6" y="330.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">which</text>
+<text x="899.2" y="330.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">body</text>
+<text x="947.2" y="330.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">part</text>
+<text x="995.2" y="330.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">each</text>
+<text x="1043.2" y="330.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">one</text>
+<text x="1081.6" y="330.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">is,</text>
+<text x="1120.0" y="330.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">is</text>
 <text x="1139.2" y="330.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="350.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Gigginox</text>
+<text x="44.8" y="350.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Qurupeco</text>
 <text x="380.8" y="350.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="370.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="370.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Barioth</text>
+<text x="44.8" y="370.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Gigginox</text>
 <text x="380.8" y="370.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="370.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="390.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="390.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Diablos</text>
+<text x="44.8" y="390.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Barioth</text>
 <text x="380.8" y="390.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="390.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="410.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="410.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Deviljho</text>
+<text x="44.8" y="410.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Diablos</text>
 <text x="380.8" y="410.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="410.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="430.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="430.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Barroth</text>
+<text x="44.8" y="430.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Deviljho</text>
 <text x="380.8" y="430.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="430.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="450.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="450.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Uragaan</text>
+<text x="44.8" y="450.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Barroth</text>
 <text x="380.8" y="450.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="450.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="470.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="470.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Great</text>
-<text x="102.4" y="470.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Baggi</text>
+<text x="44.8" y="470.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Uragaan</text>
 <text x="380.8" y="470.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="470.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="490.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="490.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Lagiacrus</text>
+<text x="44.8" y="490.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Great</text>
+<text x="102.4" y="490.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Baggi</text>
 <text x="380.8" y="490.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="490.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="510.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="510.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Royal</text>
-<text x="102.4" y="510.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Ludroth</text>
+<text x="44.8" y="510.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Lagiacrus</text>
 <text x="380.8" y="510.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="510.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="530.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="530.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Gobul</text>
+<text x="44.8" y="530.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Royal</text>
+<text x="102.4" y="530.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Ludroth</text>
 <text x="380.8" y="530.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="530.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="550.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="550.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Agnaktor</text>
+<text x="44.8" y="550.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Gobul</text>
 <text x="380.8" y="550.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="550.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="570.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="570.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Ceadeus</text>
+<text x="44.8" y="570.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Agnaktor</text>
 <text x="380.8" y="570.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="570.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="590.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Uroktor</text>
+<text x="44.8" y="590.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Ceadeus</text>
 <text x="380.8" y="590.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="610.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="610.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Delex</text>
+<text x="44.8" y="610.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Uroktor</text>
 <text x="380.8" y="610.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="610.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="630.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="630.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Alatreon</text>
+<text x="44.8" y="630.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Delex</text>
 <text x="380.8" y="630.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="630.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="650.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="44.8" y="650.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Jhen</text>
-<text x="92.8" y="650.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Mohran</text>
+<text x="44.8" y="650.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Alatreon</text>
 <text x="380.8" y="650.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">║│</text>
 <text x="1139.2" y="650.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="670.4" textLength="374.4" lengthAdjust="spacing" fill="#0db9d7">╰─────────────────────────────────────╯</text>
@@ -262,11 +263,14 @@
 <text x="54.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">tab</text>
 <text x="102.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">↑/↓</text>
 <text x="140.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">move</text>
-<text x="198.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
-<text x="217.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
-<text x="275.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="294.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="352.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="371.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="198.4" y="690.4" textLength="86.4" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">PgUp/PgDn</text>
+<text x="294.4" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">scroll</text>
+<text x="361.6" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">drops</text>
+<text x="428.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
+<text x="448.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
+<text x="505.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="524.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="582.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="601.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
 </g>
 </svg>
