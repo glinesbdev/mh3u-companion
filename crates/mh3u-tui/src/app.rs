@@ -28,17 +28,19 @@ use std::{
 pub enum Tab {
     Items,
     Equipment,
+    Worn,
     Crafting,
     Wishlist,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 4] = [Tab::Items, Tab::Equipment, Tab::Crafting, Tab::Wishlist];
+    pub const ALL: [Tab; 5] = [Tab::Items, Tab::Equipment, Tab::Worn, Tab::Crafting, Tab::Wishlist];
 
     pub fn title(self) -> &'static str {
         match self {
             Tab::Items => "Items",
             Tab::Equipment => "Equipment",
+            Tab::Worn => "Worn",
             Tab::Crafting => "Crafting",
             Tab::Wishlist => "Wishlist",
         }
@@ -677,6 +679,25 @@ impl App {
         self.equip_state.select(Some(at));
     }
 
+    /// The worn armor pieces as (equipment kind, box entry), in the order head, body, arms, waist, legs.
+    pub fn worn_armor(&self) -> Vec<(u8, &mh3u_core::save::Equipment)> {
+        [5u8, 1, 2, 3, 4]
+            .into_iter()
+            .filter_map(|kind| {
+                let e = self.save.equipment_box.iter().find(|e| e.kind == kind && self.save.is_worn(e))?;
+                Some((kind, e))
+            })
+            .collect()
+    }
+
+    /// The worn weapon, if any.
+    pub fn worn_weapon(&self) -> Option<&mh3u_core::save::Equipment> {
+        self.save
+            .equipment_box
+            .iter()
+            .find(|e| (7..=19).contains(&e.kind) && self.save.is_worn(e))
+    }
+
     /// The equipment-box entry that is highlighted on the Equipment tab.
     pub fn selected_equipment(&self) -> Option<&mh3u_core::save::Equipment> {
         let i = *self.equip_view.get(self.equip_state.selected()?)?;
@@ -689,7 +710,7 @@ impl App {
             Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
             Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
             Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
-            Tab::Items => None,
+            Tab::Items | Tab::Worn => None,
         }
     }
 
@@ -1583,6 +1604,7 @@ impl App {
 
     fn move_selection(&mut self, step: isize) {
         let (state, len) = match self.tab {
+            Tab::Worn => return,
             Tab::Items => (&mut self.box_state, self.box_view.len()),
             Tab::Equipment => (&mut self.equip_state, self.equip_view.len()),
             Tab::Crafting => (&mut self.craft_state, self.pieces.len()),

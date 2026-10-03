@@ -5,6 +5,7 @@ mod theme;
 mod tree;
 mod ui;
 mod unlocked;
+mod worn;
 
 use anyhow::{Context, Result, bail};
 use app::App;

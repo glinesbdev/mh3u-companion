@@ -27,6 +27,7 @@ dark theme; your terminal's own palette applies when you run it.
 
 - **Items**: item pouch and item box, with names and quantities, and a details panel for the highlighted item: the game's description, how many you hold, what the wishlist needs of it, and which armor and weapons are made with it. The header shows your hunter name and zenny. `/` is a fuzzy
   search by item name over both lists (typos are fine: `hny` finds Honey).
+- **Worn**: what you are wearing, slot by slot, and what it adds up to: base defense, gem slots, resistances and the skill points of each skill with where they come from. A skill is active at 10 points or more and has its penalty at -10 or less (every skill's first effect starts at 10); Torso Up, when active, doubles the body piece's points. The talisman and decorations are not read yet. The higher tiers (15 and 20 points) and which effect each tier gives are not decoded, so they are not shown.
 - **Descriptions**: the details panels show the game's own description of the piece. `i` also shows what each skill does under it.
 - **Equipment**: your equipment box, with the same details panel as the Crafting tab (stats, recipes and costs, and what a weapon upgrades into). The weapon and armor you are wearing are marked `●`. `s` cycles the sort: box order, name, rarity, type, worn first.
 - **Crafting**: every armor piece and weapon that has a recipe, with have/need counts for each material (pouch and box together).
