@@ -21,6 +21,8 @@ pub struct Files {
     pub prices: PathBuf,
     pub unlocked: PathBuf,
     pub tracker_log: PathBuf,
+    /// The items picked up while playing live; one file per hunter, like the lists, but in the data folder.
+    pub gains: PathBuf,
     /// Where `--debug-edit` copies the saves before changing the game.
     pub backups: PathBuf,
 }
@@ -54,6 +56,11 @@ impl Files {
             prices: data.join("prices.tsv"),
             unlocked: data.join("unlocked.tsv"),
             tracker_log: data.join("tracker.log"),
+            gains: data.join(if slot == 1 {
+                "gains.tsv".to_string()
+            } else {
+                format!("gains-{slot}.tsv")
+            }),
             backups: data.join("backups"),
         }
     }
@@ -90,6 +97,8 @@ mod tests {
         assert_eq!(two.wishlist, Path::new("/c/app/wishlist-2.txt"));
         assert_eq!(two.builds, Path::new("/c/app/builds-2.txt"));
         assert_eq!(two.templates, Path::new("/c/app/templates-2.txt"));
+        assert_eq!(one.gains, Path::new("/d/app/gains.tsv"));
+        assert_eq!(two.gains, Path::new("/d/app/gains-2.tsv"));
         assert_eq!(one.prices, two.prices, "the ledger is shared");
         assert_eq!(one.unlocked, Path::new("/d/app/unlocked.tsv"));
     }

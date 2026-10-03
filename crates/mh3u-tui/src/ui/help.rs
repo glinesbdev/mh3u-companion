@@ -119,6 +119,16 @@ pub(super) const SECTIONS: &[Section] = &[
         ],
     },
     Section {
+        title: "Pickups",
+        rows: &[
+            (
+                "",
+                "With --live: the items you gained, newest first. Changes within 20 seconds are one entry, so a quest's rewards show as a block.",
+            ),
+            ("★", "the wishlist was short of it"),
+        ],
+    },
+    Section {
         title: "Compare",
         rows: &[
             ("v", "(on a weapon elsewhere) add or remove, up to four"),

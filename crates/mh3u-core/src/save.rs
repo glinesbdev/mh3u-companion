@@ -58,7 +58,7 @@ impl Equipment {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Save {
     pub hunter_name: String,
     pub zenny: u32,

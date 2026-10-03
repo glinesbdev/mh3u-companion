@@ -62,11 +62,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Live mode
 
-- Notify when a wishlist piece becomes craftable (the materials just arrived).
-- Show the quest's drops as they land, matched against the wishlist.
 - Record each blacksmith visit's list (the unlock rule could then be checked against what the game shows).
-- Notice when a quest ends and log what it gave (items, zenny), to build a personal history of drops that could be compared with the
-  published chances.
+- Tell when a quest ends, so that pickups can be grouped by quest instead of by pauses of 20 seconds (no quest state is known in the live
+  block), and log the quest's name and the zenny it paid.
 - Search for sets off the UI thread, if a very large pool ever makes the Builds tab slow (it takes a few milliseconds today).
 
 ## Checks that need the game

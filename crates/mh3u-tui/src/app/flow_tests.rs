@@ -36,7 +36,7 @@ fn tabs_wrap_around_and_the_help_scrolls_and_closes() {
     let Some(mut app) = app_in(&dir) else { return };
     assert_eq!(app.tab, Tab::Items);
     key(&mut app, KeyCode::Left);
-    assert_eq!(app.tab, Tab::Builds, "left of the first tab is the last");
+    assert_eq!(app.tab, Tab::Gains, "left of the first tab is the last");
     key(&mut app, KeyCode::Right);
     assert_eq!(app.tab, Tab::Items);
     press(&mut app, "?");
@@ -75,6 +75,7 @@ fn the_crafting_filters_toggle_and_narrow_the_list() {
 fn a_build_is_searched_saved_as_a_template_edited_and_remembered_for_the_hunter() {
     let dir = temp_dir("builds");
     let Some(mut app) = app_in(&dir) else { return };
+    key(&mut app, KeyCode::Left);
     key(&mut app, KeyCode::Left); // Builds
     press(&mut app, "a");
     assert!(app.builds.skill_picker.is_some());
@@ -250,6 +251,7 @@ fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swappe
     use mh3u_core::armor::ArmorClass;
     let dir = temp_dir("weapon");
     let Some(mut app) = app_in(&dir) else { return };
+    key(&mut app, KeyCode::Left);
     key(&mut app, KeyCode::Left); // Builds
     press(&mut app, "aauto");
     key(&mut app, KeyCode::Enter);
@@ -609,5 +611,57 @@ fn h_lists_the_hunters_in_the_save_slots_and_shows_the_one_picked() {
     assert_eq!(app.slot_shown(), Some(2));
     assert_eq!(app.wish.items, [(5, 2)], "slot 2's wishlist");
     assert!(app.status.contains("slot 2"), "{}", app.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn live_pickups_are_logged_starred_when_wanted_and_saved_per_hunter() {
+    let dir = temp_dir("pickups");
+    let Some(mut app) = app_in(&dir) else { return };
+    let mut live = app.save.clone();
+    // the first update after connecting is only a starting point
+    assert!(app.record_gains(&live).is_none());
+    assert!(app.gains.log.entries.is_empty());
+    // a moved item adds nothing; a new one does
+    let moved = live.item_box.pop();
+    if let Some(stack) = moved {
+        live.pouch.push(stack);
+    }
+    assert!(app.record_gains(&live).is_none(), "moving between box and pouch is not a pickup");
+    live.item_box.push(ItemStack { id: 1, count: 3 });
+    let notice = app.record_gains(&live).expect("a pickup");
+    assert!(notice.starts_with("picked up ") && notice.contains("x3"), "{notice}");
+    assert_eq!(app.gains.log.entries.len(), 1);
+    let file = std::fs::read_to_string(app.files.as_ref().unwrap().gains.clone()).unwrap();
+    assert!(file.contains("\t1:3"), "{file:?}");
+    // the game loading another hunter starts over
+    app.forget_gain_baseline();
+    assert!(app.record_gains(&live).is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_wishlisted_piece_is_announced_when_its_materials_arrive() {
+    let dir = temp_dir("craftable");
+    let Some(mut app) = app_in(&dir) else { return };
+    // the first piece (by id) of head armor that is not craftable now and that has a recipe of at most two materials
+    let found = app.game.piece_ids(5).find_map(|id| {
+        let r = app.game.recipe(5, id)?;
+        (!app.can_make_now(5, id) && r.materials.len() <= 2 && !r.materials.is_empty()).then_some((id, r.clone()))
+    });
+    let Some((id, recipe)) = found else { return };
+    app.wish.items = vec![(5, id)];
+    let before = app.craftable_wishes();
+    assert!(!before.contains(&(5, id)));
+    for m in &recipe.materials {
+        app.save.item_box.retain(|s| s.id != m.id);
+        app.save.item_box.push(ItemStack { id: m.id, count: m.count });
+    }
+    if !app.can_make_now(5, id) {
+        return; // a recipe with another condition (money, a parent): nothing to announce
+    }
+    let notice = app.newly_craftable(&before).expect("a notice");
+    assert!(notice.starts_with("now craftable: "), "{notice}");
+    assert!(app.newly_craftable(&app.craftable_wishes()).is_none(), "only what is new");
     let _ = std::fs::remove_dir_all(&dir);
 }

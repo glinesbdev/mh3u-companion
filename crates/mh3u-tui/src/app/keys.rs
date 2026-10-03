@@ -117,7 +117,7 @@ impl App {
             Tab::Quests => self.quests_key(code),
             Tab::Skills => self.skills_tab_key(code),
             Tab::Compare => self.compare_key(code),
-            Tab::Worn | Tab::Builds => false,
+            Tab::Worn | Tab::Builds | Tab::Gains => false,
         }
     }
 

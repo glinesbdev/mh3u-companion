@@ -4,6 +4,7 @@ mod commands;
 mod compare;
 mod families;
 mod files;
+mod gains;
 mod hunts;
 mod search;
 mod surplus;

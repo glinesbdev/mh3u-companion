@@ -45,6 +45,7 @@ impl App {
         self.hunts = HuntTab::default();
         // the next live data is another hunter's: comparing it with the last would look like a crafting
         self.costs.tracker.reset();
+        self.load_gains();
     }
 
     /// Live data from the game: if it is another hunter than the one shown, switch to that hunter's slot first.
@@ -191,18 +192,20 @@ impl App {
     /// Apply whatever the live reader has found since the last call.
     pub(super) fn poll_live(&mut self) {
         let Some(live) = &mut self.live else { return };
-        let (mut newest, mut status) = (None, None);
+        let (mut newest, mut status, mut fresh) = (None, None, false);
         let was_connected = live.connected;
         while let Ok(event) = live.reader.events.try_recv() {
             match event {
                 LiveEvent::Connected(_) => {
                     live.connected = true;
+                    fresh = true;
                     status = Some("live: connected to the game".to_string());
                 }
                 LiveEvent::Save(bytes) => newest = Some(bytes),
                 LiveEvent::WriteFailed(why) => status = Some(format!("edit failed: {why}")),
                 LiveEvent::Lost => {
                     live.connected = false;
+                    fresh = true;
                     status = Some("live: hunter unloaded, showing the last save file".to_string());
                 }
             }
@@ -216,15 +219,21 @@ impl App {
         if dropped {
             self.costs.tracker.reset();
         }
+        if fresh || dropped {
+            self.forget_gain_baseline();
+        }
         if let Some(bytes) = newest {
             let parsed = Save::parse(&bytes);
             self.console.live_bytes = Some(bytes);
             match parsed {
                 Ok(save) => {
                     let switched = self.follow_hunter(&save);
+                    let picked = self.record_gains(&save);
                     self.costs.tracker.observe(&save, Instant::now());
+                    let craftable_before = self.craftable_wishes();
                     let zenny = self.apply_save(save);
-                    status = switched.or(zenny).or(status);
+                    let craftable = self.newly_craftable(&craftable_before);
+                    status = [switched, craftable, picked, zenny].into_iter().flatten().next().or(status);
                 }
                 Err(e) => status = Some(format!("live data not understood: {e:#}")),
             }

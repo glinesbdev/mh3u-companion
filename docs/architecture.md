@@ -15,6 +15,7 @@ Everything that reads a file or the running game. No terminal code.
 | `arc`, `gmd`, `rpx` | The game's archive, text-table and executable formats. |
 | `gamedata` | Loads a game dump once and answers questions about it: names, descriptions, recipes, stats, drops. Everything else asks `GameData`. |
 | `recipes`, `armor`, `weapons`, `drops` | The tables found in the executable's data section (offsets are for the US v32 build and are checked on load). `drops` also indexes the lists by item and by monster. |
+| `hitzones` | Monster hit zones from each monster archive's `em_status00`. |
 | `quest` | The quest files (`quest/us/*.quest`): texts, monsters and the two reward boxes. |
 | `blacksmith` | The rule for which pieces the blacksmith offers (a monster that drops the piece's first material has been hunted). |
 | `prices` | The forging-cost ledger and the tracker that learns costs from play. |
@@ -38,6 +39,7 @@ app/
   quests.rs         Quests tab (search, sort, wishlist stars)
   compare.rs        Compare tab (the weapons being compared)
   skills.rs         Skills tab (the armor with each skill)
+  gains.rs          Pickups tab and the live notices (pickups, newly craftable wishlist pieces)
   hunters.rs        the hunter list popup (H) for switching save slots
   wishlist.rs       the wishlist, parent weapons, the shopping list
   blacksmith.rs     what is on offer, and the pieces remembered as seen on offer
@@ -50,7 +52,7 @@ ui/
   one file per tab, plus pieces.rs (what is said about a piece), help.rs, tree.rs
 ```
 
-Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `templates`
+Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `gains` (the pickup log and its file format), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
 `unlocked` and `files` (what is kept on disk, and where).
 

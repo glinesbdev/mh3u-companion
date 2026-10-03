@@ -53,6 +53,14 @@ slot's data: the wishlist, the Builds skills and templates (`wishlist-2.txt` and
 the hunter is unloaded. The price tracker starts afresh so that one hunter's inventory is never compared with another's. So `--slot`
 only decides what is shown until the game loads a hunter. If the hunter's name is in no slot file, nothing switches.
 
+## Pickups and notices
+
+Each live update is compared with the one before. Items the pouch and box hold more of than before are a pickup, and are written to the
+Pickups tab and to `gains.tsv` (one file per hunter, in the data folder; see `src/gains.rs`). The first update after connecting, after the
+hunter is unloaded or after the game loads another hunter is only a starting point, so nothing already in the save counts. Moving items
+between pouch and box nets to zero. The status line announces a pickup (★ for what the wishlist is short of) and a wishlisted piece that
+has become craftable. The game's data holds no quest state, so pickups are grouped by time (20 seconds), not by quest.
+
 ## Debug editing (`--debug-edit`)
 
 ```

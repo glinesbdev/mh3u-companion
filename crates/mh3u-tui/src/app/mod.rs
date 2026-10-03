@@ -34,6 +34,7 @@ mod crafting;
 mod families;
 #[cfg(test)]
 mod flow_tests;
+mod gains;
 mod hunters;
 mod hunts;
 mod inventory;
@@ -53,6 +54,7 @@ pub use compare::{CompareTab, MAX_COMPARED};
 pub use crafting::Crafting;
 pub use crafting::Via;
 pub use families::FamiliesTab;
+pub use gains::GainsTab;
 pub use hunters::HunterChoice;
 pub use hunts::HuntTab;
 pub use inventory::Inventory;
@@ -85,10 +87,11 @@ pub enum Tab {
     Skills,
     Compare,
     Builds,
+    Gains,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 12] = [
+    pub const ALL: [Tab; 13] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
@@ -101,6 +104,7 @@ impl Tab {
         Tab::Skills,
         Tab::Compare,
         Tab::Builds,
+        Tab::Gains,
     ];
 
     pub fn title(self) -> &'static str {
@@ -117,6 +121,7 @@ impl Tab {
             Tab::Skills => "Skills",
             Tab::Compare => "Compare",
             Tab::Builds => "Builds",
+            Tab::Gains => "Pickups",
         }
     }
 }
@@ -162,6 +167,8 @@ pub struct App {
     pub compare: CompareTab,
     /// The Builds tab.
     pub builds: BuildManager,
+    /// The Pickups tab: what live mode saw the hunter gain.
+    pub gains: GainsTab,
     /// Forging costs seen in the game and the watcher that finds them.
     pub costs: PriceBook,
     /// The debug command line (`--debug-edit`).
@@ -225,6 +232,7 @@ impl App {
             skills: skill_tab,
             compare: CompareTab::default(),
             builds,
+            gains: GainsTab::new(gains::read_log(files.as_ref())),
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
             unlocked,
@@ -312,6 +320,7 @@ impl App {
                 self.quests.scroll = 0;
                 (&mut self.quests.state, self.quests.rows.len())
             }
+            Tab::Gains => (&mut self.gains.state, self.gains.log.entries.len()),
             Tab::Builds => match self.builds.focus {
                 BuildFocus::Sets => (&mut self.builds.result_state, self.builds.results.len()),
                 BuildFocus::Skills => (&mut self.builds.target_state, self.builds.settings.targets.len()),

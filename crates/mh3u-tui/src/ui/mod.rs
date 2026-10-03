@@ -14,6 +14,7 @@ mod compare;
 mod crafting;
 mod equipment;
 mod families;
+mod gains;
 mod help;
 mod hunters;
 mod hunts;
@@ -123,6 +124,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Skills => draw_skills(f, app, body),
         Tab::Compare => draw_compare(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
+        Tab::Gains => gains::draw_gains(f, app, body),
     }
 
     draw_footer(f, app, footer);
@@ -236,6 +238,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 keys.extend([("o", "reachable"), ("Enter", "build"), ("PgUp/PgDn", "scroll")]);
             }
             Tab::Compare => keys.extend([("↑/↓", "move"), ("x", "remove"), ("c", "clear"), ("Enter", "craft")]),
+            Tab::Gains => keys.push(("↑/↓", "move")),
             Tab::Families => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {

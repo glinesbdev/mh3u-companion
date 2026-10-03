@@ -216,6 +216,7 @@ impl App {
             | Tab::Families
             | Tab::Skills
             | Tab::Compare
+            | Tab::Gains
             | Tab::Builds => None,
         }
     }
