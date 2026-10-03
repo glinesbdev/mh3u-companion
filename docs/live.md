@@ -90,7 +90,7 @@ where. It is a good idea to use a spare hunter.
 
 Where the game keeps the list of pieces the blacksmith offers is not known (the app works it out from the monsters you have hunted). To
 look for it, open the blacksmith's head-armor menu in the game and type `:scan head`. This searches all of Cemu's writable memory for
-runs of the piece ids the app expects on offer: big-endian u16 values, increasing, 2 to 24 bytes apart. It writes a report to
+runs of the piece ids the app expects on offer: big-endian u16 values, 2 to 24 bytes apart, either increasing or each once in any order (the menu may group pieces by set, not by id). It writes a report to
 `scan-<time>.txt` in the data folder with the best twelve runs: where each is (in Cemu's memory and as a guest address), which expected
 ids it lacks, and the bytes around it. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
 tables and score low. Compare a good run with what the menu really shows; a piece the run has and the app does not expect (or the

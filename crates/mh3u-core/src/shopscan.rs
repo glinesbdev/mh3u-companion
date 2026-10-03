@@ -19,9 +19,19 @@ pub struct Run {
     pub ids: Vec<u16>,
 }
 
-/// Every run of at least `min_len` ids from `wanted`, increasing, `stride` bytes apart, starting at an even offset below `start_below`.
-/// A run is as long as it can be (it is not reported again from inside).
-pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, start_below: usize) -> Vec<Run> {
+/// How a run's ids are ordered.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Order {
+    /// Strictly increasing, like a list sorted by id.
+    Increasing,
+    /// Each id once, in any order, with at least one step down (the in-game menu may group pieces by set, not by id). Runs that only
+    /// go up are the `Increasing` kind.
+    Shuffled,
+}
+
+/// Every run of at least `min_len` ids from `wanted`, `stride` bytes apart, starting at an even offset below `start_below`. A run is as
+/// long as it can be (it is not reported again from inside).
+pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, start_below: usize, order: Order) -> Vec<Run> {
     let at = |o: usize| -> Option<u16> {
         let v = u16::from_be_bytes([*data.get(o)?, *data.get(o + 1)?]);
         wanted.contains(&v).then_some(v)
@@ -30,15 +40,26 @@ pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, s
     let mut o = 0;
     while o < data.len().min(start_below) {
         if let Some(first) = at(o) {
-            let continues_one = o >= stride && at(o - stride).is_some_and(|p| p < first);
+            let continues_one = match order {
+                Order::Increasing => o >= stride && at(o - stride).is_some_and(|p| p < first),
+                Order::Shuffled => o >= stride && at(o - stride).is_some(),
+            };
             if !continues_one {
                 let mut ids = vec![first];
                 let mut p = o + stride;
-                while let Some(v) = at(p).filter(|&v| v > *ids.last().unwrap_or(&0)) {
+                while let Some(v) = at(p) {
+                    let fits = match order {
+                        Order::Increasing => v > *ids.last().unwrap_or(&0),
+                        Order::Shuffled => !ids.contains(&v),
+                    };
+                    if !fits {
+                        break;
+                    }
                     ids.push(v);
                     p += stride;
                 }
-                if ids.len() >= min_len {
+                let steps_down = ids.windows(2).any(|w| w[1] < w[0]);
+                if ids.len() >= min_len && (order == Order::Increasing || steps_down) {
                     out.push(Run { offset: o, stride, ids });
                 }
             }
@@ -52,7 +73,8 @@ pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, s
 /// matches anything contiguous).
 pub fn score(run: &Run) -> usize {
     let gaps = run.ids.windows(2).filter(|w| w[1] != w[0] + 1).count();
-    run.ids.len() * 4 + gaps * 3
+    let steps_down = run.ids.windows(2).filter(|w| w[1] < w[0]).count();
+    run.ids.len() * 4 + gaps * 3 + steps_down * 6
 }
 
 /// A run and where it is in the emulator's memory.
@@ -67,11 +89,13 @@ pub fn scan(mem: &ProcMem, wanted: &HashSet<u16>, min_len: usize, keep: usize) -
     let mut found = Vec::new();
     mem.for_each_chunk(4096, |addr, data| {
         for stride in STRIDES {
-            for run in runs(data, wanted, stride, min_len, CHUNK_LEN) {
-                found.push(Found {
-                    host: addr + run.offset as u64,
-                    run,
-                });
+            for order in [Order::Increasing, Order::Shuffled] {
+                for run in runs(data, wanted, stride, min_len, CHUNK_LEN, order) {
+                    found.push(Found {
+                        host: addr + run.offset as u64,
+                        run,
+                    });
+                }
             }
         }
     })?;
@@ -97,7 +121,7 @@ mod tests {
         let wanted: HashSet<u16> = [3, 5, 9, 12, 20].into();
         for stride in [2, 4, 12] {
             let d = be(&[3, 5, 9, 12, 20], stride);
-            let found = runs(&d, &wanted, stride, 4, d.len());
+            let found = runs(&d, &wanted, stride, 4, d.len(), Order::Increasing);
             assert_eq!(
                 found,
                 vec![Run {
@@ -113,16 +137,35 @@ mod tests {
     #[test]
     fn short_runs_unwanted_values_and_decreasing_ones_do_not_count() {
         let wanted: HashSet<u16> = [3, 5, 9, 12].into();
-        assert!(runs(&be(&[3, 5], 2), &wanted, 2, 3, 100).is_empty());
-        assert!(runs(&be(&[3, 5, 7, 9], 2), &wanted, 2, 4, 100).is_empty(), "7 is not wanted");
-        assert!(runs(&be(&[12, 9, 5, 3], 2), &wanted, 2, 2, 100).is_empty(), "decreasing");
+        assert!(runs(&be(&[3, 5], 2), &wanted, 2, 3, 100, Order::Increasing).is_empty());
+        assert!(
+            runs(&be(&[3, 5, 7, 9], 2), &wanted, 2, 4, 100, Order::Increasing).is_empty(),
+            "7 is not wanted"
+        );
+        assert!(
+            runs(&be(&[12, 9, 5, 3], 2), &wanted, 2, 2, 100, Order::Increasing).is_empty(),
+            "decreasing"
+        );
     }
 
     #[test]
     fn a_run_is_reported_once_from_its_start() {
         let wanted: HashSet<u16> = [1, 2, 3, 4, 5].into();
         let d = be(&[1, 2, 3, 4, 5], 2);
-        assert_eq!(runs(&d, &wanted, 2, 2, d.len()).len(), 1);
+        assert_eq!(runs(&d, &wanted, 2, 2, d.len(), Order::Increasing).len(), 1);
+    }
+
+    #[test]
+    fn a_shuffled_run_is_found_when_the_order_is_not_by_id() {
+        let wanted: HashSet<u16> = [3, 5, 9, 12, 20].into();
+        let d = be(&[9, 3, 12, 5, 20], 4);
+        assert!(runs(&d, &wanted, 4, 4, d.len(), Order::Increasing).is_empty());
+        let found = runs(&d, &wanted, 4, 4, d.len(), Order::Shuffled);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].ids, vec![9, 3, 12, 5, 20]);
+        // an id repeated ends the run, and a run that only goes up is not "shuffled"
+        let up = be(&[3, 5, 9, 12], 4);
+        assert!(runs(&up, &wanted, 4, 4, up.len(), Order::Shuffled).is_empty());
     }
 
     #[test]

@@ -83,12 +83,17 @@ impl App {
                 .collect();
             let _ = writeln!(
                 out,
-                "#{} host {:#x} guest {guest} stride {} length {} of {}\n  ids {:?}\n  expected but not in the run: {}",
+                "#{} host {:#x} guest {guest} stride {} length {} of {}{}\n  ids {:?}\n  expected but not in the run: {}",
                 i + 1,
                 f.host,
                 f.run.stride,
                 f.run.ids.len(),
                 expected.len(),
+                if f.run.ids.windows(2).any(|w| w[1] < w[0]) {
+                    ", not in id order"
+                } else {
+                    ""
+                },
                 f.run.ids,
                 if missing.is_empty() { "none".into() } else { missing.join(" ") },
             );
