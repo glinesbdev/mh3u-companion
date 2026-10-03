@@ -123,3 +123,17 @@ after a visit to the blacksmith's screen the `06`/`07` became `02`/`03` (bit 2 c
 hunters. They look like "this piece has turned up" flags, but they do **not** match what the blacksmith offers: on slot 2 before the
 Great Jaggi quest, one table was already flagged while the Jaggi pieces were not offered, and Bone Helm was offered with its table
 unflagged. Do not use them for the blacksmith until a controlled before/after test (one action between two saves) explains them.
+
+### Monsters hunted (found 2026-10-03, matches the blacksmith)
+
+A table of u16 counters starts at `0x57a0`; entry `n` is for the monster whose id in the game's name table is `n + 6` (Jaggi 11,
+Jaggia 5, Great Jaggi 1, Ludroth 7, Kelbi 4, Arzuros 3 in the WornTester save). Capturing counts as well as killing. Of the pieces tested
+in play, the blacksmith offers a piece once the monster its materials come from has a count above zero: Jaggi armor after Great Jaggi
+was hunted (holding the materials from `give` did nothing), Ludroth and Bone pieces with their monsters, all ten Arzuros pieces
+and the Jawblade right after a captured Arzuros. Higher-rank variants (S, X, ...) need more than a first hunt (presumably quest
+rank) and are not explained. The five per-piece flag tables above did NOT change when the Arzuros pieces appeared, so they are not the
+blacksmith's list.
+
+Not solved: the drop tables do not line up with the name table past about monster 36 (Arzuros' drops sit in the row the name table
+calls Sand Barioth, 11 rows later than its name), so the Monsters tab shows later monsters' drops under the wrong name. Rows from
+Arzuros on are the name table plus 11.

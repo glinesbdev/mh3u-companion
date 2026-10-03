@@ -73,6 +73,44 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
+        // unlock-monsters <user> <game_dir>: pieces whose first material drops from a monster the save counts as hunted
+        Some("unlock-monsters") if args.len() == 3 => {
+            let bytes = std::fs::read(&args[1]).with_context(|| args[1].clone())?;
+            let data = GameData::load(Path::new(&args[2]))?;
+            // u16 per monster from 0x57a0; entry n is monster n + 6 (worked out from saves, see docs/formats.md)
+            let hunted = |m: u16| -> u16 {
+                let o = 0x57a0 + 2 * (m as usize).saturating_sub(6);
+                u16::from_be_bytes([bytes[o], bytes[o + 1]])
+            };
+            for (m, name) in (6u16..80).map(|m| (m, data.monster_name(m))) {
+                if let (n @ 1.., Some(name)) = (hunted(m), name) {
+                    println!("hunted: {name} x{n}");
+                }
+            }
+            for kind in (1..=5u8).chain(7..=19) {
+                for id in 1..2000u16 {
+                    let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.equipment_name(kind, id)) else {
+                        continue;
+                    };
+                    if name.is_empty() || name == "DUMMY" || recipe.flag == 1 {
+                        continue;
+                    }
+                    let first = recipe.materials[0].id;
+                    let mut sources: Vec<u16> = data.drops().sources(first).iter().map(|s| s.0).collect();
+                    sources.sort_unstable();
+                    sources.dedup();
+                    let any = sources.iter().any(|&m| hunted(m) > 0);
+                    let monsters: Vec<&str> = sources.iter().filter_map(|&m| data.monster_name(m)).collect();
+                    println!(
+                        "{} kind {kind:>2} {name:<24} first {:<18} from {:?}",
+                        if any { "OFFER" } else { "  -  " },
+                        data.item_name(first).unwrap_or("?"),
+                        monsters
+                    );
+                }
+            }
+            Ok(())
+        }
         // items <user1> <game_dir>: print pouch, item box and equipment box with names
         Some("items") if args.len() == 3 => {
             let save = Save::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;
