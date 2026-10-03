@@ -2,6 +2,18 @@
 
 use super::*;
 
+/// The debug command line, available with `--debug-edit`.
+#[derive(Default)]
+pub struct EditConsole {
+    /// Debug editing is on: `:` opens the command line.
+    pub enabled: bool,
+    /// The command line is open.
+    pub(super) active: bool,
+    pub text: String,
+    /// The newest live save block, the base for edit commands.
+    pub(super) live_bytes: Option<Vec<u8>>,
+}
+
 impl App {
     /// Make `save` the current data. Returns a message if the zenny changed.
     pub(super) fn apply_save(&mut self, save: Save) -> Option<String> {
@@ -27,7 +39,7 @@ impl App {
 
     /// Turn on the debug command line (`:`). `note` is shown in the status line.
     pub fn enable_edit(&mut self, note: String) {
-        self.edit_mode = true;
+        self.console.enabled = true;
         self.status = note;
     }
 
@@ -38,7 +50,7 @@ impl App {
             Err(e) => return self.status = e,
         };
         let connected = self.live_connected();
-        let (Some(live), Some(mut data)) = (&self.live, self.live_bytes.clone()) else {
+        let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {
             return self.status = "editing needs the game running through --live".into();
         };
         if !connected {
@@ -105,7 +117,7 @@ impl App {
                 }
                 // what we just wrote must not be mistaken for something the player did
                 if let Ok(edited) = Save::parse(&data) {
-                    self.tracker.rebase(&edited);
+                    self.costs.tracker.rebase(&edited);
                 }
                 self.status = notes.join("; ");
             }
@@ -120,7 +132,7 @@ impl App {
 
     /// True while the debug command line is open.
     pub fn is_commanding(&self) -> bool {
-        self.commanding
+        self.console.active
     }
 
     pub fn live_connected(&self) -> bool {
@@ -153,14 +165,14 @@ impl App {
         // The live data is gone (hunter unloaded or Cemu closed), and anything not saved with it. Go back to the save file.
         let dropped = was_connected && !live.connected;
         if dropped {
-            self.tracker.reset();
+            self.costs.tracker.reset();
         }
         if let Some(bytes) = newest {
             let parsed = Save::parse(&bytes);
-            self.live_bytes = Some(bytes);
+            self.console.live_bytes = Some(bytes);
             match parsed {
                 Ok(save) => {
-                    self.tracker.observe(&save, Instant::now());
+                    self.costs.tracker.observe(&save, Instant::now());
                     if let Some(message) = self.apply_save(save) {
                         status = Some(message);
                     }

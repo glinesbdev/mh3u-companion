@@ -123,7 +123,7 @@ pub(super) fn draw_help(f: &mut Frame, app: &mut App) {
     let w = area.width.min(89);
     let text_width = usize::from(w).saturating_sub(2 + 4); // borders and two cells of padding on each side
     let mut lines = help_lines(HELP, text_width);
-    if app.edit_mode {
+    if app.console.enabled {
         lines.extend(help_lines(HELP_EDIT, text_width));
     }
     lines.push(Line::raw(""));

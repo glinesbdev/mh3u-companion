@@ -2,6 +2,42 @@
 
 use super::*;
 
+/// The Items and Equipment tabs: the highlighted rows, how the lists are ordered and filtered, and the lists as shown.
+pub struct Inventory {
+    pub box_state: ListState,
+    pub pouch_state: ListState,
+    /// The Items tab's highlight (and details) follow the pouch rather than the box.
+    pub pouch_focus: bool,
+    pub equip_state: ListState,
+    pub box_sort: BoxSort,
+    pub equip_sort: EquipSort,
+    /// Search text for the Items tab.
+    pub item_search: String,
+    /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
+    pub equip_view: Vec<usize>,
+    /// The item box in display order (see `box_sort`).
+    pub box_view: Vec<ItemStack>,
+    /// The item pouch, filtered by the item search.
+    pub pouch_view: Vec<ItemStack>,
+}
+
+impl Default for Inventory {
+    fn default() -> Inventory {
+        Inventory {
+            box_state: ListState::default().with_selected(Some(0)),
+            pouch_state: ListState::default().with_selected(Some(0)),
+            pouch_focus: false,
+            equip_state: ListState::default().with_selected(Some(0)),
+            box_sort: BoxSort::BoxOrder,
+            equip_sort: EquipSort::BoxOrder,
+            item_search: String::new(),
+            equip_view: Vec::new(),
+            box_view: Vec::new(),
+            pouch_view: Vec::new(),
+        }
+    }
+}
+
 /// The upgrade tree popup for one weapon.
 pub struct TreeView {
     pub kind: u8,
@@ -13,7 +49,7 @@ pub struct TreeView {
 impl App {
     /// Items whose names match the item search, best match first (or unfiltered, in their given order).
     pub(super) fn filter_items(&self, stacks: &[ItemStack]) -> Vec<(u32, ItemStack)> {
-        let words: Vec<String> = self.item_search.split_whitespace().map(str::to_lowercase).collect();
+        let words: Vec<String> = self.inv.item_search.split_whitespace().map(str::to_lowercase).collect();
         stacks
             .iter()
             .filter_map(|&stack| {
@@ -35,39 +71,45 @@ impl App {
 
     /// Rebuild the pouch and item box lists for the current search and sort order.
     pub(super) fn refresh_box(&mut self) {
-        let searching = !self.item_search.trim().is_empty();
+        let searching = !self.inv.item_search.trim().is_empty();
         let mut pouch = self.filter_items(&self.save.pouch);
         if searching {
             pouch.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
         }
-        self.pouch_view = pouch.into_iter().map(|(_, s)| s).collect();
+        self.inv.pouch_view = pouch.into_iter().map(|(_, s)| s).collect();
 
         let mut view = self.filter_items(&self.save.item_box);
-        match self.box_sort {
+        match self.inv.box_sort {
             BoxSort::BoxOrder if searching => view.sort_by_key(|(score, _)| std::cmp::Reverse(*score)),
             BoxSort::BoxOrder => {}
             BoxSort::Name => view.sort_by_key(|(_, s)| self.game.item_name(s.id).unwrap_or("?").to_lowercase()),
             BoxSort::Quantity => view.sort_by_key(|(_, s)| std::cmp::Reverse(s.count)),
         }
-        self.box_view = view.into_iter().map(|(_, s)| s).collect();
-        let sel = self.box_state.selected().unwrap_or(0).min(self.box_view.len().saturating_sub(1));
-        self.box_state.select(Some(sel));
+        self.inv.box_view = view.into_iter().map(|(_, s)| s).collect();
         let sel = self
+            .inv
+            .box_state
+            .selected()
+            .unwrap_or(0)
+            .min(self.inv.box_view.len().saturating_sub(1));
+        self.inv.box_state.select(Some(sel));
+        let sel = self
+            .inv
             .pouch_state
             .selected()
             .unwrap_or(0)
-            .min(self.pouch_view.len().saturating_sub(1));
-        self.pouch_state.select(Some(sel));
+            .min(self.inv.pouch_view.len().saturating_sub(1));
+        self.inv.pouch_state.select(Some(sel));
     }
 
     /// Put the equipment box in display order, keeping the same item selected when it is still there.
     pub(super) fn refresh_equipment(&mut self) {
-        let kept = self.equip_state.selected().and_then(|i| self.equip_view.get(i)).copied();
+        let kept = self.inv.equip_state.selected().and_then(|i| self.inv.equip_view.get(i)).copied();
         let boxed = &self.save.equipment_box;
         let name = |i: usize| self.game.equipment_name(boxed[i].kind, boxed[i].id).unwrap_or("?").to_lowercase();
         let rarity = |i: usize| self.game.equipment_rarity(boxed[i].kind, boxed[i].id).unwrap_or(0);
         let mut view: Vec<usize> = (0..boxed.len()).collect();
-        match self.equip_sort {
+        match self.inv.equip_sort {
             EquipSort::BoxOrder => {}
             EquipSort::Name => view.sort_by_key(|&i| (name(i), kind_rank(boxed[i].kind))),
             EquipSort::Rarity => view.sort_by_key(|&i| (std::cmp::Reverse(rarity(i)), kind_rank(boxed[i].kind), name(i))),
@@ -76,14 +118,14 @@ impl App {
         }
         let at = kept
             .and_then(|k| view.iter().position(|&i| i == k))
-            .unwrap_or_else(|| self.equip_state.selected().unwrap_or(0).min(view.len().saturating_sub(1)));
-        self.equip_view = view;
-        self.equip_state.select(Some(at));
+            .unwrap_or_else(|| self.inv.equip_state.selected().unwrap_or(0).min(view.len().saturating_sub(1)));
+        self.inv.equip_view = view;
+        self.inv.equip_state.select(Some(at));
     }
 
     /// Whether the Items tab's highlight is on the pouch: when asked for with `p`, or when the box list has nothing to highlight.
     pub fn items_on_pouch(&self) -> bool {
-        !self.pouch_view.is_empty() && (self.pouch_focus || self.box_view.is_empty())
+        !self.inv.pouch_view.is_empty() && (self.inv.pouch_focus || self.inv.box_view.is_empty())
     }
 
     /// The worn armor pieces as (equipment kind, box entry), in the order head, body, arms, waist, legs.
@@ -107,16 +149,21 @@ impl App {
 
     /// The equipment-box entry that is highlighted on the Equipment tab.
     pub fn selected_equipment(&self) -> Option<&mh3u_core::save::Equipment> {
-        let i = *self.equip_view.get(self.equip_state.selected()?)?;
+        let i = *self.inv.equip_view.get(self.inv.equip_state.selected()?)?;
         self.save.equipment_box.get(i)
     }
 
     /// The weapon highlighted on the current tab, as (kind, id). `None` on tabs with no selection.
     pub fn highlighted_equipment(&self) -> Option<(u8, u16)> {
         match self.tab {
-            Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
+            Tab::Crafting => self
+                .craft
+                .state
+                .selected()
+                .and_then(|i| self.craft.pieces.get(i))
+                .map(|p| (p.kind, p.id)),
             Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
-            Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
+            Tab::Wishlist => self.wish.state.selected().and_then(|i| self.wish.items.get(i)).copied(),
             Tab::Items | Tab::Worn | Tab::Monsters | Tab::Builds => None,
         }
     }
@@ -132,7 +179,8 @@ impl App {
     pub fn upgrade_children(&self, kind: u8, id: u16) -> Vec<u16> {
         let mut kids = self.game.upgrade_children(kind, id);
         kids.extend(
-            self.learned_upgrade
+            self.craft
+                .learned_upgrade
                 .iter()
                 .filter(|((k, child), u)| *k == kind && *child != id && u.parents.contains(&id))
                 .map(|((_, child), _)| *child),
@@ -156,10 +204,10 @@ impl App {
 
     /// The sort label for the item box: with a search, the default order is "best match".
     pub fn box_sort_label(&self) -> &'static str {
-        if self.box_sort == BoxSort::BoxOrder && !self.item_search.trim().is_empty() {
+        if self.inv.box_sort == BoxSort::BoxOrder && !self.inv.item_search.trim().is_empty() {
             "best match"
         } else {
-            self.box_sort.label()
+            self.inv.box_sort.label()
         }
     }
 }

@@ -29,7 +29,7 @@ impl App {
             self.name_key(code);
         } else if self.builds.piece_picker.is_some() {
             self.piece_key(code);
-        } else if self.commanding {
+        } else if self.console.active {
             self.command_key(code);
         } else if self.searching {
             self.search_key(code);
@@ -57,25 +57,25 @@ impl App {
 
     fn command_key(&mut self, code: KeyCode) {
         match code {
-            KeyCode::Esc => self.commanding = false,
+            KeyCode::Esc => self.console.active = false,
             KeyCode::Enter => {
-                self.commanding = false;
-                let text = std::mem::take(&mut self.command);
+                self.console.active = false;
+                let text = std::mem::take(&mut self.console.text);
                 self.run_command(&text);
             }
             KeyCode::Backspace => {
-                self.command.pop();
+                self.console.text.pop();
             }
-            KeyCode::Char(c) => self.command.push(c),
+            KeyCode::Char(c) => self.console.text.push(c),
             _ => {}
         }
     }
 
     fn search_key(&mut self, code: KeyCode) {
         let text = if self.tab == Tab::Items {
-            &mut self.item_search
+            &mut self.inv.item_search
         } else {
-            &mut self.search
+            &mut self.craft.search
         };
         match code {
             KeyCode::Esc => {
@@ -119,10 +119,10 @@ impl App {
 
     fn items_key(&mut self, code: KeyCode) -> bool {
         match code {
-            KeyCode::Char('p') => self.pouch_focus = !self.pouch_focus,
+            KeyCode::Char('p') => self.inv.pouch_focus = !self.inv.pouch_focus,
             KeyCode::Char('/') => self.searching = true,
             KeyCode::Char('s') => {
-                self.box_sort = self.box_sort.next();
+                self.inv.box_sort = self.inv.box_sort.next();
                 self.refresh_box();
             }
             KeyCode::Char('x') => self.clear_search(),
@@ -134,13 +134,13 @@ impl App {
     fn crafting_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('c') => self.craftable_only = !self.craftable_only,
-            KeyCode::Char('o') => self.hide_owned = !self.hide_owned,
-            KeyCode::Char('b') => self.blacksmith_only = !self.blacksmith_only,
-            KeyCode::Char('u') => self.unpriced_only = !self.unpriced_only,
-            KeyCode::Char('s') => self.piece_sort = self.piece_sort.next(),
+            KeyCode::Char('c') => self.craft.craftable_only = !self.craft.craftable_only,
+            KeyCode::Char('o') => self.craft.hide_owned = !self.craft.hide_owned,
+            KeyCode::Char('b') => self.craft.blacksmith_only = !self.craft.blacksmith_only,
+            KeyCode::Char('u') => self.craft.unpriced_only = !self.craft.unpriced_only,
+            KeyCode::Char('s') => self.craft.sort = self.craft.sort.next(),
             KeyCode::Char('w') => {
-                if let Some(p) = self.craft_state.selected().and_then(|i| self.pieces.get(i)) {
+                if let Some(p) = self.craft.state.selected().and_then(|i| self.craft.pieces.get(i)) {
                     let (kind, id) = (p.kind, p.id);
                     self.toggle_wish(kind, id);
                 }
@@ -159,7 +159,7 @@ impl App {
     fn wishlist_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('w' | 'x') | KeyCode::Delete => {
-                if let Some(&(kind, id)) = self.wish_state.selected().and_then(|i| self.wishlist.get(i)) {
+                if let Some(&(kind, id)) = self.wish.state.selected().and_then(|i| self.wish.items.get(i)) {
                     self.toggle_wish(kind, id);
                 }
                 true
@@ -171,7 +171,7 @@ impl App {
     fn equipment_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('s') => {
-                self.equip_sort = self.equip_sort.next();
+                self.inv.equip_sort = self.inv.equip_sort.next();
                 self.refresh_equipment();
                 true
             }
@@ -182,9 +182,9 @@ impl App {
     /// On the Monsters tab the page keys scroll the drops, since the list is moved with the arrows and Home/End.
     fn monsters_key(&mut self, code: KeyCode) -> bool {
         match code {
-            KeyCode::Char('s') => self.monster_sort = self.monster_sort.next(),
-            KeyCode::PageDown => self.monster_scroll = self.monster_scroll.saturating_add(10),
-            KeyCode::PageUp => self.monster_scroll = self.monster_scroll.saturating_sub(10),
+            KeyCode::Char('s') => self.monsters.sort = self.monsters.sort.next(),
+            KeyCode::PageDown => self.monsters.scroll = self.monsters.scroll.saturating_add(10),
+            KeyCode::PageUp => self.monsters.scroll = self.monsters.scroll.saturating_sub(10),
             _ => return false,
         }
         true
@@ -205,9 +205,9 @@ impl App {
             KeyCode::Char('?') => self.show_help = true,
             KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
             KeyCode::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
-            KeyCode::Char(':') if self.edit_mode => {
-                self.commanding = true;
-                self.command.clear();
+            KeyCode::Char(':') if self.console.enabled => {
+                self.console.active = true;
+                self.console.text.clear();
             }
             KeyCode::Tab | KeyCode::Right | KeyCode::Char('l') => self.switch_tab(1),
             KeyCode::BackTab | KeyCode::Left | KeyCode::Char('h') => self.switch_tab(-1),
@@ -225,9 +225,9 @@ impl App {
     /// Forget the search text of the current tab (the Items tab has its own).
     fn clear_search(&mut self) {
         if self.tab == Tab::Items {
-            self.item_search.clear();
+            self.inv.item_search.clear();
         } else {
-            self.search.clear();
+            self.craft.search.clear();
         }
         self.apply_search();
     }

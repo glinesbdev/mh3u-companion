@@ -56,13 +56,18 @@ fn the_crafting_filters_toggle_and_narrow_the_list() {
         key(&mut app, KeyCode::Right);
     }
     assert_eq!(app.tab, Tab::Crafting);
-    let all = app.pieces.len();
+    let all = app.craft.pieces.len();
     press(&mut app, "b");
-    assert!(app.blacksmith_only);
-    assert!(app.pieces.len() < all, "only what the blacksmith offers");
-    assert!(app.pieces.iter().all(|p| p.offered || p.owned || app.at_blacksmith(p.kind, p.id)));
+    assert!(app.craft.blacksmith_only);
+    assert!(app.craft.pieces.len() < all, "only what the blacksmith offers");
+    assert!(
+        app.craft
+            .pieces
+            .iter()
+            .all(|p| p.offered || p.owned || app.at_blacksmith(p.kind, p.id))
+    );
     press(&mut app, "b");
-    assert_eq!(app.pieces.len(), all);
+    assert_eq!(app.craft.pieces.len(), all);
     let _ = std::fs::remove_dir_all(&dir);
 }
 

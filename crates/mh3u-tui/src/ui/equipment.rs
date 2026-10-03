@@ -5,6 +5,7 @@ use super::*;
 pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
     let rows: Vec<ListItem> = app
+        .inv
         .equip_view
         .iter()
         .map(|&i| {
@@ -27,7 +28,7 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             ]))
         })
         .collect();
-    let title = format!(" Equipment Box ({}/1000) · {} ", rows.len(), app.equip_sort.label());
+    let title = format!(" Equipment Box ({}/1000) · {} ", rows.len(), app.inv.equip_sort.label());
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("The equipment box is empty.", muted())]);
         f.render_widget(Paragraph::new(Vec::<Line>::new()).block(theme::pane(" Details ", false)), right);
@@ -40,9 +41,9 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             .highlight_style(theme::selection())
             .highlight_symbol(theme::SELECTION_MARK),
         left,
-        &mut app.equip_state,
+        &mut app.inv.equip_state,
     );
-    scrollbar(f, left, len, app.equip_state.selected());
+    scrollbar(f, left, len, app.inv.equip_state.selected());
 
     let lines = match app.selected_equipment() {
         Some(e) => {

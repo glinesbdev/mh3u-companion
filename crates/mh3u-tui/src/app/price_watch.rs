@@ -2,15 +2,30 @@
 
 use super::*;
 
+/// Forging costs seen in the game (see `mh3u_core::prices`) and the watcher that finds them.
+pub struct PriceBook {
+    pub(super) ledger: Ledger,
+    pub(super) tracker: PriceTracker,
+}
+
+impl PriceBook {
+    pub(super) fn new(ledger: Ledger) -> PriceBook {
+        PriceBook {
+            ledger,
+            tracker: PriceTracker::default(),
+        }
+    }
+}
+
 impl App {
     /// Let the price tracker judge what has settled, and keep any cost it is sure about.
     pub(super) fn tick_prices(&mut self) {
         let book = GameBook {
             game: &self.game,
-            create: &self.learned_create,
-            upgrade: &self.learned_upgrade,
+            create: &self.craft.learned_create,
+            upgrade: &self.craft.learned_upgrade,
         };
-        let outcome = self.tracker.finish(Instant::now(), &book);
+        let outcome = self.costs.tracker.finish(Instant::now(), &book);
         let when = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_secs());
@@ -49,7 +64,7 @@ impl App {
             parent,
         };
         let (z, how) = (group_digits(u64::from(cost)), route.label());
-        let message = match (self.prices.record(entry), recipe_text) {
+        let message = match (self.costs.ledger.record(entry), recipe_text) {
             (_, Some(recipe)) => format!("learned {name}: {z} z to {how}, recipe {recipe}"),
             (Recorded::New, None) => format!("price noted: {name} costs {z} z to {how}"),
             (Recorded::Unchanged, None) => format!("{name} costs {z} z to {how} (as noted before)"),
@@ -60,11 +75,11 @@ impl App {
         if learned {
             // the new recipe makes the piece appear in the Crafting list and the wishlist
             self.rebuild_learned();
-            self.catalog = self.build_catalog();
+            self.craft.catalog = self.build_catalog();
             self.refresh_pieces();
         }
         if let Some(path) = self.files.as_ref().map(|f| &f.prices)
-            && let Err(message) = crate::files::save(path, &self.prices.format(), "prices")
+            && let Err(message) = crate::files::save(path, &self.costs.ledger.format(), "prices")
         {
             self.status = message;
         }

@@ -6,6 +6,7 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
 
     let rows: Vec<ListItem> = app
+        .craft
         .pieces
         .iter()
         .map(|p| {
@@ -36,19 +37,19 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .collect();
     let mut title = format!(" Pieces ({}) · {} ", rows.len(), app.sort_label());
-    if !app.search.is_empty() {
-        title = format!(" \"{}\" ({}) · {} ", app.search, rows.len(), app.sort_label());
+    if !app.craft.search.is_empty() {
+        title = format!(" \"{}\" ({}) · {} ", app.craft.search, rows.len(), app.sort_label());
     }
-    if app.craftable_only {
+    if app.craft.craftable_only {
         title.push_str("[craftable only] ");
     }
-    if app.hide_owned {
+    if app.craft.hide_owned {
         title.push_str("[hiding owned] ");
     }
-    if app.unpriced_only {
+    if app.craft.unpriced_only {
         title.push_str("[owned, no price yet] ");
     }
-    if app.blacksmith_only {
+    if app.craft.blacksmith_only {
         title.push_str("[at the blacksmith] ");
     }
     if rows.is_empty() {
@@ -65,12 +66,12 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
                 .highlight_style(theme::selection())
                 .highlight_symbol(theme::SELECTION_MARK),
             left,
-            &mut app.craft_state,
+            &mut app.craft.state,
         );
-        scrollbar(f, left, len, app.craft_state.selected());
+        scrollbar(f, left, len, app.craft.state.selected());
     }
 
-    let lines = match app.craft_state.selected().and_then(|i| app.pieces.get(i)) {
+    let lines = match app.craft.state.selected().and_then(|i| app.craft.pieces.get(i)) {
         Some(piece) => piece_details(app, piece.kind, piece.id, &piece.name, Some(piece.craftable)),
         None => Vec::new(),
     };

@@ -24,7 +24,8 @@ knows how the other works beyond `App`'s public fields and methods.
 
 ```
 app/
-  mod.rs            the App struct, App::new, the main loop, moving in lists
+  mod.rs            the App struct (a handful of fields, one struct per tab: Inventory, Crafting, WishList, MonsterTab,
+                    BuildManager, PriceBook, EditConsole), App::new, the main loop, moving in lists
   keys.rs           all key handling: popups first, then the tab's keys, then the shared ones
   crafting.rs       Crafting tab: pieces, recipes, plans, search and sort, costs
   inventory.rs      Items and Equipment tabs, worn gear, upgrade-tree popup
@@ -47,7 +48,7 @@ Pure logic with no `App` in sight lives beside them so it can be tested alone: `
 ### Adding a tab
 
 1. Add a variant to `Tab` (`app/mod.rs`) and to `Tab::ALL` and `title`.
-2. Put its state and methods in `app/<name>.rs` (`impl App { ... }`); add `mod <name>;` in `app/mod.rs`.
+2. Put its state in a struct and its methods in `app/<name>.rs` (`impl App { ... }`); add `mod <name>;` in `app/mod.rs` and a field of the struct on `App`.
 3. Its keys go in a `<name>_key` method that `tab_key` in `app/keys.rs` calls.
 4. Its drawing goes in `ui/<name>.rs`; add the arm in `ui::draw`, key hints in `draw_footer`, and a line in `ui/help.rs`.
 

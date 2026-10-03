@@ -2,6 +2,42 @@
 
 use super::*;
 
+/// The Crafting tab: the pieces listed, the filters and sort on them, the search, and the recipes learned from play.
+pub struct Crafting {
+    pub state: ListState,
+    pub search: String,
+    pub craftable_only: bool,
+    pub hide_owned: bool,
+    /// Show only pieces you own that have no forging cost in the ledger yet.
+    pub unpriced_only: bool,
+    /// Show only pieces the blacksmith is offering (see `mh3u_core::blacksmith`).
+    pub blacksmith_only: bool,
+    pub sort: PieceSort,
+    pub pieces: Vec<Piece>,
+    pub(super) catalog: Vec<Searchable>,
+    /// Recipes learned from play (see `prices::Outcome::Learned`), for pieces the game data has no recipe for.
+    pub(super) learned_create: HashMap<(u8, u16), Recipe>,
+    pub(super) learned_upgrade: HashMap<(u8, u16), Upgrade>,
+}
+
+impl Default for Crafting {
+    fn default() -> Crafting {
+        Crafting {
+            state: ListState::default().with_selected(Some(0)),
+            search: String::new(),
+            craftable_only: false,
+            hide_owned: false,
+            unpriced_only: false,
+            blacksmith_only: false,
+            sort: PieceSort::GameOrder,
+            pieces: Vec::new(),
+            catalog: Vec::new(),
+            learned_create: HashMap::new(),
+            learned_upgrade: HashMap::new(),
+        }
+    }
+}
+
 /// How a piece would be obtained.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Via {
@@ -163,34 +199,34 @@ impl App {
             .game
             .recipe(kind, id)
             .filter(|r| !r.materials.iter().any(placeholder))
-            .or_else(|| self.learned_create.get(&(kind, id)));
+            .or_else(|| self.craft.learned_create.get(&(kind, id)));
         let upgrade = self
             .game
             .upgrade(kind, id)
             .filter(|u| !u.materials.iter().any(placeholder))
-            .or_else(|| self.learned_upgrade.get(&(kind, id)));
+            .or_else(|| self.craft.learned_upgrade.get(&(kind, id)));
         (create, upgrade)
     }
 
     /// The create recipe of a piece from the game data, or learned from play.
     pub fn create_recipe(&self, kind: u8, id: u16) -> Option<&Recipe> {
-        self.game.recipe(kind, id).or_else(|| self.learned_create.get(&(kind, id)))
+        self.game.recipe(kind, id).or_else(|| self.craft.learned_create.get(&(kind, id)))
     }
 
     /// The upgrade recipe of a weapon from the game data, or learned from play.
     pub fn upgrade_recipe(&self, kind: u8, id: u16) -> Option<&Upgrade> {
-        self.game.upgrade(kind, id).or_else(|| self.learned_upgrade.get(&(kind, id)))
+        self.game.upgrade(kind, id).or_else(|| self.craft.learned_upgrade.get(&(kind, id)))
     }
 
     /// Rebuild the recipe lookups from the ledger's learned entries.
     pub(super) fn rebuild_learned(&mut self) {
-        self.learned_create.clear();
-        self.learned_upgrade.clear();
-        for e in self.prices.learned() {
+        self.craft.learned_create.clear();
+        self.craft.learned_upgrade.clear();
+        for e in self.costs.ledger.learned() {
             let materials = e.materials.clone().unwrap_or_default();
             match e.route {
                 Route::Create => {
-                    self.learned_create.insert(
+                    self.craft.learned_create.insert(
                         (e.kind, e.id),
                         Recipe {
                             materials,
@@ -201,7 +237,7 @@ impl App {
                 }
                 Route::Upgrade => {
                     let parents = e.parent.into_iter().collect();
-                    self.learned_upgrade.insert((e.kind, e.id), Upgrade { materials, parents });
+                    self.craft.learned_upgrade.insert((e.kind, e.id), Upgrade { materials, parents });
                 }
             }
         }
@@ -240,7 +276,11 @@ impl App {
 
     /// The search text for the current tab.
     pub fn active_search(&self) -> &str {
-        if self.tab == Tab::Items { &self.item_search } else { &self.search }
+        if self.tab == Tab::Items {
+            &self.inv.item_search
+        } else {
+            &self.craft.search
+        }
     }
 
     pub(super) fn apply_search(&mut self) {
@@ -320,9 +360,9 @@ impl App {
 
     /// Recompute the crafting list for the current search text, filter, sort and inventory.
     pub(super) fn refresh_pieces(&mut self) {
-        let words: Vec<String> = self.search.split_whitespace().map(str::to_lowercase).collect();
+        let words: Vec<String> = self.craft.search.split_whitespace().map(str::to_lowercase).collect();
         let mut scored: Vec<(u32, Piece)> = Vec::new();
-        for entry in &self.catalog {
+        for entry in &self.craft.catalog {
             let Some((score, reason)) = entry.matches(&words) else { continue };
             let (kind, id) = (entry.kind, entry.id);
             let piece = Piece {
@@ -335,33 +375,38 @@ impl App {
                 reason,
             };
             let unpriced = piece.owned && self.cost(kind, id, Route::Create).is_none() && self.cost(kind, id, Route::Upgrade).is_none();
-            if (!self.craftable_only || piece.craftable)
-                && (!self.hide_owned || !piece.owned)
-                && (!self.unpriced_only || unpriced)
-                && (!self.blacksmith_only || piece.offered)
+            if (!self.craft.craftable_only || piece.craftable)
+                && (!self.craft.hide_owned || !piece.owned)
+                && (!self.craft.unpriced_only || unpriced)
+                && (!self.craft.blacksmith_only || piece.offered)
             {
                 scored.push((score, piece));
             }
         }
-        sort_pieces(&mut scored, self.piece_sort, words.len());
-        self.pieces = scored.into_iter().map(|(_, p)| p).collect();
-        let sel = self.craft_state.selected().unwrap_or(0).min(self.pieces.len().saturating_sub(1));
-        self.craft_state.select(Some(sel));
+        sort_pieces(&mut scored, self.craft.sort, words.len());
+        self.craft.pieces = scored.into_iter().map(|(_, p)| p).collect();
+        let sel = self
+            .craft
+            .state
+            .selected()
+            .unwrap_or(0)
+            .min(self.craft.pieces.len().saturating_sub(1));
+        self.craft.state.select(Some(sel));
     }
 
     /// The sort label to show: with a search, the default order is "best match".
     pub fn sort_label(&self) -> &'static str {
-        if self.piece_sort == PieceSort::GameOrder && !self.search.trim().is_empty() {
+        if self.craft.sort == PieceSort::GameOrder && !self.craft.search.trim().is_empty() {
             "best match"
         } else {
-            self.piece_sort.label()
+            self.craft.sort.label()
         }
     }
 
     /// The forging cost of a piece by a route and what it came from. A price seen in play wins over the game files,
     /// which in turn win over notes and learned costs.
     pub fn cost(&self, kind: u8, id: u16, route: Route) -> Option<(u32, Source)> {
-        let seen = self.prices.get(kind, id, route).filter(|e| e.source == Source::Seen);
+        let seen = self.costs.ledger.get(kind, id, route).filter(|e| e.source == Source::Seen);
         if let Some(e) = seen {
             return Some((e.cost, e.source));
         }
@@ -375,7 +420,7 @@ impl App {
         if let Some(cost) = from_game {
             return Some((cost, Source::Game));
         }
-        self.prices.get(kind, id, route).map(|e| (e.cost, e.source))
+        self.costs.ledger.get(kind, id, route).map(|e| (e.cost, e.source))
     }
 }
 

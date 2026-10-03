@@ -43,13 +43,19 @@ mod wishlist;
 
 pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
-pub use crafting::{Piece, Via};
+pub use crafting::Crafting;
+pub use crafting::Via;
+pub use inventory::Inventory;
 pub use inventory::TreeView;
+pub use live::EditConsole;
 pub use money::{group_digits, signed_zenny};
+pub use monsters::MonsterTab;
+pub use price_watch::PriceBook;
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
+pub use wishlist::WishList;
 
 // the helpers the submodules share (their `use super::*` picks these up)
-use crafting::{Searchable, kind_rank};
+use crafting::kind_rank;
 use money::next_zenny_change;
 use wishlist::parse_wishlist;
 
@@ -111,70 +117,33 @@ pub struct App {
     modified: Option<SystemTime>,
     pub status: String,
     pub tab: Tab,
-    pub box_state: ListState,
-    pub pouch_state: ListState,
-    /// The Items tab's highlight (and details) follow the pouch rather than the box.
-    pub pouch_focus: bool,
-    pub equip_state: ListState,
-    pub craft_state: ListState,
-    pub search: String,
-    /// Search text for the Items tab (the crafting search is `search`).
-    pub item_search: String,
-    pub searching: bool,
-    pub craftable_only: bool,
-    pub hide_owned: bool,
-    /// Show only pieces you own that have no forging cost in the ledger yet.
-    pub unpriced_only: bool,
-    /// Crafting list shows only pieces the blacksmith is offering (see `mh3u_core::blacksmith`).
-    pub blacksmith_only: bool,
-    pub piece_sort: PieceSort,
-    pub box_sort: BoxSort,
-    pub equip_sort: EquipSort,
-    pub monster_sort: MonsterSort,
-    /// The highlighted monster (by id, so the highlight stays on it when the order changes).
-    pub monster_selected: Option<u16>,
-    /// First visible line of the highlighted monster's drops; the drawing code keeps it inside the text.
-    pub monster_scroll: u16,
-    /// Show what each skill does under it in the details panels.
-    pub skill_info: bool,
-    /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
-    pub equip_view: Vec<usize>,
-    /// The upgrade tree popup, when open.
-    pub tree: Option<TreeView>,
-    /// The item box in display order (see `box_sort`).
-    pub box_view: Vec<ItemStack>,
-    /// The item pouch, filtered by the item search.
-    pub pouch_view: Vec<ItemStack>,
-    pub pieces: Vec<Piece>,
-    catalog: Vec<Searchable>,
-    /// Wishlisted pieces as (equipment kind, piece id), in the order they were added.
-    pub wishlist: Vec<(u8, u16)>,
-    /// Wishlisted pieces that were added automatically as a parent of another piece (see `remove_wish`).
-    auto_parents: HashSet<(u8, u16)>,
-    pub wish_state: ListState,
-    /// The Builds tab (see `build_manager`).
+    /// The Items and Equipment tabs.
+    pub inv: Inventory,
+    /// The Crafting tab.
+    pub craft: Crafting,
+    pub wish: WishList,
+    pub monsters: MonsterTab,
+    /// The Builds tab.
     pub builds: BuildManager,
+    /// Forging costs seen in the game and the watcher that finds them.
+    pub costs: PriceBook,
+    /// The debug command line (`--debug-edit`).
+    pub console: EditConsole,
+    /// Pieces seen on offer at the blacksmith, per hunter, saved next to the ledger.
+    unlocked: Unlocked,
     /// Where the files live; `None` when the system has no home folder, and nothing is kept between sessions.
     files: Option<Files>,
+    /// Set when the TUI started Cemu and is reading its memory (`--live`).
+    pub live: Option<Live>,
+    /// Typing a search (the text belongs to the tab: `inv.item_search` or `craft.search`).
+    pub searching: bool,
+    /// Show what each skill does under it in the details panels.
+    pub skill_info: bool,
+    /// The upgrade tree popup, when open.
+    pub tree: Option<TreeView>,
     pub show_help: bool,
     /// First visible line of the help screen (the drawing code keeps it inside the text).
     pub help_scroll: u16,
-    /// Set when the TUI started Cemu and is reading its memory (`--live`).
-    pub live: Option<Live>,
-    /// Debug editing is on (`--debug-edit`): `:` opens the command line.
-    pub edit_mode: bool,
-    commanding: bool,
-    pub command: String,
-    /// The newest live save block, the base for edit commands.
-    live_bytes: Option<Vec<u8>>,
-    /// Forging costs seen in the game (see `mh3u_core::prices`) and the watcher that finds them.
-    prices: Ledger,
-    /// Pieces seen on offer at the blacksmith, per hunter, saved next to the ledger.
-    unlocked: Unlocked,
-    /// Recipes learned from play (see `prices::Outcome::Learned`), for pieces the game data has no recipe for.
-    learned_create: HashMap<(u8, u16), Recipe>,
-    learned_upgrade: HashMap<(u8, u16), Upgrade>,
-    tracker: PriceTracker,
     /// The recent change in zenny and when it happened (see `zenny_change`).
     zenny_change: Option<(i64, Instant)>,
     /// Waiting for y/n because quitting would end live updates from a Cemu that is still running.
@@ -206,54 +175,27 @@ impl App {
             save_path,
             status: String::new(),
             tab: Tab::Items,
-            box_state: ListState::default().with_selected(Some(0)),
-            pouch_state: ListState::default().with_selected(Some(0)),
-            pouch_focus: false,
-            equip_state: ListState::default().with_selected(Some(0)),
-            craft_state: ListState::default().with_selected(Some(0)),
-            search: String::new(),
-            item_search: String::new(),
-            searching: false,
-            craftable_only: false,
-            hide_owned: false,
-            unpriced_only: false,
-            blacksmith_only: false,
-            piece_sort: PieceSort::GameOrder,
-            box_sort: BoxSort::BoxOrder,
-            equip_sort: EquipSort::BoxOrder,
-            monster_sort: MonsterSort::GameOrder,
-            monster_selected: None,
-            monster_scroll: 0,
-            skill_info: false,
-            equip_view: Vec::new(),
-            tree: None,
-            box_view: Vec::new(),
-            pouch_view: Vec::new(),
-            pieces: Vec::new(),
-            catalog: Vec::new(),
-            wishlist,
-            auto_parents,
-            wish_state: ListState::default().with_selected(Some(0)),
+            inv: Inventory::default(),
+            craft: Crafting::default(),
+            wish: WishList::new(wishlist, auto_parents),
+            monsters: MonsterTab::default(),
             builds,
+            costs: PriceBook::new(prices),
+            console: EditConsole::default(),
+            unlocked,
             files,
+            live: None,
+            searching: false,
+            skill_info: false,
+            tree: None,
             show_help: false,
             help_scroll: 0,
-            live: None,
-            prices,
-            unlocked,
-            learned_create: HashMap::new(),
-            learned_upgrade: HashMap::new(),
-            tracker: PriceTracker::default(),
             zenny_change: None,
-            edit_mode: false,
-            commanding: false,
-            command: String::new(),
-            live_bytes: None,
             confirm_quit: false,
             quit: false,
         };
         app.rebuild_learned();
-        app.catalog = app.build_catalog();
+        app.craft.catalog = app.build_catalog();
         app.learn_unlocked();
         app.refresh_box();
         app.refresh_equipment();
@@ -292,18 +234,18 @@ impl App {
                 let view = self.monster_view();
                 let at = self.highlighted_monster().and_then(|m| view.iter().position(|&(v, _)| v == m));
                 if let Some(&(m, _)) = view.get(stepped(at, step, view.len())) {
-                    if self.monster_selected != Some(m) {
-                        self.monster_scroll = 0;
+                    if self.monsters.selected != Some(m) {
+                        self.monsters.scroll = 0;
                     }
-                    self.monster_selected = Some(m);
+                    self.monsters.selected = Some(m);
                 }
                 return;
             }
-            Tab::Items if self.items_on_pouch() => (&mut self.pouch_state, self.pouch_view.len()),
-            Tab::Items => (&mut self.box_state, self.box_view.len()),
-            Tab::Equipment => (&mut self.equip_state, self.equip_view.len()),
-            Tab::Crafting => (&mut self.craft_state, self.pieces.len()),
-            Tab::Wishlist => (&mut self.wish_state, self.wishlist.len()),
+            Tab::Items if self.items_on_pouch() => (&mut self.inv.pouch_state, self.inv.pouch_view.len()),
+            Tab::Items => (&mut self.inv.box_state, self.inv.box_view.len()),
+            Tab::Equipment => (&mut self.inv.equip_state, self.inv.equip_view.len()),
+            Tab::Crafting => (&mut self.craft.state, self.craft.pieces.len()),
+            Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
             Tab::Builds => match self.builds.focus {
                 BuildFocus::Sets => (&mut self.builds.result_state, self.builds.results.len()),
                 BuildFocus::Skills => (&mut self.builds.target_state, self.builds.settings.targets.len()),

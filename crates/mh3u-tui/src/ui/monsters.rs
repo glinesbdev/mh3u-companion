@@ -17,7 +17,7 @@ pub(super) fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
             ListItem::new(Line::from(spans))
         })
         .collect();
-    let title = format!(" Monsters ({}) · {} ", rows.len(), app.monster_sort.label());
+    let title = format!(" Monsters ({}) · {} ", rows.len(), app.monsters.sort.label());
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("No monster drop data.", muted())]);
         return;
@@ -39,8 +39,8 @@ pub(super) fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
         .unwrap_or_default();
     let visible = usize::from(right.height.saturating_sub(2));
     let total = lines.len();
-    let scroll = usize::from(app.monster_scroll).min(total.saturating_sub(visible));
-    app.monster_scroll = scroll as u16;
+    let scroll = usize::from(app.monsters.scroll).min(total.saturating_sub(visible));
+    app.monsters.scroll = scroll as u16;
     f.render_widget(
         Paragraph::new(lines)
             .scroll((scroll as u16, 0))

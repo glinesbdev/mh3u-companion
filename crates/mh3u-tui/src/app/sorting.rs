@@ -56,8 +56,9 @@ impl BoxSort {
 }
 
 /// Ordering of the monster list.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub enum MonsterSort {
+    #[default]
     GameOrder,
     Name,
     /// Monsters that drop the most of what the wishlist still needs first.

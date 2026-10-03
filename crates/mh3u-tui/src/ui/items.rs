@@ -16,21 +16,21 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
             })
             .collect()
     };
-    let pouch = rows(&app.pouch_view);
-    let item_box = rows(&app.box_view);
-    let query = app.item_search.trim();
+    let pouch = rows(&app.inv.pouch_view);
+    let item_box = rows(&app.inv.box_view);
+    let query = app.inv.item_search.trim();
     let focus_pouch = app.items_on_pouch();
     let pouch_title = if query.is_empty() {
         format!(" Item Pouch ({}/24) ", app.save.pouch.len())
     } else {
-        format!(" Item Pouch · \"{query}\" ({}/{}) ", app.pouch_view.len(), app.save.pouch.len())
+        format!(" Item Pouch · \"{query}\" ({}/{}) ", app.inv.pouch_view.len(), app.save.pouch.len())
     };
     let box_title = if query.is_empty() {
         format!(" Item Box ({}/1000) · {} ", app.save.item_box.len(), app.box_sort_label())
     } else {
         format!(
             " Item Box · \"{query}\" ({}/{}) · {} ",
-            app.box_view.len(),
+            app.inv.box_view.len(),
             app.save.item_box.len(),
             app.box_sort_label()
         )
@@ -53,9 +53,9 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
         empty_pane(f, left, pouch_title, focus_pouch, vec![Line::styled(what, muted())]);
     } else {
         let mut unfocused = ListState::default();
-        let state = if focus_pouch { &mut app.pouch_state } else { &mut unfocused };
+        let state = if focus_pouch { &mut app.inv.pouch_state } else { &mut unfocused };
         f.render_stateful_widget(list(pouch, pouch_title, focus_pouch), left, state);
-        scrollbar(f, left, pouch_len, app.pouch_state.selected().filter(|_| focus_pouch));
+        scrollbar(f, left, pouch_len, app.inv.pouch_state.selected().filter(|_| focus_pouch));
     }
     if item_box.is_empty() {
         let what = if query.is_empty() {
@@ -66,15 +66,15 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
         empty_pane(f, box_area, box_title, !focus_pouch, vec![Line::styled(what, muted())]);
     } else {
         let mut unfocused = ListState::default();
-        let state = if focus_pouch { &mut unfocused } else { &mut app.box_state };
+        let state = if focus_pouch { &mut unfocused } else { &mut app.inv.box_state };
         f.render_stateful_widget(list(item_box, box_title, !focus_pouch), box_area, state);
-        scrollbar(f, box_area, box_len, app.box_state.selected().filter(|_| !focus_pouch));
+        scrollbar(f, box_area, box_len, app.inv.box_state.selected().filter(|_| !focus_pouch));
     }
 
     let highlighted = if focus_pouch {
-        app.pouch_state.selected().and_then(|i| app.pouch_view.get(i))
+        app.inv.pouch_state.selected().and_then(|i| app.inv.pouch_view.get(i))
     } else {
-        app.box_state.selected().and_then(|i| app.box_view.get(i))
+        app.inv.box_state.selected().and_then(|i| app.inv.box_view.get(i))
     };
     let lines = match highlighted {
         Some(stack) => item_details(app, stack.id),

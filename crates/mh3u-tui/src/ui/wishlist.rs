@@ -17,12 +17,12 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
                 .highlight_style(theme::selection())
                 .highlight_symbol(theme::SELECTION_MARK),
             left,
-            &mut app.wish_state,
+            &mut app.wish.state,
         );
-        scrollbar(f, left, len, app.wish_state.selected());
+        scrollbar(f, left, len, app.wish.state.selected());
     }
 
-    if app.wishlist.is_empty() {
+    if app.wish.items.is_empty() {
         let hint = vec![
             Line::from("Your wishlist is empty."),
             Line::styled("On the Crafting tab, press w on a piece to add it (★).", muted()),
@@ -33,7 +33,7 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Top right: what the highlighted piece needs on its own.
-    let selected = app.wish_state.selected().and_then(|i| app.wishlist.get(i)).copied();
+    let selected = app.wish.state.selected().and_then(|i| app.wish.items.get(i)).copied();
     let (piece_title, piece_lines) = match selected {
         Some((kind, id)) => (
             format!(" {} ", app.game.equipment_name(kind, id).unwrap_or("?")),
@@ -54,7 +54,8 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
 /// One row per wishlisted piece: an anvil if the blacksmith offers it and you lack it, its name and type, and whether you own it
 /// or can make it now.
 fn wish_rows(app: &App) -> Vec<ListItem<'static>> {
-    app.wishlist
+    app.wish
+        .items
         .iter()
         .map(|&(kind, id)| {
             let name = app.game.equipment_name(kind, id).unwrap_or("?");

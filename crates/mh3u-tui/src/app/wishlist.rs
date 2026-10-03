@@ -2,6 +2,25 @@
 
 use super::*;
 
+/// The wishlist: the pieces wanted, which of them were added only as a parent of another, and the highlighted row.
+pub struct WishList {
+    /// Wishlisted pieces as (equipment kind, piece id), in the order they were added.
+    pub items: Vec<(u8, u16)>,
+    /// Wishlisted pieces that were added automatically as a parent of another piece (see `remove_wish`).
+    pub(super) auto_parents: HashSet<(u8, u16)>,
+    pub state: ListState,
+}
+
+impl WishList {
+    pub(super) fn new(items: Vec<(u8, u16)>, auto_parents: HashSet<(u8, u16)>) -> WishList {
+        WishList {
+            items,
+            auto_parents,
+            state: ListState::default().with_selected(Some(0)),
+        }
+    }
+}
+
 /// Node of the upgrade tree for `parent_chain`.
 pub(super) struct TreeNode {
     /// Can be made from scratch, so it never needs a parent.
@@ -72,7 +91,7 @@ impl App {
     }
 
     pub fn is_wished(&self, kind: u8, id: u16) -> bool {
-        self.wishlist.contains(&(kind, id))
+        self.wish.items.contains(&(kind, id))
     }
 
     /// Add a piece to the wishlist, plus the parent weapons it needs: the upgrade chain leading to it, back to
@@ -90,9 +109,9 @@ impl App {
         let mut added = 0;
         for &parent in chain.iter().rev().chain([&id]) {
             if !self.is_wished(kind, parent) {
-                self.wishlist.push((kind, parent));
+                self.wish.items.push((kind, parent));
                 if parent != id {
-                    self.auto_parents.insert((kind, parent));
+                    self.wish.auto_parents.insert((kind, parent));
                 }
                 added += 1;
             }
@@ -123,20 +142,21 @@ impl App {
     /// Remove a piece, and the parents that were added automatically for it unless another wishlisted piece still
     /// needs them. Parents you added yourself are kept.
     pub(super) fn remove_wish(&mut self, kind: u8, id: u16) {
-        self.wishlist.retain(|&w| w != (kind, id));
-        self.auto_parents.remove(&(kind, id));
+        self.wish.items.retain(|&w| w != (kind, id));
+        self.wish.auto_parents.remove(&(kind, id));
         let mut removed = 0;
         for parent in self.needed_parents(kind, id) {
-            if !self.is_wished(kind, parent) || !self.auto_parents.contains(&(kind, parent)) {
+            if !self.is_wished(kind, parent) || !self.wish.auto_parents.contains(&(kind, parent)) {
                 continue;
             }
             let still_needed = self
-                .wishlist
+                .wish
+                .items
                 .iter()
                 .any(|&(k, other)| k == kind && other != parent && self.needed_parents(kind, other).contains(&parent));
             if !still_needed {
-                self.wishlist.retain(|&w| w != (kind, parent));
-                self.auto_parents.remove(&(kind, parent));
+                self.wish.items.retain(|&w| w != (kind, parent));
+                self.wish.auto_parents.remove(&(kind, parent));
                 removed += 1;
             }
         }
@@ -159,8 +179,8 @@ impl App {
     }
 
     pub(super) fn after_wishlist_change(&mut self) {
-        let sel = self.wish_state.selected().unwrap_or(0).min(self.wishlist.len().saturating_sub(1));
-        self.wish_state.select(Some(sel));
+        let sel = self.wish.state.selected().unwrap_or(0).min(self.wish.items.len().saturating_sub(1));
+        self.wish.state.select(Some(sel));
         self.save_wishlist();
     }
 
@@ -168,7 +188,7 @@ impl App {
         let Some(path) = self.files.as_ref().map(|f| &f.wishlist) else {
             return;
         };
-        if let Err(message) = crate::files::save(path, &format_wishlist(&self.wishlist, &self.auto_parents), "wishlist") {
+        if let Err(message) = crate::files::save(path, &format_wishlist(&self.wish.items, &self.wish.auto_parents), "wishlist") {
             self.status = message;
         }
     }
@@ -183,7 +203,7 @@ impl App {
     pub(super) fn shopping_need_with(&self, include_owned: bool) -> (Vec<(u16, u32)>, usize) {
         let mut need: Vec<(u16, u32)> = Vec::new();
         let mut unowned = 0;
-        for &(kind, id) in &self.wishlist {
+        for &(kind, id) in &self.wish.items {
             if !include_owned && self.save.owns_equipment(kind, id) {
                 continue;
             }
@@ -203,7 +223,7 @@ impl App {
     /// Total known forging cost of the wishlist's planned routes, and how many pieces have no known cost.
     pub fn wishlist_cost(&self) -> (u64, usize) {
         let (mut known, mut unknown) = (0u64, 0usize);
-        for &(kind, id) in &self.wishlist {
+        for &(kind, id) in &self.wish.items {
             if self.save.owns_equipment(kind, id) {
                 continue;
             }

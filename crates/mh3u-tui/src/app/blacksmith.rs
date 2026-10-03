@@ -57,7 +57,7 @@ impl App {
                 }
             }
         }
-        for e in self.prices.entries() {
+        for e in self.costs.ledger.entries() {
             if matches!(e.source, Source::Seen | Source::Learned) && e.route == Route::Create {
                 changed |= self.unlocked.add(&hunter, (e.kind, e.id));
             }

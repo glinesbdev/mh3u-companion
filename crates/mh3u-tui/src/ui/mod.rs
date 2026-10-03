@@ -36,7 +36,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let [tabs, body, footer] = Layout::vertical([Constraint::Length(3), Constraint::Min(0), Constraint::Length(1)]).areas(f.area());
 
     let selected = Tab::ALL.iter().position(|&t| t == app.tab).unwrap_or(0);
-    let edit_badge = if app.edit_mode {
+    let edit_badge = if app.console.enabled {
         Span::styled("✎ EDIT ", bad().add_modifier(Modifier::BOLD))
     } else {
         Span::raw("")
@@ -69,7 +69,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         .map(|&t| {
             let count = match t {
                 Tab::Equipment => Some(app.save.equipment_box.len()),
-                Tab::Wishlist => Some(app.wishlist.len()),
+                Tab::Wishlist => Some(app.wish.items.len()),
                 _ => None,
             };
             let mut spans = vec![Span::raw(t.title())];
@@ -121,7 +121,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
     let mut spans: Vec<Span> = if app.is_commanding() {
         vec![
             Span::styled(": ", accent()),
-            Span::raw(format!("{}_", app.command)),
+            Span::raw(format!("{}_", app.console.text)),
             Span::styled(
                 "   Enter run · Esc cancel · zenny N | give ITEM [N] | set ITEM N | stock [all]",
                 muted(),
