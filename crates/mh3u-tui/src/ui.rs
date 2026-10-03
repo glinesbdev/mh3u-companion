@@ -6,7 +6,7 @@ use ratatui::{
     layout::{Constraint, Layout, Margin, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Clear, List, ListItem, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Tabs, Wrap},
+    widgets::{Clear, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Tabs, Wrap},
 };
 
 pub fn draw(f: &mut Frame, app: &mut App) {
@@ -69,6 +69,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Items => draw_items(f, app, body),
         Tab::Equipment => draw_equipment(f, app, body),
         Tab::Worn => draw_worn(f, app, body),
+        Tab::Monsters => draw_monsters(f, app, body),
         Tab::Crafting => draw_crafting(f, app, body),
         Tab::Wishlist => draw_wishlist(f, app, body),
     }
@@ -124,7 +125,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 ]);
             }
             Tab::Items => {
-                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                keys.extend([("↑/↓", "move"), ("p", "pouch/box"), ("/", "search")]);
                 if clear {
                     keys.push(("x", "clear"));
                 }
@@ -133,6 +134,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree")]),
             Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
             Tab::Worn => keys.push(("i", "skill info")),
+            Tab::Monsters => keys.extend([("↑/↓", "move"), ("s", "sort")]),
         }
         keys.extend([("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
@@ -252,6 +254,8 @@ Wishlist      w or x  remove the selected piece, and the parents
 Equipment     s  sort (box order, name, rarity, type, worn first)
 Worn          totals for what you are wearing; i shows what each
                  skill does
+Monsters      what each monster drops; s sort, ★ = the wishlist
+                 still needs it
 Any weapon    t  upgrade tree: the line down to it and everything
                  it upgrades into (↑/↓ scroll, t or Esc close)
 
@@ -316,21 +320,21 @@ fn empty_pane(f: &mut Frame, area: Rect, title: String, active: bool, lines: Vec
 fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 40);
     let [box_area, details_area] = Layout::vertical([Constraint::Percentage(55), Constraint::Percentage(45)]).areas(right);
-    let rows = |stacks: &[mh3u_core::save::ItemStack], indent: &str| -> Vec<ListItem<'static>> {
+    let rows = |stacks: &[mh3u_core::save::ItemStack]| -> Vec<ListItem<'static>> {
         stacks
             .iter()
             .map(|s| {
                 ListItem::new(Line::from(vec![
-                    Span::raw(format!("{indent}{:<26}", app.game.item_name(s.id).unwrap_or("?"))),
+                    Span::raw(format!("{:<26}", app.game.item_name(s.id).unwrap_or("?"))),
                     Span::styled(format!(" x{}", s.count), muted()),
                 ]))
             })
             .collect()
     };
-    // the box list has a selection mark column; the pouch lines up with it
-    let pouch = rows(&app.pouch_view, "  ");
-    let item_box = rows(&app.box_view, "");
+    let pouch = rows(&app.pouch_view);
+    let item_box = rows(&app.box_view);
     let query = app.item_search.trim();
+    let focus_pouch = app.items_on_pouch();
     let pouch_title = if query.is_empty() {
         format!(" Item Pouch ({}/24) ", app.save.pouch.len())
     } else {
@@ -346,15 +350,27 @@ fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
             app.box_sort_label()
         )
     };
+    // Both lists reserve the room for the selection mark, so their names line up; only the focused one shows a highlight.
+    let list = |rows: Vec<ListItem<'static>>, title: String, active: bool| {
+        List::new(rows)
+            .block(theme::pane(title, active))
+            .highlight_style(theme::selection())
+            .highlight_symbol(theme::SELECTION_MARK)
+            .highlight_spacing(ratatui::widgets::HighlightSpacing::Always)
+    };
+    let (pouch_len, box_len) = (pouch.len(), item_box.len());
     if pouch.is_empty() {
         let what = if query.is_empty() {
             "Nothing in the pouch."
         } else {
             "No pouch items match."
         };
-        empty_pane(f, left, pouch_title, false, vec![Line::styled(what, muted())]);
+        empty_pane(f, left, pouch_title, focus_pouch, vec![Line::styled(what, muted())]);
     } else {
-        f.render_widget(List::new(pouch).block(theme::pane(pouch_title, false)), left);
+        let mut unfocused = ListState::default();
+        let state = if focus_pouch { &mut app.pouch_state } else { &mut unfocused };
+        f.render_stateful_widget(list(pouch, pouch_title, focus_pouch), left, state);
+        scrollbar(f, left, pouch_len, app.pouch_state.selected().filter(|_| focus_pouch));
     }
     if item_box.is_empty() {
         let what = if query.is_empty() {
@@ -362,21 +378,20 @@ fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
         } else {
             "No box items match. Press x to clear the search."
         };
-        empty_pane(f, right, box_title, true, vec![Line::styled(what, muted())]);
-        return;
+        empty_pane(f, box_area, box_title, !focus_pouch, vec![Line::styled(what, muted())]);
+    } else {
+        let mut unfocused = ListState::default();
+        let state = if focus_pouch { &mut unfocused } else { &mut app.box_state };
+        f.render_stateful_widget(list(item_box, box_title, !focus_pouch), box_area, state);
+        scrollbar(f, box_area, box_len, app.box_state.selected().filter(|_| !focus_pouch));
     }
-    let len = item_box.len();
-    f.render_stateful_widget(
-        List::new(item_box)
-            .block(theme::pane(box_title, true))
-            .highlight_style(theme::selection())
-            .highlight_symbol(theme::SELECTION_MARK),
-        box_area,
-        &mut app.box_state,
-    );
-    scrollbar(f, box_area, len, app.box_state.selected());
 
-    let lines = match app.box_state.selected().and_then(|i| app.box_view.get(i)) {
+    let highlighted = if focus_pouch {
+        app.pouch_state.selected().and_then(|i| app.pouch_view.get(i))
+    } else {
+        app.box_state.selected().and_then(|i| app.box_view.get(i))
+    };
+    let lines = match highlighted {
         Some(stack) => item_details(app, stack.id),
         None => Vec::new(),
     };
@@ -424,6 +439,36 @@ fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
             Span::styled("Wishlist needs ", muted()),
             Span::styled(format!("{have}/{n}"), theme::progress_style(have, n)),
         ]));
+    }
+    let sources = app.game.drops().sources(id);
+    if !sources.is_empty() {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled("Dropped by", bold()));
+        // one row per monster and kind of drop, with the chance at each rank
+        let mut rows: std::collections::BTreeMap<(u16, mh3u_core::drops::Method), [Option<u8>; 3]> = Default::default();
+        for (monster, rank, method, percent) in sources {
+            let slot = mh3u_core::drops::Rank::ALL.iter().position(|&r| r == rank).unwrap_or(0);
+            rows.entry((monster, method)).or_default()[slot] = Some(percent);
+        }
+        const SHOWN: usize = 12;
+        let total = rows.len();
+        for ((monster, method), chances) in rows.into_iter().take(SHOWN) {
+            let mut spans = vec![
+                Span::raw(format!("  {:<16}", fit(app.game.monster_name(monster).unwrap_or("?"), 16))),
+                Span::styled(format!("{:<12}", method.label()), muted()),
+            ];
+            for (label, chance) in ["Low", "High", "G"].into_iter().zip(chances) {
+                spans.push(Span::styled(format!("{label} "), muted()));
+                spans.push(match chance {
+                    Some(p) => Span::styled(format!("{p:>3}%  "), good()),
+                    None => Span::styled("  –   ", muted()),
+                });
+            }
+            lines.push(Line::from(spans));
+        }
+        if total > SHOWN {
+            lines.push(Line::styled(format!("  … and {} more", total - SHOWN), muted()));
+        }
     }
     let users: Vec<String> = app
         .game
@@ -576,6 +621,89 @@ fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
             .block(theme::pane(" Totals ", false)),
         right,
     );
+}
+
+/// A monster and what it drops, with the items the wishlist still needs picked out.
+fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
+    let [left, right] = theme::split(area, 33);
+    let view = app.monster_view();
+    let selected = app.highlighted_monster();
+    let rows: Vec<ListItem> = view
+        .iter()
+        .map(|&(m, wanted)| {
+            let mut spans = vec![Span::raw(format!("{:<22}", fit(app.game.monster_name(m).unwrap_or("?"), 22)))];
+            if wanted > 0 {
+                spans.push(Span::styled(format!("★ {wanted}"), warn()));
+            }
+            ListItem::new(Line::from(spans))
+        })
+        .collect();
+    let title = format!(" Monsters ({}) · {} ", rows.len(), app.monster_sort.label());
+    if rows.is_empty() {
+        empty_pane(f, left, title, true, vec![Line::styled("No monster drop data.", muted())]);
+        return;
+    }
+    let len = rows.len();
+    let mut state = ListState::default().with_selected(selected.and_then(|m| view.iter().position(|&(v, _)| v == m)));
+    f.render_stateful_widget(
+        List::new(rows)
+            .block(theme::pane(title, true))
+            .highlight_style(theme::selection())
+            .highlight_symbol(theme::SELECTION_MARK),
+        left,
+        &mut state,
+    );
+    scrollbar(f, left, len, state.selected());
+
+    let lines = selected.map(|m| monster_details(app, m)).unwrap_or_default();
+    f.render_widget(
+        Paragraph::new(lines)
+            .wrap(Wrap { trim: false })
+            .block(theme::pane(" Drops ", false)),
+        right,
+    );
+}
+
+fn monster_details(app: &App, monster: u16) -> Vec<Line<'static>> {
+    use mh3u_core::drops::{Method, Rank};
+    let missing = app.missing_for_wishlist();
+    let drops = app.game.drops();
+    let mut lines = vec![Line::styled(app.game.monster_name(monster).unwrap_or("?").to_string(), bold())];
+    lines.push(Line::from(vec![
+        Span::styled("Chance in percent. ", muted()),
+        Span::styled("★", warn()),
+        Span::styled(" marks what your wishlist still needs.", muted()),
+    ]));
+    for method in Method::ALL {
+        if Rank::ALL.iter().all(|&r| drops.list(monster, r, method).is_none()) {
+            continue;
+        }
+        lines.push(Line::raw(""));
+        lines.push(Line::styled(method.label(), bold()));
+        for rank in Rank::ALL {
+            let Some(list) = drops.list(monster, rank, method) else { continue };
+            let mut spans = vec![Span::styled(format!("  {:<10}", rank.label()), muted())];
+            for (n, d) in list.iter().enumerate() {
+                if n > 0 {
+                    spans.push(Span::styled("  ·  ", muted()));
+                }
+                let name = app.game.item_name(d.item).unwrap_or("?");
+                if missing.contains_key(&d.item) {
+                    spans.push(Span::styled(format!("★ {name}"), warn().add_modifier(Modifier::BOLD)));
+                } else {
+                    spans.push(Span::raw(name.to_string()));
+                }
+                spans.push(Span::styled(format!(" {}%", d.percent), muted()));
+            }
+            lines.push(Line::from(spans));
+        }
+    }
+    lines.push(Line::raw(""));
+    lines.push(Line::styled(
+        "Capture and part-break rewards are not decoded yet, so they are not listed.",
+        muted(),
+    ));
+    lines
 }
 
 fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {

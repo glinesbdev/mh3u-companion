@@ -31,10 +31,11 @@ pub enum Tab {
     Worn,
     Crafting,
     Wishlist,
+    Monsters,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 5] = [Tab::Items, Tab::Equipment, Tab::Worn, Tab::Crafting, Tab::Wishlist];
+    pub const ALL: [Tab; 6] = [Tab::Items, Tab::Equipment, Tab::Worn, Tab::Crafting, Tab::Wishlist, Tab::Monsters];
 
     pub fn title(self) -> &'static str {
         match self {
@@ -43,6 +44,7 @@ impl Tab {
             Tab::Worn => "Worn",
             Tab::Crafting => "Crafting",
             Tab::Wishlist => "Wishlist",
+            Tab::Monsters => "Monsters",
         }
     }
 }
@@ -106,6 +108,33 @@ impl BoxSort {
             BoxSort::BoxOrder => "box order",
             BoxSort::Name => "name",
             BoxSort::Quantity => "quantity",
+        }
+    }
+}
+
+/// Ordering of the monster list.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum MonsterSort {
+    GameOrder,
+    Name,
+    /// Monsters that drop the most of what the wishlist still needs first.
+    Needed,
+}
+
+impl MonsterSort {
+    fn next(self) -> MonsterSort {
+        match self {
+            MonsterSort::GameOrder => MonsterSort::Name,
+            MonsterSort::Name => MonsterSort::Needed,
+            MonsterSort::Needed => MonsterSort::GameOrder,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            MonsterSort::GameOrder => "game order",
+            MonsterSort::Name => "name",
+            MonsterSort::Needed => "wishlist needs first",
         }
     }
 }
@@ -398,6 +427,9 @@ pub struct App {
     pub status: String,
     pub tab: Tab,
     pub box_state: ListState,
+    pub pouch_state: ListState,
+    /// The Items tab's highlight (and details) follow the pouch rather than the box.
+    pub pouch_focus: bool,
     pub equip_state: ListState,
     pub craft_state: ListState,
     pub search: String,
@@ -413,6 +445,9 @@ pub struct App {
     pub piece_sort: PieceSort,
     pub box_sort: BoxSort,
     pub equip_sort: EquipSort,
+    pub monster_sort: MonsterSort,
+    /// The highlighted monster (by id, so the highlight stays on it when the order changes).
+    pub monster_selected: Option<u16>,
     /// Show what each skill does under it in the details panels.
     pub skill_info: bool,
     /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
@@ -476,6 +511,8 @@ impl App {
             status: String::new(),
             tab: Tab::Items,
             box_state: ListState::default().with_selected(Some(0)),
+            pouch_state: ListState::default().with_selected(Some(0)),
+            pouch_focus: false,
             equip_state: ListState::default().with_selected(Some(0)),
             craft_state: ListState::default().with_selected(Some(0)),
             search: String::new(),
@@ -488,6 +525,8 @@ impl App {
             piece_sort: PieceSort::GameOrder,
             box_sort: BoxSort::BoxOrder,
             equip_sort: EquipSort::BoxOrder,
+            monster_sort: MonsterSort::GameOrder,
+            monster_selected: None,
             skill_info: false,
             equip_view: Vec::new(),
             tree: None,
@@ -656,6 +695,12 @@ impl App {
         self.box_view = view.into_iter().map(|(_, s)| s).collect();
         let sel = self.box_state.selected().unwrap_or(0).min(self.box_view.len().saturating_sub(1));
         self.box_state.select(Some(sel));
+        let sel = self
+            .pouch_state
+            .selected()
+            .unwrap_or(0)
+            .min(self.pouch_view.len().saturating_sub(1));
+        self.pouch_state.select(Some(sel));
     }
 
     /// Put the equipment box in display order, keeping the same item selected when it is still there.
@@ -677,6 +722,61 @@ impl App {
             .unwrap_or_else(|| self.equip_state.selected().unwrap_or(0).min(view.len().saturating_sub(1)));
         self.equip_view = view;
         self.equip_state.select(Some(at));
+    }
+
+    /// Whether the Items tab's highlight is on the pouch: when asked for with `p`, or when the box list has nothing to highlight.
+    pub fn items_on_pouch(&self) -> bool {
+        !self.pouch_view.is_empty() && (self.pouch_focus || self.box_view.is_empty())
+    }
+
+    /// Items the wishlist still needs, as item id -> how many more are missing.
+    pub fn missing_for_wishlist(&self) -> HashMap<u16, u32> {
+        self.shopping_need()
+            .0
+            .into_iter()
+            .filter_map(|(item, n)| {
+                let have = self.save.item_count(item);
+                (have < n).then_some((item, n - have))
+            })
+            .collect()
+    }
+
+    /// The monsters that have drops, in display order, each with how many of the wishlist's missing items it drops.
+    pub fn monster_view(&self) -> Vec<(u16, usize)> {
+        let missing = self.missing_for_wishlist();
+        let drops = self.game.drops();
+        let mut view: Vec<(u16, usize)> = drops
+            .monsters()
+            .into_iter()
+            .filter(|&m| self.game.monster_name(m).is_some())
+            .map(|m| {
+                let mut wanted = std::collections::HashSet::new();
+                for rank in mh3u_core::drops::Rank::ALL {
+                    for method in mh3u_core::drops::Method::ALL {
+                        for d in drops.list(m, rank, method).unwrap_or_default() {
+                            if missing.contains_key(&d.item) {
+                                wanted.insert(d.item);
+                            }
+                        }
+                    }
+                }
+                (m, wanted.len())
+            })
+            .collect();
+        match self.monster_sort {
+            MonsterSort::GameOrder => {}
+            MonsterSort::Name => view.sort_by_key(|&(m, _)| self.game.monster_name(m).unwrap_or("").to_lowercase()),
+            MonsterSort::Needed => view.sort_by_key(|&(m, wanted)| (std::cmp::Reverse(wanted), m)),
+        }
+        view
+    }
+
+    /// The highlighted monster: the remembered one if it is still listed, else the first.
+    pub fn highlighted_monster(&self) -> Option<u16> {
+        let view = self.monster_view();
+        self.monster_selected
+            .filter(|m| view.iter().any(|&(v, _)| v == *m))
+            .or_else(|| view.first().map(|&(m, _)| m))
     }
 
     /// The worn armor pieces as (equipment kind, box entry), in the order head, body, arms, waist, legs.
@@ -710,7 +810,7 @@ impl App {
             Tab::Crafting => self.craft_state.selected().and_then(|i| self.pieces.get(i)).map(|p| (p.kind, p.id)),
             Tab::Equipment => self.selected_equipment().map(|e| (e.kind, e.id)),
             Tab::Wishlist => self.wish_state.selected().and_then(|i| self.wishlist.get(i)).copied(),
-            Tab::Items | Tab::Worn => None,
+            Tab::Items | Tab::Worn | Tab::Monsters => None,
         }
     }
 
@@ -1517,6 +1617,7 @@ impl App {
                 }
             }
             KeyCode::Char('?') => self.show_help = true,
+            KeyCode::Char('p') if self.tab == Tab::Items => self.pouch_focus = !self.pouch_focus,
             KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
             KeyCode::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
             KeyCode::Char(':') if self.edit_mode => {
@@ -1561,6 +1662,7 @@ impl App {
                     self.equip_sort = self.equip_sort.next();
                     self.refresh_equipment();
                 }
+                Tab::Monsters => self.monster_sort = self.monster_sort.next(),
                 _ => {}
             },
             KeyCode::Char('w') if self.tab == Tab::Crafting => {
@@ -1605,6 +1707,15 @@ impl App {
     fn move_selection(&mut self, step: isize) {
         let (state, len) = match self.tab {
             Tab::Worn => return,
+            Tab::Monsters => {
+                let view = self.monster_view();
+                let at = self.highlighted_monster().and_then(|m| view.iter().position(|&(v, _)| v == m));
+                if let Some(&(m, _)) = view.get(stepped(at, step, view.len())) {
+                    self.monster_selected = Some(m);
+                }
+                return;
+            }
+            Tab::Items if self.items_on_pouch() => (&mut self.pouch_state, self.pouch_view.len()),
             Tab::Items => (&mut self.box_state, self.box_view.len()),
             Tab::Equipment => (&mut self.equip_state, self.equip_view.len()),
             Tab::Crafting => (&mut self.craft_state, self.pieces.len()),

@@ -18,6 +18,7 @@ macro_rules! fixture {
 pub mod arc;
 pub mod armor;
 pub mod diff;
+pub mod drops;
 pub mod edit;
 pub mod gamedata;
 pub mod gmd;

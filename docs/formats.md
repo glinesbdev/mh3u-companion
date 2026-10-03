@@ -75,6 +75,21 @@ Not yet checked against the game's own screens. Sharpness and element are not in
 executable's data or rodata sections as plain bytes, 16-bit values, cumulative values or scaled values (a table in an archive
 or in code is still possible).
 
+## Monster drops (`drops.rs`)
+
+Three pointer tables per rank (low, high, G) at `0x765e0`, `0x76dc8` and `0x775b0` (data section offsets, monster 1's entry): body
+carves, tail carves and shiny drops, `0x194` bytes (101 entries) apart. Entry `n` is for the monster whose name is entry `n` of
+`Monster_eng`; it points to a list of 4-byte records `[0, chance %, item id u16]` ended by `ff ff 00 00`. The first byte is always 0
+(every carve gives one item). The chances in a real list add up to 100; monsters with nothing to carve point at 0xff filler, which
+that check rejects. 81 body-carve, 35 tail-carve and 58 shiny-drop lists per rank are found. Checked against a published list for
+Rathian and Rathalos: all 18 of their lists (3 ranks x 3 kinds) are identical, chances included, though the game orders them differently.
+
+Capture rewards and part-break rewards are lists of `[item id u16, quantity, chance]` in the same section, found for Rathian and
+checked against the published list, but their pointers are one flat table (from `0x78fd8`, 203 entries per rank, ranks `0x32c` apart)
+with a varying number of lists per monster (3 to 6), and how monsters map onto it is not decoded. The table of monsters per list, or
+the rule that gives the count, has not been found. Quest rewards are in the `.quest` files (`QTDS` format: multilingual text followed by
+binary data), which are not decoded.
+
 ## Blacksmith unlock (inferred)
 
 Nothing in the save or the recipe tables says outright which pieces the blacksmith offers. The recipe records do carry two
@@ -91,5 +106,5 @@ then on. `recipes.rs` has the rule and a test for the early-game save.
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
-- Weapon sharpness and element; talisman data.
+- Weapon sharpness and element; talisman data (no save has a talisman to decode the equipment record's tail from); capture and part-break rewards; quest rewards.
 - Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).

@@ -54,6 +54,7 @@ pub struct GameData {
     upgrades: HashMap<(u8, u16), Upgrade>,
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
+    drops: crate::drops::Drops,
     skills: Vec<String>,
     /// (kind, label, names, descriptions)
     equipment: Vec<(u8, &'static str, Vec<String>, Vec<String>)>,
@@ -102,6 +103,7 @@ impl GameData {
         let (recipes, upgrades) = (recipes::parse(&data_section)?, recipes::parse_upgrades(&data_section)?);
         let armor = armor::parse(&data_section)?;
         let weapons = crate::weapons::parse(&data_section)?;
+        let drops = crate::drops::parse(&data_section, recipes::DATA_SECTION_ADDR)?;
         Ok(GameData {
             items: strings("Item00_eng")?,
             item_details: optional("ItemDetail_eng"),
@@ -111,6 +113,7 @@ impl GameData {
             upgrades,
             armor,
             weapons,
+            drops,
             skills: strings("Skill_Type_eng")?,
             equipment,
         })
@@ -150,6 +153,11 @@ impl GameData {
             .get(id as usize)
             .map(String::as_str)
             .filter(|t| !t.is_empty() && *t != "DUMMY")
+    }
+
+    /// The carve and shiny-drop lists.
+    pub fn drops(&self) -> &crate::drops::Drops {
+        &self.drops
     }
 
     pub fn monster_name(&self, id: u16) -> Option<&str> {
