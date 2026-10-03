@@ -40,7 +40,7 @@ pub struct Equipment {
 
 impl Equipment {
     /// A talisman's skills as (skill tree id, points): `(id, points)` byte pairs from byte 4, up to a zero id. Only the first pair
-    /// has been seen (one Pawn Talisman: skill confirmed in game, points not), so further pairs are a guess; anything but a
+    /// has been seen (one Pawn Talisman: Auto-Guard +10, confirmed in game), so further pairs are a guess; anything but a
     /// talisman has none.
     pub fn talisman_skills(&self) -> Vec<(u8, i8)> {
         if self.kind != 6 {
