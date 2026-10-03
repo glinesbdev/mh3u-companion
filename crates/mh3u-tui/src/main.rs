@@ -32,12 +32,24 @@ fn guess_game_dir() -> Option<PathBuf> {
     })
 }
 
-/// `$XDG_CONFIG_HOME/mh3u-companion/wishlist.txt`, or `~/.config/...` when that isn't set.
-fn wishlist_path() -> Option<PathBuf> {
+/// Which hunter's list a save file belongs to: the slot number from a `userN` file name.
+fn slot_of(save: &std::path::Path) -> Option<u8> {
+    let n = save.file_name()?.to_str()?.strip_prefix("user")?.parse().ok()?;
+    (1..=3).contains(&n).then_some(n)
+}
+
+/// One wishlist per save slot, in `$XDG_CONFIG_HOME/mh3u-companion` (or `~/.config/...` when that isn't set). Slot 1 keeps the
+/// original `wishlist.txt`, so lists made before there were several are still there; the others are `wishlist-2.txt`, ...
+fn wishlist_path(slot: u8) -> Option<PathBuf> {
     let config = std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .or_else(|| home().ok().map(|h| h.join(".config")))?;
-    Some(config.join("mh3u-companion/wishlist.txt"))
+    let name = if slot == 1 {
+        "wishlist.txt".to_string()
+    } else {
+        format!("wishlist-{slot}.txt")
+    };
+    Some(config.join("mh3u-companion").join(name))
 }
 
 /// Start Cemu on the game and read its memory. Only a process we started may be read (see `docs/live.md`).
@@ -137,7 +149,7 @@ fn main() -> Result<()> {
     if debug_edit && !live_mode {
         bail!("--debug-edit works on the live game, so it needs --live\n{USAGE}");
     }
-    let mut app = App::new(game, save.clone(), wishlist_path(), prices_path())?;
+    let mut app = App::new(game, save.clone(), wishlist_path(slot_of(&save).unwrap_or(slot)), prices_path())?;
     if live_mode {
         let note = if debug_edit { Some(back_up_saves(&save)?) } else { None };
         app.set_live(start_live(&game_dir, &save, &cemu, debug_edit)?);
@@ -149,4 +161,18 @@ fn main() -> Result<()> {
     let result = app.run(&mut terminal);
     ratatui::restore();
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn the_slot_comes_from_the_save_file_name() {
+        assert_eq!(slot_of(Path::new("/x/80000001/user2")), Some(2));
+        assert_eq!(slot_of(Path::new("user3")), Some(3));
+        assert_eq!(slot_of(Path::new("user4")), None);
+        assert_eq!(slot_of(Path::new("system")), None);
+    }
 }

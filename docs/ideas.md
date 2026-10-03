@@ -53,9 +53,8 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
 - **Skill browser:** pick a skill and see every armor piece that has it, strongest first, with a mark for the ones you own or the
   blacksmith is offering. (Search already finds a skill by name; this would be a view of its own and the first step of the build
   manager's search.)
-- **Wishlist per hunter:** the wishlist is one file for everyone, while the remembered blacksmith list is already per hunter. Switching
-  hunters (WornTester, Shamus) could switch the wishlist and build templates too, with an in-app way to pick the hunter instead of
-  `--slot`.
+- **Hunter picker:** the wishlist is now per save slot (chosen with `--slot`), like the remembered blacksmith list. Build templates should
+  follow the same rule, and an in-app way to pick the hunter would replace `--slot`.
 
 ## Data not shown yet
 

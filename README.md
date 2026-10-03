@@ -57,8 +57,8 @@ dark theme; your terminal's own palette applies when you run it.
   the highlighted piece shows what it needs by itself (have / need), and below it is one running shopping list for everything
   on the wishlist (have / need / still missing). Pieces you already own are left out of the totals. For each
   piece it plans "create from scratch" whenever that is possible, because upgrading uses up the parent weapon, and plans an
-  upgrade only for pieces that have no create recipe. The wishlist is saved in
-  `~/.config/mh3u-companion/wishlist.txt` (or under `$XDG_CONFIG_HOME`).
+  upgrade only for pieces that have no create recipe. Each save slot has its own wishlist (`--slot n`), saved in
+  `~/.config/mh3u-companion/` (or under `$XDG_CONFIG_HOME`): `wishlist.txt` for slot 1, `wishlist-2.txt` and `wishlist-3.txt` for the others.
 - **Upgrade tree**: `t` on a weapon (in Crafting, Equipment or Wishlist) opens its tree: the line of weapons from the first one down to it, a note where other branches leave that line, and everything it can be upgraded into, each marked owned or not with rarity and attack. `↑`/`↓` scroll, `t` or `Esc` close. Armor has no upgrade line in the game data, so it has no tree.
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
