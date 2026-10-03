@@ -448,6 +448,8 @@ pub struct App {
     pub monster_sort: MonsterSort,
     /// The highlighted monster (by id, so the highlight stays on it when the order changes).
     pub monster_selected: Option<u16>,
+    /// First visible line of the highlighted monster's drops; the drawing code keeps it inside the text.
+    pub monster_scroll: u16,
     /// Show what each skill does under it in the details panels.
     pub skill_info: bool,
     /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
@@ -527,6 +529,7 @@ impl App {
             equip_sort: EquipSort::BoxOrder,
             monster_sort: MonsterSort::GameOrder,
             monster_selected: None,
+            monster_scroll: 0,
             skill_info: false,
             equip_view: Vec::new(),
             tree: None,
@@ -750,16 +753,12 @@ impl App {
             .into_iter()
             .filter(|&m| self.game.monster_name(m).is_some())
             .map(|m| {
-                let mut wanted = std::collections::HashSet::new();
-                for rank in mh3u_core::drops::Rank::ALL {
-                    for method in mh3u_core::drops::Method::ALL {
-                        for d in drops.list(m, rank, method).unwrap_or_default() {
-                            if missing.contains_key(&d.item) {
-                                wanted.insert(d.item);
-                            }
-                        }
-                    }
-                }
+                let wanted: std::collections::HashSet<u16> = drops
+                    .lists_for(m)
+                    .into_iter()
+                    .flat_map(|(_, _, list)| list.iter().map(|d| d.item))
+                    .filter(|item| missing.contains_key(item))
+                    .collect();
                 (m, wanted.len())
             })
             .collect();
@@ -1628,6 +1627,9 @@ impl App {
             KeyCode::BackTab | KeyCode::Left | KeyCode::Char('h') => self.switch_tab(-1),
             KeyCode::Down | KeyCode::Char('j') => self.move_selection(1),
             KeyCode::Up | KeyCode::Char('k') => self.move_selection(-1),
+            // on the Monsters tab the page keys scroll the drops, since the list is moved with the arrows and Home/End
+            KeyCode::PageDown if self.tab == Tab::Monsters => self.monster_scroll = self.monster_scroll.saturating_add(10),
+            KeyCode::PageUp if self.tab == Tab::Monsters => self.monster_scroll = self.monster_scroll.saturating_sub(10),
             KeyCode::PageDown => self.move_selection(10),
             KeyCode::PageUp => self.move_selection(-10),
             KeyCode::Home | KeyCode::Char('g') => self.move_selection(isize::MIN),
@@ -1711,6 +1713,9 @@ impl App {
                 let view = self.monster_view();
                 let at = self.highlighted_monster().and_then(|m| view.iter().position(|&(v, _)| v == m));
                 if let Some(&(m, _)) = view.get(stepped(at, step, view.len())) {
+                    if self.monster_selected != Some(m) {
+                        self.monster_scroll = 0;
+                    }
                     self.monster_selected = Some(m);
                 }
                 return;

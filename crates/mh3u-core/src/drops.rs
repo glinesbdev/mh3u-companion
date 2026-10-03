@@ -6,12 +6,17 @@
 //! so every carve gives one item. The chances of a real list add up to 100; monsters with nothing to carve point at filler, which
 //! that check (and the item id range) rejects.
 //!
-//! Capture rewards and part-break rewards are in the same section as `[item id u16, quantity, chance]` lists, but the pointers to
-//! them are in one flat table with a varying number of entries per monster, and how monsters map onto it is not decoded yet.
-//! Found by matching two monsters' published drop lists; checked on all three ranks. Offsets are for the US v32 executable.
+//! Capture rewards and part-break rewards are lists of `[item id u16, quantity, chance]` ended by a zero record. Their pointers sit
+//! in one flat table per rank (203 entries) with 2 to 6 lists per monster, and nothing in the data says where one monster's lists end.
+//! They are assigned by their contents: each list goes to the monster whose carve items it mostly holds, with monsters in id order.
+//! A capturable monster's group is `[capture, break lists..., one more list]` (the last repeats the capture's items and is not
+//! shown); a monster that cannot be captured has only break lists. The break lists are in the game's order, but which body part each
+//! is, is not known. That inference reproduces 106 of the 108 capture and break lists checked for 12 monsters.
+//!
+//! Found by matching published drop lists; offsets are for the US v32 executable.
 
 use anyhow::{Result, bail};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Where monster 1's entry sits for each rank's first table (body carves); the tail and shiny tables follow `TABLE_STRIDE` apart.
 const RANK_STARTS: [usize; 3] = [0x765e0, 0x76dc8, 0x775b0];
@@ -20,6 +25,11 @@ const TABLE_STRIDE: usize = 0x194;
 const MONSTERS: u16 = 100;
 const MAX_ITEM_ID: u16 = 1550;
 const MAX_LIST: usize = 12;
+/// Start of each rank's flat table of capture and part-break list pointers, and how many entries each has.
+const FLAT_STARTS: [usize; 3] = [0x78fd8, 0x79304, 0x79630];
+const FLAT_LEN: usize = 203;
+/// What it costs to move on to the next monster when assigning lists; keeps the assignment from flickering between monsters.
+const SWITCH_COST: f64 = 0.05;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Rank {
@@ -45,16 +55,22 @@ pub enum Method {
     BodyCarve,
     TailCarve,
     Shiny,
+    Capture,
+    /// The nth part-break reward (from 1), in the game's order for that monster.
+    Break(u8),
 }
 
 impl Method {
-    pub const ALL: [Method; 3] = [Method::BodyCarve, Method::TailCarve, Method::Shiny];
+    /// The kinds of drop read from the carve tables.
+    pub const CARVES: [Method; 3] = [Method::BodyCarve, Method::TailCarve, Method::Shiny];
 
-    pub fn label(self) -> &'static str {
+    pub fn label(self) -> String {
         match self {
-            Method::BodyCarve => "Body carve",
-            Method::TailCarve => "Tail carve",
-            Method::Shiny => "Shiny drops",
+            Method::BodyCarve => "Body carve".to_string(),
+            Method::TailCarve => "Tail carve".to_string(),
+            Method::Shiny => "Shiny drops".to_string(),
+            Method::Capture => "Capture".to_string(),
+            Method::Break(n) => format!("Part break {n}"),
         }
     }
 }
@@ -62,6 +78,7 @@ impl Method {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Drop {
     pub item: u16,
+    pub quantity: u8,
     /// Chance in percent.
     pub percent: u8,
 }
@@ -84,7 +101,11 @@ fn read_list(data: &[u8], data_addr: u32, ptr: u32) -> Option<Vec<Drop>> {
         if rec[0] != 0 || item == 0 || item > MAX_ITEM_ID || out.len() >= MAX_LIST {
             return None;
         }
-        out.push(Drop { item, percent: rec[1] });
+        out.push(Drop {
+            item,
+            quantity: 1,
+            percent: rec[1],
+        });
         at += 4;
     }
     (!out.is_empty() && out.iter().map(|d| u32::from(d.percent)).sum::<u32>() == 100).then_some(out)
@@ -94,7 +115,7 @@ fn read_list(data: &[u8], data_addr: u32, ptr: u32) -> Option<Vec<Drop>> {
 pub fn parse(data: &[u8], data_addr: u32) -> Result<Drops> {
     let mut lists = HashMap::new();
     for (r, &start) in RANK_STARTS.iter().enumerate() {
-        for (j, method) in Method::ALL.into_iter().enumerate() {
+        for (j, method) in Method::CARVES.into_iter().enumerate() {
             for monster in 1..=MONSTERS {
                 let at = start + TABLE_STRIDE * j + 4 * usize::from(monster - 1);
                 let Some(word) = data.get(at..at + 4) else {
@@ -110,12 +131,153 @@ pub fn parse(data: &[u8], data_addr: u32) -> Result<Drops> {
     if lists.len() < 300 {
         bail!("only {} monster drop lists found; unsupported executable?", lists.len());
     }
+    let pools = item_pools(&lists);
+    for (r, &start) in FLAT_STARTS.iter().enumerate() {
+        let Some(table) = data.get(start..start + 4 * FLAT_LEN) else {
+            bail!("capture and break table runs past the data section; unsupported executable?");
+        };
+        let flat: Vec<Vec<Drop>> = table
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|w| read_reward_list(data, data_addr, u32::from_be_bytes(*w)).unwrap_or_default())
+            .collect();
+        for (monster, group) in assign_groups(&flat, &pools) {
+            let (capture, breaks) = split_group(group);
+            if let Some(list) = capture {
+                lists.insert((monster, Rank::ALL[r], Method::Capture), list);
+            }
+            for (n, list) in breaks.into_iter().enumerate() {
+                lists.insert((monster, Rank::ALL[r], Method::Break(n as u8 + 1)), list);
+            }
+        }
+    }
     Ok(Drops { lists })
+}
+
+/// The items each monster is known to drop, from its carve lists in every rank.
+fn item_pools(lists: &HashMap<(u16, Rank, Method), Vec<Drop>>) -> Vec<(u16, HashSet<u16>)> {
+    let mut pools: HashMap<u16, HashSet<u16>> = HashMap::new();
+    for (&(monster, ..), list) in lists {
+        pools.entry(monster).or_default().extend(list.iter().map(|d| d.item));
+    }
+    let mut out: Vec<(u16, HashSet<u16>)> = pools.into_iter().collect();
+    out.sort_unstable_by_key(|(m, _)| *m);
+    out
+}
+
+/// A capture or part-break list: records `[item id u16, quantity, chance]` ended by a zero item. `None` if it is not a real list.
+fn read_reward_list(data: &[u8], data_addr: u32, ptr: u32) -> Option<Vec<Drop>> {
+    let mut at = usize::try_from(ptr.checked_sub(data_addr)?).ok()?;
+    let mut out = Vec::new();
+    loop {
+        let rec = data.get(at..at + 4)?;
+        let item = u16::from_be_bytes([rec[0], rec[1]]);
+        if item == 0 {
+            break;
+        }
+        if item > MAX_ITEM_ID || rec[2] == 0 || out.len() >= MAX_LIST {
+            return None;
+        }
+        out.push(Drop {
+            item,
+            quantity: rec[2],
+            percent: rec[3],
+        });
+        at += 4;
+    }
+    (!out.is_empty() && out.iter().map(|d| u32::from(d.percent)).sum::<u32>() == 100).then_some(out)
+}
+
+/// Give every list in the flat table to a monster. The lists of one monster are next to each other and monsters come in id order,
+/// so this picks, for each list, the monster whose carve items it holds most of, never going back to an earlier monster; each run of
+/// lists given to one monster is that monster's group. Returns (monster, its lists in table order).
+fn assign_groups(flat: &[Vec<Drop>], pools: &[(u16, HashSet<u16>)]) -> Vec<(u16, Vec<Vec<Drop>>)> {
+    if flat.is_empty() || pools.is_empty() {
+        return Vec::new();
+    }
+    let (n, m) = (flat.len(), pools.len());
+    let score = |i: usize, k: usize| -> f64 {
+        if flat[i].is_empty() {
+            return 0.0;
+        }
+        flat[i].iter().filter(|d| pools[k].1.contains(&d.item)).count() as f64 / flat[i].len() as f64
+    };
+    // dp[i][k]: best total score with list i given to monster k (monsters never decrease down the table)
+    let mut dp = vec![vec![f64::NEG_INFINITY; m]; n];
+    let mut back = vec![vec![0usize; m]; n];
+    for (k, cell) in dp[0].iter_mut().enumerate() {
+        *cell = score(0, k);
+    }
+    for i in 1..n {
+        let (mut best, mut best_k) = (f64::NEG_INFINITY, 0);
+        for k in 0..m {
+            let stay = dp[i - 1][k];
+            let switch = best - SWITCH_COST;
+            if stay >= switch {
+                dp[i][k] = stay + score(i, k);
+                back[i][k] = k;
+            } else {
+                dp[i][k] = switch + score(i, k);
+                back[i][k] = best_k;
+            }
+            if dp[i - 1][k] > best {
+                best = dp[i - 1][k];
+                best_k = k;
+            }
+        }
+    }
+    let mut k = (0..m).fold(0, |b, k| if dp[n - 1][k] > dp[n - 1][b] { k } else { b });
+    let mut owners = vec![0usize; n];
+    for i in (0..n).rev() {
+        owners[i] = k;
+        if i > 0 {
+            k = back[i][k];
+        }
+    }
+    let mut groups: Vec<(u16, Vec<Vec<Drop>>)> = Vec::new();
+    for (i, &k) in owners.iter().enumerate() {
+        let monster = pools[k].0;
+        match groups.last_mut() {
+            Some((m, lists)) if *m == monster => lists.push(flat[i].clone()),
+            _ => groups.push((monster, vec![flat[i].clone()])),
+        }
+    }
+    groups
+}
+
+/// Split a monster's group into its capture list and its part-break lists. If the last list repeats the first one's items, the
+/// monster can be captured: the first is the capture reward and the last is an extra that is not used. Otherwise they are all breaks.
+fn split_group(mut group: Vec<Vec<Drop>>) -> (Option<Vec<Drop>>, Vec<Vec<Drop>>) {
+    let items = |l: &Vec<Drop>| l.iter().map(|d| d.item).collect::<HashSet<u16>>();
+    let capturable = group.len() >= 2 && {
+        let (first, last) = (items(&group[0]), items(&group[group.len() - 1]));
+        !first.is_empty() && first.intersection(&last).count() as f64 / first.union(&last).count() as f64 >= 0.8
+    };
+    if capturable {
+        group.pop();
+        let capture = group.remove(0);
+        (Some(capture), group.into_iter().filter(|l| !l.is_empty()).collect())
+    } else {
+        (None, group.into_iter().filter(|l| !l.is_empty()).collect())
+    }
 }
 
 impl Drops {
     pub fn list(&self, monster: u16, rank: Rank, method: Method) -> Option<&[Drop]> {
         self.lists.get(&(monster, rank, method)).map(Vec::as_slice)
+    }
+
+    /// All of a monster's lists as (method, rank, list), ordered by kind of drop and then rank.
+    pub fn lists_for(&self, monster: u16) -> Vec<(Method, Rank, &[Drop])> {
+        let mut out: Vec<(Method, Rank, &[Drop])> = self
+            .lists
+            .iter()
+            .filter(|((m, ..), _)| *m == monster)
+            .map(|((_, rank, method), list)| (*method, *rank, list.as_slice()))
+            .collect();
+        out.sort_unstable_by_key(|&(method, rank, _)| (method, rank));
+        out
     }
 
     /// Monster ids that have at least one drop list, ascending.
@@ -169,10 +331,20 @@ mod tests {
         let d = parse(&section(), ADDR).unwrap();
         assert_eq!(
             d.list(1, Rank::Low, Method::BodyCarve),
-            Some(&[Drop { item: 101, percent: 100 }][..])
+            Some(
+                &[Drop {
+                    item: 101,
+                    quantity: 1,
+                    percent: 100
+                }][..]
+            )
         );
         assert_eq!(d.list(100, Rank::G, Method::Shiny).unwrap()[0].item, 200);
         assert_eq!(d.monsters().len(), 100);
+        assert!(
+            d.list(1, Rank::Low, Method::Capture).is_none(),
+            "no capture or break lists in the fake section"
+        );
         assert_eq!(d.list(101, Rank::Low, Method::BodyCarve), None, "there is no monster 101");
     }
 
@@ -198,6 +370,46 @@ mod tests {
         // a pointer at nothing
         data[at..at + 4].copy_from_slice(&0u32.to_be_bytes());
         assert!(parse(&data, ADDR).is_ok());
+    }
+
+    fn drops(items: &[(u16, u8)]) -> Vec<Drop> {
+        items
+            .iter()
+            .map(|&(item, percent)| Drop {
+                item,
+                quantity: 1,
+                percent,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn lists_are_given_to_the_monster_whose_items_they_hold_and_grouped_in_order() {
+        let pools: Vec<(u16, HashSet<u16>)> = vec![
+            (1, HashSet::from([10, 11, 12])),
+            (2, HashSet::from([20, 21])),
+            (3, HashSet::from([30, 31])),
+        ];
+        let flat = vec![
+            drops(&[(10, 60), (11, 40)]), // monster 1: capture
+            drops(&[(12, 100)]),          // break
+            drops(&[(10, 50), (11, 50)]), // same items as the capture
+            drops(&[(20, 100)]),          // monster 2 cannot be captured: breaks only
+            drops(&[(99, 100)]),          // generic items stay with the monster around them
+            drops(&[(21, 100)]),
+            drops(&[(30, 70), (31, 30)]), // monster 3
+            drops(&[(30, 20), (31, 80)]),
+        ];
+        let groups = assign_groups(&flat, &pools);
+        let shape: Vec<(u16, usize)> = groups.iter().map(|(m, l)| (*m, l.len())).collect();
+        assert_eq!(shape, [(1, 3), (2, 3), (3, 2)]);
+        let (capture, breaks) = split_group(groups[0].1.clone());
+        assert_eq!(capture, Some(drops(&[(10, 60), (11, 40)])));
+        assert_eq!(breaks, [drops(&[(12, 100)])]);
+        let (capture, breaks) = split_group(groups[1].1.clone());
+        assert_eq!((capture, breaks.len()), (None, 3));
+        let (capture, breaks) = split_group(groups[2].1.clone());
+        assert!(capture.is_some() && breaks.is_empty(), "a capture and its repeat, no breaks");
     }
 
     #[test]
@@ -245,8 +457,49 @@ mod real_data {
                 (1, Rank::Low, Method::BodyCarve, 40),
                 (1, Rank::Low, Method::TailCarve, 62),
                 (1, Rank::Low, Method::Shiny, 15),
+                (1, Rank::Low, Method::Capture, 25),
+                (1, Rank::Low, Method::Break(1), 25),
                 (1, Rank::High, Method::TailCarve, 7),
             ]
         );
+    }
+
+    /// Capture and part-break rewards for Rathian and Ceadeus, from the extracted data section. They match a published list
+    /// (Rathian's capture and head and wing breaks; the order of the breaks is the game's).
+    #[test]
+    fn capture_and_break_rewards_follow_the_monsters() {
+        let Ok(data) = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/live/rpx_data.bin")) else {
+            return;
+        };
+        let d = parse(&data, DATA_SECTION_ADDR).unwrap();
+        let get = |m, method| {
+            d.list(m, Rank::Low, method)
+                .unwrap()
+                .iter()
+                .map(|x| (x.item, x.quantity, x.percent))
+                .collect::<Vec<_>>()
+        };
+        // Rathian Shell, Scale x2, Rath Marrow, Flame Sac, Rathian Plate
+        assert_eq!(
+            get(1, Method::Capture),
+            [(566, 1, 30), (563, 2, 25), (599, 1, 23), (289, 1, 20), (573, 1, 2)]
+        );
+        assert_eq!(get(1, Method::Break(1)), [(566, 1, 71), (563, 1, 25), (573, 1, 4)], "head");
+        assert_eq!(
+            get(1, Method::Break(2)),
+            [(597, 1, 70), (318, 4, 15), (569, 1, 15)],
+            "wing: Rath Talon, Wyvern Claw x4, Webbing"
+        );
+        assert!(d.list(1, Rank::Low, Method::Break(3)).is_none());
+        // Ceadeus cannot be captured: only breaks
+        assert!(d.list(20, Rank::Low, Method::Capture).is_none());
+        assert_eq!(get(20, Method::Break(1))[0], (782, 1, 67));
+        assert!(d.list(20, Rank::Low, Method::Break(3)).is_some());
+        let talon = d
+            .sources(597)
+            .iter()
+            .filter(|s| s.1 == Rank::Low && s.2 == Method::Break(2))
+            .count();
+        assert!(talon >= 2, "Rath Talon: Rathian and Rathalos");
     }
 }

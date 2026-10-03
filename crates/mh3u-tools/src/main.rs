@@ -209,13 +209,43 @@ fn main() -> Result<()> {
         // prices-hint <game_dir> <ledger>: look for where the ledger's costs are stored in the game's data
         Some("prices-hint") if args.len() == 3 => prices_hint(Path::new(&args[1]), Path::new(&args[2])),
         // armor-todo <game_dir> <ledger>: craftable armor pieces whose price is not in the ledger yet
+        // drops <game_dir>: every monster drop list as `monster<TAB>rank<TAB>kind<TAB>item:quantity:percent,...`
+        Some("drops") if args.len() == 2 => {
+            let game = GameData::load(Path::new(&args[1]))?;
+            for monster in game.drops().monsters() {
+                for rank in mh3u_core::drops::Rank::ALL {
+                    let mut methods: Vec<_> = (1..=40u8)
+                        .map(mh3u_core::drops::Method::Break)
+                        .chain(mh3u_core::drops::Method::CARVES)
+                        .chain([mh3u_core::drops::Method::Capture])
+                        .collect();
+                    methods.sort();
+                    for method in methods {
+                        if let Some(list) = game.drops().list(monster, rank, method) {
+                            let items: Vec<String> = list
+                                .iter()
+                                .map(|d| format!("{}:{}:{}", game.item_name(d.item).unwrap_or("?"), d.quantity, d.percent))
+                                .collect();
+                            println!(
+                                "{}\t{}\t{}\t{}",
+                                game.monster_name(monster).unwrap_or("?"),
+                                rank.label(),
+                                method.label(),
+                                items.join(",")
+                            );
+                        }
+                    }
+                }
+            }
+            Ok(())
+        }
         // weapon-names <game_dir>: every weapon as `kind id name`, for joining with other tables
         Some("weapon-names") if args.len() == 2 => weapon_names(Path::new(&args[1])),
         Some("armor-todo") if args.len() == 3 => armor_todo(Path::new(&args[1]), Path::new(&args[2])),
         // cemu-host <game_dir> <outdir>: start Cemu on the game and record every save block found in its memory
         Some("cemu-host") if args.len() == 3 => cemu_host(Path::new(&args[1]), Path::new(&args[2])),
         _ => bail!(
-            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | ansi2svg <capture> <out.svg> [FROM=TO...] | cemu-host <game_dir> <outdir>"
+            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | drops <game_dir> | ansi2svg <capture> <out.svg> [FROM=TO...] | cemu-host <game_dir> <outdir>"
         ),
     }
 }

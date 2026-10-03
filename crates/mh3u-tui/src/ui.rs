@@ -134,7 +134,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree")]),
             Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
             Tab::Worn => keys.push(("i", "skill info")),
-            Tab::Monsters => keys.extend([("↑/↓", "move"), ("s", "sort")]),
+            Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
         }
         keys.extend([("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
@@ -655,52 +655,86 @@ fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
     );
     scrollbar(f, left, len, state.selected());
 
-    let lines = selected.map(|m| monster_details(app, m)).unwrap_or_default();
+    let lines = selected
+        .map(|m| monster_details(app, m, usize::from(right.width.saturating_sub(3))))
+        .unwrap_or_default();
+    let visible = usize::from(right.height.saturating_sub(2));
+    let total = lines.len();
+    let scroll = usize::from(app.monster_scroll).min(total.saturating_sub(visible));
+    app.monster_scroll = scroll as u16;
     f.render_widget(
         Paragraph::new(lines)
-            .wrap(Wrap { trim: false })
+            .scroll((scroll as u16, 0))
             .block(theme::pane(" Drops ", false)),
         right,
     );
+    scrollbar(f, right, total, Some(scroll));
 }
 
-fn monster_details(app: &App, monster: u16) -> Vec<Line<'static>> {
-    use mh3u_core::drops::{Method, Rank};
+/// Lay out `items` after `label`, separated by dots, breaking lines to fit `width` and indenting the continuation lines under the
+/// first item.
+fn wrap_items(label: &str, items: Vec<Vec<Span<'static>>>, width: usize) -> Vec<Line<'static>> {
+    const SEP: &str = "  ·  ";
+    let indent = " ".repeat(label.chars().count());
+    let mut lines = Vec::new();
+    let mut spans = vec![Span::styled(label.to_string(), muted())];
+    let mut used = label.chars().count();
+    let mut first = true;
+    for item in items {
+        let w: usize = item.iter().map(|s| s.content.chars().count()).sum();
+        if !first && used + SEP.chars().count() + w > width {
+            lines.push(Line::from(std::mem::replace(&mut spans, vec![Span::raw(indent.clone())])));
+            used = indent.chars().count();
+        } else if !first {
+            spans.push(Span::styled(SEP, muted()));
+            used += SEP.chars().count();
+        }
+        spans.extend(item);
+        used += w;
+        first = false;
+    }
+    lines.push(Line::from(spans));
+    lines
+}
+
+fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line<'static>> {
     let missing = app.missing_for_wishlist();
-    let drops = app.game.drops();
     let mut lines = vec![Line::styled(app.game.monster_name(monster).unwrap_or("?").to_string(), bold())];
     lines.push(Line::from(vec![
         Span::styled("Chance in percent. ", muted()),
         Span::styled("★", warn()),
         Span::styled(" marks what your wishlist still needs.", muted()),
     ]));
-    for method in Method::ALL {
-        if Rank::ALL.iter().all(|&r| drops.list(monster, r, method).is_none()) {
-            continue;
+    let mut current = None;
+    for (method, rank, list) in app.game.drops().lists_for(monster) {
+        if current != Some(method) {
+            lines.push(Line::raw(""));
+            lines.push(Line::styled(method.label(), bold()));
+            current = Some(method);
         }
-        lines.push(Line::raw(""));
-        lines.push(Line::styled(method.label(), bold()));
-        for rank in Rank::ALL {
-            let Some(list) = drops.list(monster, rank, method) else { continue };
-            let mut spans = vec![Span::styled(format!("  {:<10}", rank.label()), muted())];
-            for (n, d) in list.iter().enumerate() {
-                if n > 0 {
-                    spans.push(Span::styled("  ·  ", muted()));
-                }
+        let items: Vec<Vec<Span<'static>>> = list
+            .iter()
+            .map(|d| {
                 let name = app.game.item_name(d.item).unwrap_or("?");
-                if missing.contains_key(&d.item) {
-                    spans.push(Span::styled(format!("★ {name}"), warn().add_modifier(Modifier::BOLD)));
+                let quantity = if d.quantity > 1 {
+                    format!(" x{}", d.quantity)
                 } else {
-                    spans.push(Span::raw(name.to_string()));
-                }
+                    String::new()
+                };
+                let mut spans = if missing.contains_key(&d.item) {
+                    vec![Span::styled(format!("★ {name}{quantity}"), warn().add_modifier(Modifier::BOLD))]
+                } else {
+                    vec![Span::raw(format!("{name}{quantity}"))]
+                };
                 spans.push(Span::styled(format!(" {}%", d.percent), muted()));
-            }
-            lines.push(Line::from(spans));
-        }
+                spans
+            })
+            .collect();
+        lines.extend(wrap_items(&format!("  {:<10}", rank.label()), items, width));
     }
     lines.push(Line::raw(""));
     lines.push(Line::styled(
-        "Capture and part-break rewards are not decoded yet, so they are not listed.",
+        "Part breaks are numbered in the game's order; which body part each one is, is not known.",
         muted(),
     ));
     lines
@@ -1231,4 +1265,35 @@ fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     }
     let title = format!(" Shopping list · all {unowned} unowned piece(s) ");
     f.render_widget(Paragraph::new(lines).block(theme::pane(title, false)), bottom);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn item(text: &str) -> Vec<Span<'static>> {
+        vec![Span::raw(text.to_string())]
+    }
+
+    #[test]
+    fn items_wrap_under_the_first_item() {
+        let items = vec![item("aaaa 10%"), item("bbbb 20%"), item("cccc 30%")];
+        // label (4) + "aaaa 10%" (8) + "  ·  " (5) + "bbbb 20%" (8) = 25
+        let lines: Vec<String> = wrap_items("Low ", items.clone(), 25).iter().map(Line::to_string).collect();
+        assert_eq!(lines, ["Low aaaa 10%  ·  bbbb 20%", "    cccc 30%"]);
+        let one: Vec<String> = wrap_items("Low ", items, 80).iter().map(Line::to_string).collect();
+        assert_eq!(one, ["Low aaaa 10%  ·  bbbb 20%  ·  cccc 30%"]);
+    }
+
+    #[test]
+    fn an_item_wider_than_the_pane_still_gets_its_own_line() {
+        let lines = wrap_items("Low ", vec![item("a"), item("a very long item name 99%")], 10);
+        assert_eq!(lines.len(), 2);
+    }
+
+    #[test]
+    fn fit_cuts_with_an_ellipsis() {
+        assert_eq!(fit("Rathalos", 20), "Rathalos");
+        assert_eq!(fit("Guild Bard Bolero X", 8), "Guild B…");
+    }
 }

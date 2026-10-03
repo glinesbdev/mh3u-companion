@@ -84,11 +84,16 @@ carves, tail carves and shiny drops, `0x194` bytes (101 entries) apart. Entry `n
 that check rejects. 81 body-carve, 35 tail-carve and 58 shiny-drop lists per rank are found. Checked against a published list for
 Rathian and Rathalos: all 18 of their lists (3 ranks x 3 kinds) are identical, chances included, though the game orders them differently.
 
-Capture rewards and part-break rewards are lists of `[item id u16, quantity, chance]` in the same section, found for Rathian and
-checked against the published list, but their pointers are one flat table (from `0x78fd8`, 203 entries per rank, ranks `0x32c` apart)
-with a varying number of lists per monster (3 to 6), and how monsters map onto it is not decoded. The table of monsters per list, or
-the rule that gives the count, has not been found. Quest rewards are in the `.quest` files (`QTDS` format: multilingual text followed by
-binary data), which are not decoded.
+Capture rewards and part-break rewards are lists of `[item id u16, quantity, chance]` ended by a zero record. Their pointers sit in one
+flat table per rank (203 entries, from `0x78fd8`, `0x79304`, `0x79630`) with 2 to 6 lists per monster and no table saying where one
+monster's lists end. So they are assigned by content: each list goes to the monster whose carve items it mostly holds (the monster ids
+are non-decreasing down the table, which is solved with a small dynamic program), and each run of lists given to one monster is its
+group. A capturable monster's group is `[capture, break lists..., one more list]`, where the last list repeats the capture's items with
+different chances and is not used; a monster that cannot be captured (Ceadeus) has only break lists. The break lists are in the game's
+order but nothing says which body part each is, so the app calls them "Part break 1, 2, ...". Checked against published lists for 12
+monsters: 106 of the 108 capture and break lists (three ranks) are exactly where the inference puts them, and the two others are
+probably disagreements in that list. The grouping is inferred, not read from a table, so a monster with generic items only could be
+misplaced. Quest rewards are in the `.quest` files (`QTDS` format: multilingual text followed by binary data), which are not decoded.
 
 ## Blacksmith unlock (inferred)
 
@@ -106,5 +111,5 @@ then on. `recipes.rs` has the rule and a test for the early-game save.
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
-- Weapon sharpness and element; talisman data (no save has a talisman to decode the equipment record's tail from); capture and part-break rewards; quest rewards.
+- Weapon sharpness and element; talisman data (no save has a talisman to decode the equipment record's tail from); which body part each part-break list is; quest rewards.
 - Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).

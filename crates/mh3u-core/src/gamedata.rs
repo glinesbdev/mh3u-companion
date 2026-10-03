@@ -87,6 +87,8 @@ impl GameData {
                 .with_context(|| format!("{want} not found in archive"))?;
             gmd::parse(&arc.read(entry)?).with_context(|| want)
         };
+        // names sometimes carry trailing spaces in the game's text
+        let names = |file: &str| -> Result<Vec<String>> { Ok(strings(file)?.into_iter().map(|n| n.trim().to_string()).collect()) };
         // Descriptions are a nicety: a dump without them still works.
         let optional = |file: &str| {
             strings(file)
@@ -95,7 +97,7 @@ impl GameData {
         };
         let equipment = EQUIPMENT_KINDS
             .iter()
-            .map(|&(kind, label, file)| Ok((kind, label, strings(file)?, optional(&file.replace("_eng", "_Exp_eng")))))
+            .map(|&(kind, label, file)| Ok((kind, label, names(file)?, optional(&file.replace("_eng", "_Exp_eng")))))
             .collect::<Result<_>>()?;
         let rpx_path = rpx_path(game_dir)?;
         let rpx_bytes = std::fs::read(&rpx_path).with_context(|| format!("reading {}", rpx_path.display()))?;
@@ -105,16 +107,16 @@ impl GameData {
         let weapons = crate::weapons::parse(&data_section)?;
         let drops = crate::drops::parse(&data_section, recipes::DATA_SECTION_ADDR)?;
         Ok(GameData {
-            items: strings("Item00_eng")?,
+            items: names("Item00_eng")?,
             item_details: optional("ItemDetail_eng"),
             skill_details: optional("Skill_Type_Exp_eng"),
-            monsters: strings("Monster_eng").unwrap_or_default(),
+            monsters: names("Monster_eng").unwrap_or_default(),
             recipes,
             upgrades,
             armor,
             weapons,
             drops,
-            skills: strings("Skill_Type_eng")?,
+            skills: names("Skill_Type_eng")?,
             equipment,
         })
     }
