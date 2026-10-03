@@ -35,6 +35,8 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
   further and say "hunt X in high rank for 4 of your 7 missing materials".
 - **Quest finder:** which quests have a monster (or a reward). **Needs:** the `.quest` files decoded (QTDS: text, then binary data;
   monsters, rewards and the quest rank are in the binary part).
+- Quests are spread over several folders (`quest/us`, `quest/btl`, `quest/support` and `DLC/us`); the quest finder should cover them
+  all and say which come from downloadable content.
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 
@@ -46,6 +48,14 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
   for armor, so this is by name.
 - **Surplus finder:** items in the box that no wishlist piece and no remaining recipe needs, as candidates to sell.
 - **Zenny goal:** how much to earn before the wishlist is affordable, and which cheap pieces to make first.
+- **Affordable now:** a Crafting filter (like `c` for materials) for pieces whose zenny cost you can pay, and a sort by cost.
+- **Weapon comparison:** two or three weapons side by side (attack, affinity, slots, rarity, and sharpness and element once found).
+- **Skill browser:** pick a skill and see every armor piece that has it, strongest first, with a mark for the ones you own or the
+  blacksmith is offering. (Search already finds a skill by name; this would be a view of its own and the first step of the build
+  manager's search.)
+- **Wishlist per hunter:** the wishlist is one file for everyone, while the remembered blacksmith list is already per hunter. Switching
+  hunters (WornTester, Shamus) could switch the wishlist and build templates too, with an in-app way to pick the hunter instead of
+  `--slot`.
 
 ## Data not shown yet
 
@@ -56,19 +66,53 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
 - Skill **effect names and higher tiers**.
 - Monster weaknesses, hit points and parts (probably in each monster's archive; nothing decoded).
 - Palico (Felyne) equipment and the guild card, quest progress and play time in the save.
+- **Item values:** sell and buy price, rarity and carry limit of each item (a published list has them; the game's table is not found).
+- **Hunter's Notes** (the monster descriptions in the text archive): show them on the Monsters tab. **Needs:** the mapping from a note to
+  a monster, which is not the monster id order.
+- How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the first-material rule).
+- Other languages: the text archive also has French, German, Italian and Spanish names and descriptions; a language option would only
+  need the archive path to change.
 
 ## Quality of life
 
-- Search on the Monsters and Worn tabs; `/` for monsters by name or by drop.
+- Search on the Equipment, Monsters and Worn tabs; `/` for monsters by name or by drop.
+- More Equipment sorts: by attack, by defense, by skill points.
+- Show a weapon's sharpness as the colored bar the game uses, once the data is found.
 - Wishlist sorting and a way to mark a piece "done" without owning it.
 - Export the shopping list as text to paste into a note.
 - A "what changed since last time" summary on startup (items gained, zenny change, new equipment), from a saved copy of the last save
   the app saw.
 - Config file for colors and icons (the anvil, the muted gray) beside the wishlist.
 - Mouse support for the lists.
+- Show maximum defense next to base defense once it is decoded, and the zenny cost of upgrading armor if it turns out to have one.
 
 ## Live mode
 
 - Notify when a wishlist piece becomes craftable (the materials just arrived).
 - Show the quest's drops as they land, matched against the wishlist.
 - Record each blacksmith visit's list (the unlock check could then be verified against what the game shows, not inferred).
+- Notice when a quest ends and log what it gave (items, zenny), to build a personal history of drops that could be compared with the
+  published chances.
+
+## Checks that need the game
+
+Not features, but they would settle open questions in the notes. Each takes a few minutes in front of the game.
+
+- **Blacksmith rule for weapons and late game.** The first-material rule was checked on one early save, for armor only. Compare the
+  app's `b` filter with the blacksmith's list on a save with more progress, and for weapons.
+- **Armor prices that differ** between the game's table and a published list: the Qurupeco set, Yukumo, Rathian X, Rath Heart Z and
+  Silhouette Casque (about 24 pieces). Read the price off the forge list; a price recorded that way already wins over the table.
+- **Weapon attack numbers.** The decoded attack matches a published list for about 97% of weapons but was not compared with the game's
+  own screens. A handful of weapons across types would do (the details are in `docs/formats.md`).
+- **Torso Up** with a real set: does the body piece's own Torso Up count double? The Worn tab assumes not.
+- **Talisman.** Get one into the WornTester save so the equipment record's tail can be decoded (skills, slots); then a second with
+  different skills to tell the fields apart.
+
+## Project
+
+- A GitHub Actions workflow running `cargo fmt --check`, `cargo clippy` and `cargo test` on every push (the tests that need game files
+  skip themselves, so it can run without them).
+- Screen-drawing tests with ratatui's `TestBackend`, so a layout change that breaks a tab is caught without running the app.
+- Release builds for Linux attached to a GitHub release; a `cargo install` line in the README. The repository is private for now;
+  making it public needs a look through the history and docs for anything personal first.
+- Keep `scripts/screenshots.sh` in step with the tab order when tabs are added (its key paths depend on it).
