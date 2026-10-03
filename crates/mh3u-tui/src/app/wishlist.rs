@@ -21,43 +21,6 @@ impl WishList {
     }
 }
 
-/// Node of the upgrade tree for `parent_chain`.
-pub(super) struct TreeNode {
-    /// Can be made from scratch, so it never needs a parent.
-    can_create: bool,
-    parents: Vec<u16>,
-}
-
-/// The ancestors to add along with a wishlisted piece, nearest first. Walks up while the piece can only be
-/// obtained by upgrading and no parent is owned; stops at an ancestor that is owned, wishlisted, or can be
-/// created from scratch.
-pub(super) fn parent_chain(
-    start: u16,
-    node: impl Fn(u16) -> TreeNode,
-    owned: impl Fn(u16) -> bool,
-    wished: impl Fn(u16) -> bool,
-) -> Vec<u16> {
-    let mut chain = Vec::new();
-    let mut cur = start;
-    for _ in 0..64 {
-        let n = node(cur);
-        if n.can_create || n.parents.iter().any(|&p| owned(p)) {
-            break;
-        }
-        // Prefer a parent that is already wishlisted, which ends the walk.
-        if n.parents.iter().any(|&p| wished(p)) {
-            break;
-        }
-        let Some(&parent) = n.parents.first() else { break };
-        if chain.contains(&parent) || parent == start {
-            break; // guard against a cycle in the data
-        }
-        chain.push(parent);
-        cur = parent;
-    }
-    chain
-}
-
 /// Parse the wishlist file: `kind id` per line, with an optional trailing `auto` for pieces added as a parent of another.
 /// Lines that don't parse are ignored.
 pub(super) fn parse_wishlist(text: &str) -> Vec<(u8, u16, bool)> {
@@ -97,17 +60,9 @@ impl App {
     /// Add a piece to the wishlist, plus the parent weapons it needs: the upgrade chain leading to it, back to
     /// the first weapon you own or can make from scratch. Parents go in before the piece.
     pub(super) fn add_wish_with_parents(&mut self, kind: u8, id: u16) {
-        let chain = parent_chain(
-            id,
-            |p| TreeNode {
-                can_create: self.recipes_for(kind, p).0.is_some(),
-                parents: self.upgrade_recipe(kind, p).map(|u| u.parents.clone()).unwrap_or_default(),
-            },
-            |p| self.save.owns_equipment(kind, p),
-            |p| self.is_wished(kind, p),
-        );
+        let chain = self.needed_parents(kind, id);
         let mut added = 0;
-        for &parent in chain.iter().rev().chain([&id]) {
+        for &parent in chain.iter().chain([&id]) {
             if !self.is_wished(kind, parent) {
                 self.wish.items.push((kind, parent));
                 if parent != id {
@@ -126,17 +81,10 @@ impl App {
         self.after_wishlist_change();
     }
 
-    /// The weapon-tree rules shared by adding and removing: the parents `id` needs, ignoring the wishlist.
+    /// The weapons to get before `id`, first to last: the steps of the cheapest way to it (see `cheapest_path`) other than the last,
+    /// leaving out any you own. Shared by adding and removing, and ignores the wishlist.
     pub(super) fn needed_parents(&self, kind: u8, id: u16) -> Vec<u16> {
-        parent_chain(
-            id,
-            |p| TreeNode {
-                can_create: self.recipes_for(kind, p).0.is_some(),
-                parents: self.upgrade_recipe(kind, p).map(|u| u.parents.clone()).unwrap_or_default(),
-            },
-            |p| self.save.owns_equipment(kind, p),
-            |_| false,
-        )
+        self.cheapest_path(kind, id).map(|p| p.parents_needed()).unwrap_or_default()
     }
 
     /// Remove a piece, and the parents that were added automatically for it unless another wishlisted piece still
@@ -145,7 +93,8 @@ impl App {
         self.wish.items.retain(|&w| w != (kind, id));
         self.wish.auto_parents.remove(&(kind, id));
         let mut removed = 0;
-        for parent in self.needed_parents(kind, id) {
+        // nearest first, so a parent that only the next one up needed goes too
+        for parent in self.needed_parents(kind, id).into_iter().rev() {
             if !self.is_wished(kind, parent) || !self.wish.auto_parents.contains(&(kind, parent)) {
                 continue;
             }
@@ -245,48 +194,6 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    /// A tiny upgrade tree: id -> (can create from scratch, parents).
-    fn tree(entries: &[(u16, bool, &[u16])]) -> impl Fn(u16) -> TreeNode {
-        let map: HashMap<u16, (bool, Vec<u16>)> = entries.iter().map(|&(id, c, p)| (id, (c, p.to_vec()))).collect();
-        move |id| {
-            let (can_create, parents) = map.get(&id).cloned().unwrap_or((false, Vec::new()));
-            TreeNode { can_create, parents }
-        }
-    }
-
-    #[test]
-    fn chain_walks_up_to_a_weapon_that_can_be_created() {
-        // 4 <- 3 <- 2 <- 1, where only 1 can be made from scratch.
-        let t = tree(&[(1, true, &[]), (2, false, &[1]), (3, false, &[2]), (4, false, &[3])]);
-        assert_eq!(parent_chain(4, &t, |_| false, |_| false), vec![3, 2, 1]);
-    }
-
-    #[test]
-    fn chain_stops_at_an_owned_parent() {
-        let t = tree(&[(1, true, &[]), (2, false, &[1]), (3, false, &[2]), (4, false, &[3])]);
-        assert_eq!(parent_chain(4, &t, |p| p == 2, |_| false), vec![3]);
-        assert!(parent_chain(3, &t, |p| p == 2, |_| false).is_empty());
-    }
-
-    #[test]
-    fn chain_adds_nothing_for_a_piece_that_can_be_created() {
-        let t = tree(&[(1, true, &[]), (2, true, &[1])]);
-        assert!(parent_chain(2, &t, |_| false, |_| false).is_empty());
-    }
-
-    #[test]
-    fn chain_stops_at_a_wishlisted_parent() {
-        let t = tree(&[(1, true, &[]), (2, false, &[1]), (3, false, &[2])]);
-        assert!(parent_chain(3, &t, |_| false, |p| p == 2).is_empty());
-    }
-
-    #[test]
-    fn chain_survives_a_cycle_and_a_missing_node() {
-        let t = tree(&[(1, false, &[2]), (2, false, &[1])]);
-        assert_eq!(parent_chain(1, &t, |_| false, |_| false), vec![2]);
-        assert!(parent_chain(9, &t, |_| false, |_| false).is_empty());
-    }
 
     #[test]
     fn wishlist_round_trips_with_auto_markers() {

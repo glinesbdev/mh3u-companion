@@ -282,19 +282,21 @@ impl App {
     pub fn plan(&self, kind: u8, id: u16) -> Option<Plan> {
         let (create, upgrade) = self.recipes_for(kind, id);
         let parent_owned = upgrade.is_some_and(|u| u.parents.iter().any(|&p| self.save.owns_equipment(kind, p)));
-        match (create, upgrade) {
-            (Some(r), _) => Some(Plan {
-                via: Via::Create,
-                materials: r.materials.clone(),
-                parent_owned,
-            }),
-            (None, Some(u)) => Some(Plan {
-                via: Via::Upgrade,
-                materials: u.materials.clone(),
-                parent_owned,
-            }),
-            (None, None) => None,
-        }
+        let (via, materials) = match (create, upgrade) {
+            (None, None) => return None,
+            (Some(r), None) => (Via::Create, &r.materials),
+            (None, Some(u)) => (Via::Upgrade, &u.materials),
+            // a weapon that can be made either way: whichever the cheapest route to it ends with
+            (Some(r), Some(u)) => match self.cheapest_path(kind, id).and_then(|p| p.steps.last().map(|s| s.how)) {
+                Some(crate::upgrade_path::How::Upgrade) => (Via::Upgrade, &u.materials),
+                _ => (Via::Create, &r.materials),
+            },
+        };
+        Some(Plan {
+            via,
+            materials: materials.clone(),
+            parent_owned,
+        })
     }
 
     /// True when the piece can be made right now by either route: create from scratch with the materials you hold,

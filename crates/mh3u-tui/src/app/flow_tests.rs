@@ -158,3 +158,38 @@ fn the_hunt_plan_follows_the_wishlist_and_opens_the_monsters_drops() {
     assert!(app.hunts.stale, "a wishlist change makes the plan stale");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_wishlist_follows_the_cheapest_route_and_its_shopping_list_matches_it() {
+    let dir = temp_dir("route");
+    let Some(mut app) = app_in(&dir) else { return };
+    // a great sword whose cheapest way here is a chain of several steps
+    let target = app
+        .game
+        .piece_ids(7)
+        .find(|&id| {
+            !app.save.owns_equipment(7, id)
+                && app
+                    .cheapest_path(7, id)
+                    .is_some_and(|p| p.steps.len() >= 3 && p.parents_needed().len() >= 2)
+        })
+        .expect("a great sword that takes a chain of steps");
+    let path = app.cheapest_path(7, target).unwrap();
+    app.toggle_wish(7, target);
+    let mut expected: Vec<(u8, u16)> = path.parents_needed().into_iter().map(|p| (7, p)).collect();
+    expected.push((7, target));
+    assert_eq!(app.wish.items, expected, "the parents it needs, first to last, then the weapon");
+
+    // every step is planned the way the cheapest route says, so the shopping list is the route's materials
+    let (need, unowned) = app.shopping_need();
+    assert_eq!(unowned, expected.len());
+    let mut got: Vec<(u16, u32)> = need;
+    got.sort_unstable();
+    let want: Vec<(u16, u32)> = path.materials().into_iter().map(|m| (m.id, u32::from(m.count))).collect();
+    assert_eq!(got, want);
+
+    // taking it off takes its automatic parents with it
+    app.toggle_wish(7, target);
+    assert!(app.wish.items.is_empty());
+    let _ = std::fs::remove_dir_all(&dir);
+}

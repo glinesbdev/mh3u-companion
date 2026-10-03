@@ -33,9 +33,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Planning
 
-- **Use the cheapest route in the wishlist.** The details panel shows the cheapest way to a weapon, but the wishlist still plans
-  "create from scratch whenever that is possible", and adds the parent chain by that rule. It could follow the cheapest route
-  instead (and count a parent you own as the start).
 - **Set families:** group armor by set (Agnaktor Cap, S, U, X, Z) with a "which variant do I have" view. The game has no upgrade chain
   for armor, so this is by name.
 - **Surplus finder:** items in the box that no wishlist piece and no remaining recipe needs, as candidates to sell.

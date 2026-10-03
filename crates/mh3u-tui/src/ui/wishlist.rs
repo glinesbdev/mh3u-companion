@@ -107,7 +107,7 @@ fn wish_piece_lines(app: &App, kind: u8, id: u16) -> Vec<Line<'static>> {
     };
     let how = match (plan.via, plan.parent_owned) {
         (Via::Create, _) => "Create from scratch",
-        (Via::Upgrade, true) => "Upgrade (parent weapon owned)",
+        (Via::Upgrade, true) => "Upgrade (uses up the parent weapon you own)",
         (Via::Upgrade, false) => "Upgrade (you don't own a parent weapon)",
     };
     lines.push(Line::styled(how, muted()));

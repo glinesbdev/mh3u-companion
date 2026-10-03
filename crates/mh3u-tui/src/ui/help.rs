@@ -24,7 +24,7 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ("", "s  sort (game order, name, craftable first, owned first)"),
     (
         "",
-        "w  add to the wishlist (★), with the parent weapons it needs; press again to remove it",
+        "w  add to the wishlist (★), with the weapons in between that its cheapest way needs; press again to remove it",
     ),
     (
         "Wishlist",
@@ -61,7 +61,7 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ("", ""),
     (
         "¶",
-        "A piece is craftable if you have the materials to create it, or to upgrade it and you own a parent weapon. Upgrading uses up the parent, so the wishlist plans a piece as 'create from scratch' whenever that is possible and as an upgrade only when there is no other way.",
+        "A piece is craftable if you have the materials to create it, or to upgrade it and you own a parent weapon. Upgrading uses up the parent. The wishlist plans a weapon by its cheapest way (fees only): making it, or upgrading it from the weapon before it, adding the weapons in between that you do not own.",
     ),
 ];
 

@@ -61,9 +61,20 @@ impl Path {
         out
     }
 
-    /// Better routes sort lower: less zenny, then fewer unknown prices, then fewer steps.
-    fn rank(&self) -> (u32, usize, usize) {
-        (self.zenny(), self.unknown_prices(), self.steps.len())
+    /// The weapons that have to be got before the last one, first to last, leaving out any you already own.
+    pub fn parents_needed(&self) -> Vec<u16> {
+        let before_last = self.steps.len().saturating_sub(1);
+        self.steps[..before_last]
+            .iter()
+            .filter(|s| s.how != How::Owned)
+            .map(|s| s.weapon)
+            .collect()
+    }
+
+    /// Better routes sort lower: routes with every price known first (a missing price could hide a dear step), then less zenny,
+    /// then fewer steps.
+    fn rank(&self) -> (usize, u32, usize) {
+        (self.unknown_prices(), self.zenny(), self.steps.len())
     }
 }
 
@@ -279,6 +290,55 @@ mod tests {
         let path = cheapest(3, &weapons).unwrap();
         assert_eq!(route(&path), [(2, How::Create), (3, How::Upgrade)]);
         assert_eq!(cheapest(4, &weapons), None, "the loop leads nowhere");
+    }
+
+    #[test]
+    fn the_parents_needed_are_the_steps_before_the_last_that_you_do_not_own() {
+        let none = Line {
+            owned: vec![],
+            create_4: None,
+        }
+        .run(4)
+        .unwrap();
+        assert_eq!(none.parents_needed(), [1, 2, 3]);
+        let some = Line {
+            owned: vec![2],
+            create_4: None,
+        }
+        .run(4)
+        .unwrap();
+        assert_eq!(some.parents_needed(), [3], "the owned weapon is the start, not something to get");
+        let direct = Line {
+            owned: vec![],
+            create_4: Some(10),
+        }
+        .run(4)
+        .unwrap();
+        assert!(direct.parents_needed().is_empty());
+    }
+
+    #[test]
+    fn a_route_with_every_price_known_beats_a_cheaper_looking_one_with_a_gap() {
+        // weapon 2 can be made for 900, or upgraded from 1 whose price is not known
+        let owned = |_: u16| false;
+        let parents = |w: u16| if w == 2 { vec![1] } else { Vec::new() };
+        let create = |w: u16| match w {
+            1 => Some(Cost {
+                zenny: None,
+                materials: Vec::new(),
+            }),
+            2 => Some(cost(900, 3)),
+            _ => None,
+        };
+        let upgrade = |w: u16| (w == 2).then(|| cost(10, 4));
+        let weapons = Weapons {
+            owned: &owned,
+            parents: &parents,
+            create: &create,
+            upgrade: &upgrade,
+        };
+        let path = cheapest(2, &weapons).unwrap();
+        assert_eq!((path.steps.len(), path.zenny()), (1, 900));
     }
 
     #[test]
