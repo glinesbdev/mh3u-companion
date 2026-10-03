@@ -389,17 +389,16 @@
 <text x="486.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">x</text>
 <text x="505.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">remove</text>
 <text x="582.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">o</text>
-<text x="601.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">on</text>
-<text x="630.4" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">offer</text>
-<text x="697.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
-<text x="716.8" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">talisman</text>
-<text x="812.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
-<text x="832.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">gender</text>
-<text x="908.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">c</text>
-<text x="928.0" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">class</text>
-<text x="995.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="1014.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="1072.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="1091.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="601.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">pieces</text>
+<text x="678.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
+<text x="697.6" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">talisman</text>
+<text x="793.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
+<text x="812.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">gender</text>
+<text x="889.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">c</text>
+<text x="908.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">class</text>
+<text x="976.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="995.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="1052.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="1072.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
 </g>
 </svg>

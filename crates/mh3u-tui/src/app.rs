@@ -543,6 +543,8 @@ pub struct App {
     build_stale: bool,
     builds_path: Option<PathBuf>,
     pub show_help: bool,
+    /// First visible line of the help screen (the drawing code keeps it inside the text).
+    pub help_scroll: u16,
     /// Set when the TUI started Cemu and is reading its memory (`--live`).
     pub live: Option<Live>,
     /// Debug editing is on (`--debug-edit`): `:` opens the command line.
@@ -650,6 +652,7 @@ impl App {
             build_stale: true,
             builds_path,
             show_help: false,
+            help_scroll: 0,
             live: None,
             prices: prices_path
                 .as_ref()
@@ -1314,14 +1317,14 @@ impl App {
                 });
             }
         }
-        if self.build.include_offered {
+        if self.build.pool != builds::Pool::Owned {
             for kind in 1..=5u8 {
                 for id in 1..1000u16 {
                     if real(kind, id)
                         && !pool.iter().any(|c| c.kind == kind && c.id == id)
                         && let Some(stats) = self.game.armor_stats(kind, id)
                         && builds::usable(stats, self.build.gender, self.build.class)
-                        && self.at_blacksmith(kind, id)
+                        && (self.build.pool == builds::Pool::All || self.at_blacksmith(kind, id))
                     {
                         pool.push(Candidate {
                             kind,
@@ -1443,7 +1446,7 @@ impl App {
                 };
             }
             KeyCode::Char('o') => {
-                self.build.include_offered = !self.build.include_offered;
+                self.build.pool = self.build.pool.next();
                 self.builds_changed();
             }
             KeyCode::Char('m') => {
@@ -2293,7 +2296,16 @@ impl App {
             return;
         }
         if self.show_help {
-            self.show_help = false; // any key closes the help overlay
+            match code {
+                KeyCode::Down | KeyCode::Char('j') => self.help_scroll = self.help_scroll.saturating_add(1),
+                KeyCode::Up | KeyCode::Char('k') => self.help_scroll = self.help_scroll.saturating_sub(1),
+                KeyCode::PageDown => self.help_scroll = self.help_scroll.saturating_add(10),
+                KeyCode::PageUp => self.help_scroll = self.help_scroll.saturating_sub(10),
+                _ => {
+                    self.show_help = false; // any other key closes the help overlay
+                    self.help_scroll = 0;
+                }
+            }
             return;
         }
         if self.tab == Tab::Builds && self.builds_key(code) {

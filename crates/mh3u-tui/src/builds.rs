@@ -7,6 +7,43 @@
 use crate::worn::{self, TORSO_UP};
 use mh3u_core::armor::{ArmorClass, ArmorStats, Gender};
 
+/// Which armor the search may use.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pool {
+    /// What the equipment box holds.
+    Owned,
+    /// Plus what the blacksmith is offering.
+    OnOffer,
+    /// Every piece in the game, for planning ahead: pieces you cannot get yet are marked as such.
+    All,
+}
+
+impl Pool {
+    pub fn next(self) -> Pool {
+        match self {
+            Pool::Owned => Pool::OnOffer,
+            Pool::OnOffer => Pool::All,
+            Pool::All => Pool::Owned,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Pool::Owned => "owned only",
+            Pool::OnOffer => "owned + on offer",
+            Pool::All => "everything (planning)",
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Pool::Owned => "owned",
+            Pool::OnOffer => "offered",
+            Pool::All => "all",
+        }
+    }
+}
+
 /// A skill and the points wanted in it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Target {
@@ -72,6 +109,8 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
         let mut chosen: Vec<usize> = of_kind.iter().copied().filter(|&i| wanted(&pool[i]) || relevance(i) > 0).collect();
         chosen.sort_by_key(|&i| (std::cmp::Reverse(relevance(i)), std::cmp::Reverse(pool[i].stats.defense), i));
         chosen.truncate(PER_SLOT);
+        // sturdiest first, so good sets turn up early and the sets still to come can be judged against them
+        chosen.sort_by_key(|&i| (std::cmp::Reverse(pool[i].stats.defense), i));
         let filler = of_kind
             .iter()
             .copied()
@@ -105,94 +144,124 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
         }
     }
 
+    // The most defense the slots from each step on can still add.
+    let mut sturdy = vec![0u32; steps + 1];
+    for s in (0..steps).rev() {
+        let best = slots[s]
+            .iter()
+            .filter(|&&i| i != empty)
+            .map(|&i| u32::from(pool[i].stats.defense))
+            .max()
+            .unwrap_or(0);
+        sturdy[s] = sturdy[s + 1] + best;
+    }
+
     let mut out: Vec<Found> = Vec::new();
     let mut picked: Vec<usize> = Vec::new();
     let mut so_far = vec![0i32; targets.len()];
-    walk(pool, targets, &slots, &ahead, 0, &mut picked, &mut so_far, empty, limit, &mut out);
+    let mut search = Walk {
+        pool,
+        targets,
+        slots: &slots,
+        ahead: &ahead,
+        sturdy: &sturdy,
+        empty,
+        limit,
+        // once `limit` sets are in hand, a branch that cannot beat the weakest of them is dropped
+        floor: 0,
+    };
+    search.walk(0, 0, &mut picked, &mut so_far, &mut out);
     rank(&mut out);
     out.truncate(limit);
     out
 }
 
-#[allow(clippy::too_many_arguments)]
-fn walk(
-    pool: &[Candidate],
-    targets: &[Target],
-    slots: &[Vec<usize>],
-    ahead: &[Vec<i32>],
-    step: usize,
-    picked: &mut Vec<usize>,
-    so_far: &mut Vec<i32>,
+struct Walk<'a> {
+    pool: &'a [Candidate],
+    targets: &'a [Target],
+    slots: &'a [Vec<usize>],
+    ahead: &'a [Vec<i32>],
+    sturdy: &'a [u32],
     empty: usize,
     limit: usize,
-    out: &mut Vec<Found>,
-) {
-    if step == slots.len() {
-        let parts: Vec<(u8, &ArmorStats)> = picked.iter().map(|&i| (pool[i].kind, &pool[i].stats)).collect();
-        let summary = worn::summarize(&parts);
-        let reached = targets.iter().all(|t| {
-            summary
-                .skills
-                .iter()
-                .find(|s| s.id == t.skill)
-                .is_some_and(|s| s.points >= t.points)
-        });
-        if reached {
-            out.push(Found {
-                pieces: picked.clone(),
-                defense: summary.defense,
-                owned: picked.iter().filter(|&&i| pool[i].owned).count(),
+    floor: u32,
+}
+
+impl Walk<'_> {
+    fn walk(&mut self, step: usize, defense: u32, picked: &mut Vec<usize>, so_far: &mut Vec<i32>, out: &mut Vec<Found>) {
+        let (pool, targets, empty) = (self.pool, self.targets, self.empty);
+        if step == self.slots.len() {
+            let parts: Vec<(u8, &ArmorStats)> = picked.iter().map(|&i| (pool[i].kind, &pool[i].stats)).collect();
+            let summary = worn::summarize(&parts);
+            let reached = targets.iter().all(|t| {
+                summary
+                    .skills
+                    .iter()
+                    .find(|s| s.id == t.skill)
+                    .is_some_and(|s| s.points >= t.points)
             });
-            // keep the list from growing without bound
-            if out.len() >= limit * 8 {
-                rank(out);
-                out.truncate(limit);
-            }
-        }
-        return;
-    }
-    for &i in &slots[step] {
-        // the body is searched last, so the running totals before it carry no doubling
-        let gain: Vec<i32> = targets
-            .iter()
-            .map(|t| {
-                if i == empty {
-                    0
-                } else {
-                    pool[i]
-                        .stats
-                        .skills
-                        .iter()
-                        .filter(|&&(id, _)| id == t.skill)
-                        .map(|&(_, p)| i32::from(p))
-                        .sum()
+            if reached {
+                out.push(Found {
+                    pieces: picked.clone(),
+                    defense: summary.defense,
+                    owned: picked.iter().filter(|&&i| pool[i].owned).count(),
+                });
+                // keep the list from growing without bound
+                if out.len() >= self.limit * 8 {
+                    rank(out);
+                    out.truncate(self.limit);
+                    self.floor = out.last().map_or(0, |f| f.defense);
                 }
-            })
-            .collect();
-        let is_body = ORDER[step] == BODY;
-        let reachable = targets.iter().enumerate().all(|(t, target)| {
-            let own = if is_body && target.skill != TORSO_UP {
-                2 * gain[t].max(0)
-            } else {
-                gain[t]
-            };
-            so_far[t] + own + ahead[step + 1][t] >= target.points
-        });
-        if !reachable {
-            continue;
+            }
+            return;
         }
-        for (t, g) in gain.iter().enumerate() {
-            so_far[t] += g;
-        }
-        if i != empty {
-            picked.push(i);
-        }
-        walk(pool, targets, slots, ahead, step + 1, picked, so_far, empty, limit, out);
-        if i != empty {
-            picked.pop();
-        }
-        for (t, g) in gain.iter().enumerate() {
-            so_far[t] -= g;
+        for &i in &self.slots[step] {
+            let own_defense = if i == empty { 0 } else { u32::from(pool[i].stats.defense) };
+            if self.floor > 0 && defense + own_defense + self.sturdy[step + 1] < self.floor {
+                continue;
+            }
+            // the body is searched last, so the running totals before it carry no doubling
+            let gain: Vec<i32> = targets
+                .iter()
+                .map(|t| {
+                    if i == empty {
+                        0
+                    } else {
+                        pool[i]
+                            .stats
+                            .skills
+                            .iter()
+                            .filter(|&&(id, _)| id == t.skill)
+                            .map(|&(_, p)| i32::from(p))
+                            .sum()
+                    }
+                })
+                .collect();
+            let is_body = ORDER[step] == BODY;
+            let reachable = targets.iter().enumerate().all(|(t, target)| {
+                let own = if is_body && target.skill != TORSO_UP {
+                    2 * gain[t].max(0)
+                } else {
+                    gain[t]
+                };
+                so_far[t] + own + self.ahead[step + 1][t] >= target.points
+            });
+            if !reachable {
+                continue;
+            }
+            for (t, g) in gain.iter().enumerate() {
+                so_far[t] += g;
+            }
+            if i != empty {
+                picked.push(i);
+            }
+            self.walk(step + 1, defense + own_defense, picked, so_far, out);
+            if i != empty {
+                picked.pop();
+            }
+            for (t, g) in gain.iter().enumerate() {
+                so_far[t] -= g;
+            }
         }
     }
 }
@@ -215,7 +284,7 @@ fn rank(found: &mut Vec<Found>) {
 pub struct Settings {
     pub targets: Vec<Target>,
     /// Use pieces the blacksmith is offering as well as the ones you own.
-    pub include_offered: bool,
+    pub pool: Pool,
     /// Try the talismans you own.
     pub use_talisman: bool,
     /// Only pieces this gender can wear (`None`: any).
@@ -242,7 +311,7 @@ impl Default for Settings {
     fn default() -> Settings {
         Settings {
             targets: Vec::new(),
-            include_offered: true,
+            pool: Pool::OnOffer,
             use_talisman: true,
             gender: None,
             class: None,
@@ -263,7 +332,15 @@ impl Settings {
                         out.targets.push(Target { skill, points });
                     }
                 }
-                (Some("offered"), Some(v), _) => out.include_offered = v != "0",
+                // `offered 0|1` is how an earlier version kept this
+                (Some("offered"), Some(v), _) => out.pool = if v == "0" { Pool::Owned } else { Pool::OnOffer },
+                (Some("pool"), Some(v), _) => {
+                    out.pool = match v {
+                        "owned" => Pool::Owned,
+                        "all" => Pool::All,
+                        _ => Pool::OnOffer,
+                    }
+                }
                 (Some("talisman"), Some(v), _) => out.use_talisman = v != "0",
                 (Some("gender"), Some(v), _) => {
                     out.gender = match v {
@@ -287,11 +364,7 @@ impl Settings {
 
     pub fn format(&self) -> String {
         let mut text: String = self.targets.iter().map(|t| format!("skill {} {}\n", t.skill, t.points)).collect();
-        text += &format!(
-            "offered {}\ntalisman {}\n",
-            u8::from(self.include_offered),
-            u8::from(self.use_talisman)
-        );
+        text += &format!("pool {}\ntalisman {}\n", self.pool.name(), u8::from(self.use_talisman));
         text += match self.gender {
             Some(Gender::Male) => "gender male\n",
             Some(Gender::Female) => "gender female\n",
@@ -419,6 +492,31 @@ mod tests {
         );
     }
 
+    /// Every slot full of pieces that carry the wanted skill: the case where nearly every combination reaches the goal.
+    #[test]
+    fn a_big_pool_where_almost_everything_qualifies_is_still_quick() {
+        let mut pool = Vec::new();
+        for kind in [5, 1, 2, 3, 4] {
+            for id in 0..300u16 {
+                pool.push(piece(
+                    kind,
+                    id,
+                    1 + (id * 7 % 90) as u8,
+                    &[(ATTACK, 2 + (id % 3) as i8), (POISON, (id % 5) as i8 - 2)],
+                ));
+            }
+        }
+        let started = std::time::Instant::now();
+        let found = search(&pool, &[Target { skill: ATTACK, points: 10 }], 300);
+        assert_eq!(found.len(), 300);
+        assert!(found.windows(2).all(|w| w[0].defense >= w[1].defense), "sturdiest first");
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(10),
+            "took {:?}",
+            started.elapsed()
+        );
+    }
+
     #[test]
     fn the_result_list_is_capped() {
         let mut pool = pool();
@@ -432,7 +530,7 @@ mod tests {
     fn settings_round_trip_and_ignore_bad_lines() {
         let s = Settings {
             targets: vec![Target { skill: 11, points: 10 }, Target { skill: 37, points: 15 }],
-            include_offered: false,
+            pool: Pool::All,
             use_talisman: true,
             gender: Some(Gender::Female),
             class: Some(ArmorClass::Gunner),
@@ -461,5 +559,13 @@ mod tests {
         assert!(!usable(&a, None, Some(ArmorClass::Gunner)));
         a.gender = None;
         assert!(usable(&a, Some(Gender::Male), None), "unknown flags are not held against a piece");
+    }
+
+    #[test]
+    fn an_older_settings_file_still_reads() {
+        assert_eq!(Settings::parse("offered 0\n").pool, Pool::Owned);
+        assert_eq!(Settings::parse("offered 1\n").pool, Pool::OnOffer);
+        assert_eq!(Settings::parse("pool all\n").pool, Pool::All);
+        assert_eq!(Pool::Owned.next().next().next(), Pool::Owned);
     }
 }
