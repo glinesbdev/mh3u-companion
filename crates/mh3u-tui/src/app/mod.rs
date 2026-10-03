@@ -30,6 +30,8 @@ use std::{
 mod blacksmith;
 mod build_manager;
 mod crafting;
+#[cfg(test)]
+mod flow_tests;
 mod inventory;
 mod keys;
 mod live;
@@ -51,7 +53,7 @@ use crafting::{Searchable, kind_rank};
 use money::next_zenny_change;
 use wishlist::parse_wishlist;
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Tab {
     Items,
     Equipment,

@@ -46,7 +46,7 @@ impl BuildManager {
 }
 
 /// Which list the keys move on the Builds tab.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BuildFocus {
     Skills,
     Sets,

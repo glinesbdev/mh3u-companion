@@ -75,6 +75,8 @@ const ORDER: [u8; 6] = [5, 2, 3, 4, 6, 1];
 const BODY: u8 = 1;
 /// Pieces tried per slot, best first.
 const PER_SLOT: usize = 30;
+/// Sturdy pieces tried in a slot on top of those.
+const STURDY_EXTRA: usize = 10;
 
 /// Sets that reach every target, sturdiest first (then those needing the fewest pieces still to be made). At most `limit`.
 pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found> {
@@ -108,7 +110,10 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
         };
         let mut chosen: Vec<usize> = of_kind.iter().copied().filter(|&i| wanted(&pool[i]) || relevance(i) > 0).collect();
         chosen.sort_by_key(|&i| (std::cmp::Reverse(relevance(i)), std::cmp::Reverse(pool[i].stats.defense), i));
-        chosen.truncate(PER_SLOT);
+        // The best by relevance, plus a few of the sturdiest of the rest: a set is ranked by defense, so those can matter more.
+        let mut rest = chosen.split_off(PER_SLOT.min(chosen.len()));
+        rest.sort_by_key(|&i| (std::cmp::Reverse(pool[i].stats.defense), i));
+        chosen.extend(rest.into_iter().take(STURDY_EXTRA));
         // sturdiest first, so good sets turn up early and the sets still to come can be judged against them
         chosen.sort_by_key(|&i| (std::cmp::Reverse(pool[i].stats.defense), i));
         let filler = of_kind
