@@ -132,6 +132,7 @@ impl App {
         self.wish.state.select(Some(sel));
         self.save_wishlist();
         self.hunts.stale = true;
+        self.refresh_box();
     }
 
     pub(super) fn save_wishlist(&mut self) {

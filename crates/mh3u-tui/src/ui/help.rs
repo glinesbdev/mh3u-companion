@@ -13,6 +13,10 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ("Items", "/  fuzzy search the pouch and box by item name"),
     ("", "s  sort the item box (box order, name, quantity)"),
     (
+        "",
+        "u  only items with some to spare: more than the wishlist and any one piece you still lack take",
+    ),
+    (
         "Crafting",
         "/  fuzzy search: name, type, skill, material, male / female / blademaster / gunner, or a rarity number 1-10 (armor only), e.g. 'attack 3'. Several words must all match.",
     ),

@@ -1,6 +1,8 @@
 //! The Items and Equipment tabs: the pouch, the item box, the equipment box and the worn gear.
 
 use super::*;
+use crate::surplus::{self, Demand, Spare};
+use mh3u_core::gamedata::MaterialUse;
 
 /// The Items and Equipment tabs: the highlighted rows, how the lists are ordered and filtered, and the lists as shown.
 pub struct Inventory {
@@ -19,6 +21,12 @@ pub struct Inventory {
     pub box_view: Vec<ItemStack>,
     /// The item pouch, filtered by the item search.
     pub pouch_view: Vec<ItemStack>,
+    /// Which recipes take each item (from the game data, worked out once).
+    pub(super) uses: HashMap<u16, Vec<MaterialUse>>,
+    /// For each item held: how many can go (see `surplus`). Worked out again whenever the save or the wishlist changes.
+    pub spare: HashMap<u16, Spare>,
+    /// Show only the items with some spare.
+    pub spare_only: bool,
 }
 
 impl Default for Inventory {
@@ -34,6 +42,9 @@ impl Default for Inventory {
             equip_view: Vec::new(),
             box_view: Vec::new(),
             pouch_view: Vec::new(),
+            uses: HashMap::new(),
+            spare: HashMap::new(),
+            spare_only: false,
         }
     }
 }
@@ -70,13 +81,42 @@ impl App {
     }
 
     /// Rebuild the pouch and item box lists for the current search and sort order.
+    /// Work out how many of each held item are spare.
+    pub(super) fn refresh_spare(&mut self) {
+        let wishlist: HashMap<u16, u32> = self.shopping_need().0.into_iter().collect();
+        let held: HashSet<u16> = self.save.pouch.iter().chain(&self.save.item_box).map(|s| s.id).collect();
+        self.inv.spare = held
+            .into_iter()
+            .map(|item| {
+                let mut demand = Demand {
+                    wishlist: wishlist.get(&item).copied().unwrap_or(0),
+                    ..Demand::default()
+                };
+                for u in self.inv.uses.get(&item).into_iter().flatten() {
+                    if self.save.owns_equipment(u.kind, u.id) {
+                        demand.owned_uses += 1;
+                    } else {
+                        demand.unowned_uses += 1;
+                        demand.biggest_piece = demand.biggest_piece.max(u32::from(u.count));
+                    }
+                }
+                (item, surplus::assess(self.save.item_count(item), &demand))
+            })
+            .collect();
+    }
+
     pub(super) fn refresh_box(&mut self) {
+        self.refresh_spare();
         let searching = !self.inv.item_search.trim().is_empty();
         let mut pouch = self.filter_items(&self.save.pouch);
         if searching {
             pouch.sort_by_key(|(score, _)| std::cmp::Reverse(*score));
         }
         self.inv.pouch_view = pouch.into_iter().map(|(_, s)| s).collect();
+        if self.inv.spare_only {
+            let spare = &self.inv.spare;
+            self.inv.pouch_view.retain(|s| spare.get(&s.id).is_some_and(|p| p.spare > 0));
+        }
 
         let mut view = self.filter_items(&self.save.item_box);
         match self.inv.box_sort {
@@ -86,6 +126,10 @@ impl App {
             BoxSort::Quantity => view.sort_by_key(|(_, s)| std::cmp::Reverse(s.count)),
         }
         self.inv.box_view = view.into_iter().map(|(_, s)| s).collect();
+        if self.inv.spare_only {
+            let spare = &self.inv.spare;
+            self.inv.box_view.retain(|s| spare.get(&s.id).is_some_and(|p| p.spare > 0));
+        }
         let sel = self
             .inv
             .box_state

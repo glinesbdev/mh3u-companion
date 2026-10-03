@@ -122,6 +122,10 @@ impl App {
                 self.inv.box_sort = self.inv.box_sort.next();
                 self.refresh_box();
             }
+            KeyCode::Char('u') => {
+                self.inv.spare_only = !self.inv.spare_only;
+                self.refresh_box();
+            }
             KeyCode::Char('x') => self.clear_search(),
             _ => return false,
         }

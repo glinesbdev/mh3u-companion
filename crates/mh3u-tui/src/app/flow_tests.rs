@@ -214,3 +214,27 @@ fn the_families_tab_groups_armor_searches_and_opens_the_crafting_search() {
     assert_eq!(app.craft.search, "Arzuros");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_spare_filter_keeps_only_items_with_something_to_spare() {
+    let dir = temp_dir("spare");
+    let Some(mut app) = app_in(&dir) else { return };
+    let all = app.inv.box_view.len();
+    assert!(
+        app.inv.spare.values().all(|p| p.keep + p.spare >= p.spare),
+        "keep and spare are counts"
+    );
+    for stack in app.save.item_box.iter() {
+        let p = app.inv.spare[&stack.id];
+        assert!(p.spare <= app.save.item_count(stack.id), "never more spare than held");
+    }
+    press(&mut app, "u");
+    assert!(app.inv.spare_only);
+    assert!(app.inv.box_view.len() < all, "the hunter holds items things still need");
+    assert!(!app.inv.box_view.is_empty(), "and plenty to spare");
+    assert!(app.inv.box_view.iter().all(|s| app.inv.spare[&s.id].spare > 0));
+    // wishing for a piece that takes an item raises what is kept
+    press(&mut app, "u");
+    assert_eq!(app.inv.box_view.len(), all);
+    let _ = std::fs::remove_dir_all(&dir);
+}

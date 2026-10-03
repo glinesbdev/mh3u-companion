@@ -5,6 +5,7 @@ mod families;
 mod files;
 mod hunts;
 mod search;
+mod surplus;
 mod templates;
 mod theme;
 mod tree;

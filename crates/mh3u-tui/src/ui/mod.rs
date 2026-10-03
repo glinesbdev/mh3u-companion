@@ -162,7 +162,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 ]);
             }
             Tab::Items => {
-                keys.extend([("↑/↓", "move"), ("p", "pouch/box"), ("/", "search")]);
+                keys.extend([("↑/↓", "move"), ("p", "pouch/box"), ("/", "search"), ("u", "spare")]);
                 if clear {
                     keys.push(("x", "clear"));
                 }

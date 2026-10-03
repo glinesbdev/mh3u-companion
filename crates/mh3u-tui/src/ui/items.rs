@@ -9,10 +9,15 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
         stacks
             .iter()
             .map(|s| {
-                ListItem::new(Line::from(vec![
+                let mut spans = vec![
                     Span::raw(format!("{:<26}", app.game.item_name(s.id).unwrap_or("?"))),
-                    Span::styled(format!(" x{}", s.count), muted()),
-                ]))
+                    Span::styled(format!(" x{:<4}", s.count), muted()),
+                ];
+                if let Some(p) = app.inv.spare.get(&s.id).filter(|p| p.spare > 0) {
+                    // what can go from this stack (the spare count is for the pouch and box together)
+                    spans.push(Span::styled(format!("spare {}", p.spare.min(u32::from(s.count))), good()));
+                }
+                ListItem::new(Line::from(spans))
             })
             .collect()
     };
@@ -20,13 +25,14 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     let item_box = rows(&app.inv.box_view);
     let query = app.inv.item_search.trim();
     let focus_pouch = app.items_on_pouch();
+    let only = if app.inv.spare_only { " · spare only" } else { "" };
     let pouch_title = if query.is_empty() {
-        format!(" Item Pouch ({}/24) ", app.save.pouch.len())
+        format!(" Item Pouch ({}/24){only} ", app.save.pouch.len())
     } else {
         format!(" Item Pouch · \"{query}\" ({}/{}) ", app.inv.pouch_view.len(), app.save.pouch.len())
     };
     let box_title = if query.is_empty() {
-        format!(" Item Box ({}/1000) · {} ", app.save.item_box.len(), app.box_sort_label())
+        format!(" Item Box ({}/1000) · {}{only} ", app.save.item_box.len(), app.box_sort_label())
     } else {
         format!(
             " Item Box · \"{query}\" ({}/{}) · {} ",
@@ -116,6 +122,7 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
     if let Some(text) = app.game.item_description(id) {
         lines.push(Line::raw(text.to_string()));
     }
+    lines.extend(spare_lines(app, id));
     let (need, _) = app.shopping_need();
     if let Some(&(_, n)) = need.iter().find(|&&(item, _)| item == id) {
         let have = app.save.item_count(id);
@@ -227,4 +234,27 @@ mod tests {
         let lines = wrap_items("Low ", vec![item("a"), item("a very long item name 99%")], 10);
         assert_eq!(lines.len(), 2);
     }
+}
+
+/// How many of an item can go, and what the rest is kept for.
+fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
+    use crate::surplus::Why;
+    let Some(p) = app.inv.spare.get(&id) else { return Vec::new() };
+    let have = app.save.item_count(id);
+    let (count, style) = if p.spare > 0 {
+        (format!("{} of {have}, pouch and box together", p.spare), good())
+    } else {
+        (format!("none, keep all {have}"), warn())
+    };
+    let why = match p.why {
+        Why::NoRecipe => "No recipe uses it.".to_string(),
+        Why::OnlyOwnedPieces => "Only pieces you already own use it.".to_string(),
+        Why::Wishlist => format!("Keep {}: the wishlist needs that many.", p.keep),
+        Why::OnePiece => format!("Keep {}: the most one piece you do not own takes.", p.keep),
+    };
+    vec![
+        Line::raw(""),
+        Line::from(vec![Span::styled("Spare ", muted()), Span::styled(count, style)]),
+        Line::styled(why, muted()),
+    ]
 }

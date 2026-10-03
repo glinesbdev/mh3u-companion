@@ -33,7 +33,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Planning
 
-- **Surplus finder:** items in the box that no wishlist piece and no remaining recipe needs, as candidates to sell.
 - **Zenny goal:** how much to earn before the wishlist is affordable, and which cheap pieces to make first.
 - **Affordable now:** a Crafting filter (like `c` for materials) for pieces whose zenny cost you can pay, and a sort by cost.
 - **Weapon comparison:** two or three weapons side by side (attack, affinity, slots, rarity, and sharpness and element once found).

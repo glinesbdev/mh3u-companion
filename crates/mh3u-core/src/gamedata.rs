@@ -52,6 +52,14 @@ struct EquipmentTable {
     details: Vec<String>,
 }
 
+/// A recipe that uses an item: this piece (a create or an upgrade recipe) takes `count` of it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MaterialUse {
+    pub kind: u8,
+    pub id: u16,
+    pub count: u16,
+}
+
 pub struct GameData {
     items: Vec<String>,
     /// Text tables the game ships for descriptions; empty when a dump lacks them.
@@ -195,6 +203,23 @@ impl GameData {
             .get(id as usize)
             .map(String::as_str)
             .filter(|n| !n.is_empty() && *n != "NO_DATA")
+    }
+
+    /// Every recipe that uses each item, worked out in one pass: item -> the pieces that take it and how many. For asking about many
+    /// items; for one, `recipes_using` is simpler.
+    pub fn material_uses(&self) -> HashMap<u16, Vec<MaterialUse>> {
+        let mut uses: HashMap<u16, Vec<MaterialUse>> = HashMap::new();
+        let create = self.recipes.iter().map(|(&key, r)| (key, &r.materials));
+        let upgrade = self.upgrades.iter().map(|(&key, u)| (key, &u.materials));
+        for ((kind, id), materials) in create.chain(upgrade) {
+            if self.piece_name(kind, id).is_none() {
+                continue;
+            }
+            for m in materials {
+                uses.entry(m.id).or_default().push(MaterialUse { kind, id, count: m.count });
+            }
+        }
+        uses
     }
 
     /// Every create or upgrade recipe that uses `item`, as (kind, piece id), in table order.

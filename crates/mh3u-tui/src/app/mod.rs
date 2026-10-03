@@ -215,6 +215,7 @@ impl App {
         app.rebuild_learned();
         app.craft.catalog = app.build_catalog();
         app.learn_unlocked();
+        app.inv.uses = app.game.material_uses();
         app.refresh_box();
         app.refresh_families();
         app.refresh_equipment();
