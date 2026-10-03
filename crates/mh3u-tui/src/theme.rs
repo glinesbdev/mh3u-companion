@@ -21,7 +21,8 @@ fn fg(color: Color) -> Style {
 
 /// Focus, selection and key names.
 pub fn accent() -> Style {
-    fg(Color::Cyan)
+    // the bright variant: the plain cyan slot is dim in many themes
+    fg(Color::LightCyan)
 }
 
 /// Something you have, can afford or can do.
@@ -39,10 +40,11 @@ pub fn bad() -> Style {
     fg(Color::Red)
 }
 
-/// Secondary text: counts, separators, key descriptions. The terminal's normal gray, which stays readable on dark themes.
+/// Secondary text: counts, separators, key descriptions. A fixed mid gray: the terminal's own "dark gray" is nearly
+/// invisible in many themes and its "gray" is as bright as normal text, so neither is used for text.
 pub fn muted() -> Style {
     if colors_on() {
-        Style::new().fg(Color::Gray)
+        Style::new().fg(Color::Indexed(245))
     } else {
         Style::new().add_modifier(Modifier::DIM)
     }
@@ -127,7 +129,7 @@ pub fn rarity_style(rarity: u8) -> Style {
     let color = match rarity {
         0..=2 => Color::Gray,
         3 => Color::Green,
-        4 => Color::Cyan,
+        4 => Color::LightCyan,
         5 => Color::Blue,
         6 => Color::Magenta,
         7 => Color::Yellow,
@@ -147,7 +149,7 @@ pub fn element_style(name: &str) -> Style {
     let color = match name {
         "Fire" => Color::Red,
         "Water" => Color::Blue,
-        "Ice" => Color::Cyan,
+        "Ice" => Color::LightCyan,
         "Thunder" => Color::Yellow,
         _ => Color::Magenta,
     };
