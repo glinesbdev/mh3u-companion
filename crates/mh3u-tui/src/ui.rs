@@ -539,7 +539,7 @@ fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     }
     gear.push(Line::raw(""));
     gear.push(Line::styled(
-        "The talisman and decorations are not read yet, so they are not counted.",
+        "Decorations are not read yet. A talisman is not counted either: it is not known where the save records the worn one.",
         muted(),
     ));
     f.render_widget(
@@ -786,6 +786,15 @@ fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
         Some(e) => {
             let name = app.game.equipment_name(e.kind, e.id).unwrap_or("?").to_string();
             let mut lines = piece_details(app, e.kind, e.id, &name, None);
+            for (id, pts) in e.talisman_skills() {
+                lines.insert(
+                    2,
+                    Line::from(vec![
+                        Span::raw(format!("  {:<18}", app.game.skill_name(id).unwrap_or("?"))),
+                        Span::styled(format!("{pts:+}"), theme::signed_style(i32::from(pts))),
+                    ]),
+                );
+            }
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }

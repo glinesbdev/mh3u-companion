@@ -17,7 +17,7 @@ not directly verified.
 | 0x1150 | 1000 x 16 | equipment box | partly decoded |
 
 Equipment record: byte 0 `kind`, byte 1 upgrade/slot state (not decoded), bytes 2-3 piece id (u16), bytes 4-15 talisman skills /
-decorations (not decoded). Kinds: 1 body, 2 arms, 3 waist, 4 legs, 5 head, 6 talisman, 7 great sword, 8 sword & shield, 9 hammer,
+decorations. A talisman (kind 6) holds `(skill id, points)` byte pairs from byte 4; only the first pair is verified (a Pawn Talisman, id 1, bytes `25 0a`: Auto-Guard confirmed in game, points read as 10 but not confirmed; no slots, rest zero). Kinds: 1 body, 2 arms, 3 waist, 4 legs, 5 head, 6 talisman, 7 great sword, 8 sword & shield, 9 hammer,
 10 lance, 11 heavy bowgun, 13 light bowgun, 14 long sword, 15 switch axe, 16 gunlance, 17 bow, 18 dual blades, 19 hunting horn.
 
 The equipment box lists everything you own, including worn gear; worn gear is just a pointer into it. Upgrading a weapon replaces its parent in the same box slot, so the parent is gone afterwards.
@@ -111,5 +111,5 @@ then on. `recipes.rs` has the rule and a test for the early-game save.
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
-- Weapon sharpness and element; talisman data (no save has a talisman to decode the equipment record's tail from); which body part each part-break list is; quest rewards.
+- Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is; quest rewards.
 - Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).

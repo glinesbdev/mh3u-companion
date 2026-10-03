@@ -34,8 +34,24 @@ pub struct Equipment {
     /// Byte 1; its meaning (slot/upgrade state) isn't decoded yet.
     pub upgrade: u8,
     pub id: u16,
-    /// Bytes 4..16: talisman skills / decorations, not decoded yet.
+    /// Bytes 4..16: a talisman's skills (see [`Equipment::talisman_skills`]); the rest is not decoded.
     pub raw_tail: [u8; 12],
+}
+
+impl Equipment {
+    /// A talisman's skills as (skill tree id, points): `(id, points)` byte pairs from byte 4, up to a zero id. Only the first pair
+    /// has been seen (one Pawn Talisman: skill confirmed in game, points not), so further pairs are a guess; anything but a
+    /// talisman has none.
+    pub fn talisman_skills(&self) -> Vec<(u8, i8)> {
+        if self.kind != 6 {
+            return Vec::new();
+        }
+        self.raw_tail[..4]
+            .chunks(2)
+            .take_while(|p| p[0] != 0)
+            .map(|p| (p[0], p[1] as i8))
+            .collect()
+    }
 }
 
 #[derive(Debug)]
@@ -145,6 +161,21 @@ mod tests {
             equipment_box: Vec::new(),
             worn_slots: Vec::new(),
         }
+    }
+
+    #[test]
+    fn a_talisman_record_gives_its_skill_and_points() {
+        let mut tail = [0; 12];
+        tail[..2].copy_from_slice(&[0x25, 0x0a]);
+        let e = |kind| Equipment {
+            slot: 0,
+            kind,
+            upgrade: 0,
+            id: 1,
+            raw_tail: tail,
+        };
+        assert_eq!(e(6).talisman_skills(), vec![(0x25, 10)]);
+        assert!(e(1).talisman_skills().is_empty(), "armor has no talisman skills");
     }
 
     #[test]
