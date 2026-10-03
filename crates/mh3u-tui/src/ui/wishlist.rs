@@ -170,6 +170,7 @@ fn shopping_lines(app: &App) -> (Vec<Line<'static>>, usize) {
     });
     if unowned > 0 {
         lines.push(zenny_line(app));
+        lines.extend(make_first_lines(app));
     }
     (lines, unowned)
 }
@@ -189,4 +190,51 @@ fn zenny_line(app: &App) -> Line<'static> {
         spans.push(Span::styled(format!(" (short {} z)", group_digits(known - have)), bad()));
     }
     Line::from(spans)
+}
+
+/// How much more to earn, and the pieces to make first: the cheapest, as many as the zenny you have pays for.
+fn make_first_lines(app: &App) -> Vec<Line<'static>> {
+    let pieces: Vec<(u8, u16)> = app
+        .wish
+        .items
+        .iter()
+        .copied()
+        .filter(|&(kind, id)| !app.save.owns_equipment(kind, id))
+        .collect();
+    let fees: Vec<Option<u32>> = pieces.iter().map(|&(kind, id)| app.fee(kind, id)).collect();
+    let plan = crate::zenny::plan(&fees, u64::from(app.save.zenny));
+    if plan.order.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![if plan.shortfall > 0 {
+        Line::from(vec![
+            Span::styled("Earn ", bold()),
+            Span::styled(format!("{} z", group_digits(plan.shortfall)), bad().add_modifier(Modifier::BOLD)),
+            Span::styled(" more to afford them all.", bold()),
+        ])
+    } else {
+        Line::styled("✔ You can afford them all.", good())
+    }];
+    lines.push(Line::raw(""));
+    lines.push(Line::styled("Make first, cheapest to dearest:", bold()));
+    for step in plan.order.iter().take(5) {
+        let (kind, id) = pieces[step.index];
+        let name = app.game.equipment_name(kind, id).unwrap_or("?");
+        let (mark, style) = if step.affordable { ("✔", good()) } else { ("○", muted()) };
+        let mut spans = vec![
+            Span::styled(format!("  {mark} "), style),
+            Span::raw(format!("{:<24}", fit(name, 24))),
+            Span::raw(format!("{:>9} z", group_digits(u64::from(step.fee)))),
+            Span::styled(format!("  {:>10} z in all", group_digits(step.running)), muted()),
+        ];
+        if app.can_make_now(kind, id) {
+            spans.push(Span::styled("  materials ready", good()));
+        }
+        lines.push(Line::from(spans));
+    }
+    if plan.order.len() > 5 {
+        lines.push(Line::styled(format!("  … and {} more", plan.order.len() - 5), muted()));
+    }
+    lines.push(Line::styled("✔ = the zenny you have pays for it and every one above it.", muted()));
+    lines
 }

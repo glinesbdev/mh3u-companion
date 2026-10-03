@@ -21,6 +21,7 @@ pub(super) const SECTIONS: &[Section] = &[
             ("x  Esc", "clear the search"),
             ("t", "upgrade tree of a weapon (↑ ↓ scroll, t closes)"),
             ("i", "what each skill does"),
+            ("H", "choose which save slot's hunter to show (not while live)"),
             ("?", "this help"),
             ("q", "quit"),
         ],
@@ -50,8 +51,9 @@ pub(super) const SECTIONS: &[Section] = &[
             ("c", "only what you can make now"),
             ("o", "hide pieces you own"),
             ("b", "only what the blacksmith offers"),
+            ("z", "only what you can pay for now"),
             ("u", "only owned pieces with no price yet"),
-            ("s", "sort"),
+            ("s", "sort (the last is cheapest first)"),
             ("w", "wishlist ★, with the weapons in between its cheapest way needs; again removes"),
             ("v", "put a weapon in the comparison"),
             (
@@ -104,6 +106,16 @@ pub(super) const SECTIONS: &[Section] = &[
             ("", "Armor grouped by name, with which variants (base, S, U, X, Z) you have."),
             ("o", "only families you own a piece of"),
             ("Enter", "look the family up in Crafting"),
+        ],
+    },
+    Section {
+        title: "Skills",
+        rows: &[
+            ("", "Pick a skill and see every armor piece that has it, the most points first."),
+            ("/", "search the skills"),
+            ("o", "only armor you own or the blacksmith offers"),
+            ("Enter", "add the skill to the Builds tab"),
+            ("PgUp PgDn", "scroll the pieces"),
         ],
     },
     Section {

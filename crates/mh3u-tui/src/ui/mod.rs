@@ -15,11 +15,13 @@ mod crafting;
 mod equipment;
 mod families;
 mod help;
+mod hunters;
 mod hunts;
 mod items;
 mod monsters;
 mod pieces;
 mod quests;
+mod skills;
 mod tree;
 mod wishlist;
 mod worn;
@@ -31,11 +33,13 @@ use crafting::draw_crafting;
 use equipment::draw_equipment;
 use families::draw_families;
 use help::draw_help;
+use hunters::draw_hunter_choice;
 use hunts::draw_hunts;
 use items::{draw_items, wrap_items};
 use monsters::draw_monsters;
 use pieces::{cost_spans, piece_details, unlock_line};
 use quests::draw_quests;
+use skills::draw_skills;
 use tree::draw_tree;
 use wishlist::draw_wishlist;
 use worn::{draw_worn, totals_lines};
@@ -72,7 +76,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         edit_badge,
         badge,
     ]);
-    let tab_titles: Vec<Line> = Tab::ALL
+    let mut tab_titles: Vec<Line> = Tab::ALL
         .iter()
         .map(|&t| {
             let count = match t {
@@ -87,9 +91,19 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             Line::from(spans)
         })
         .collect();
+    // When all the tabs do not fit, start the row further along so that the selected tab shows (a `‹` says some are hidden).
+    let first = first_visible_tab(
+        &tab_titles.iter().map(Line::width).collect::<Vec<_>>(),
+        selected,
+        usize::from(tabs.width.saturating_sub(2)),
+    );
+    tab_titles = tab_titles.split_off(first);
+    if first > 0 {
+        tab_titles[0].spans.insert(0, Span::styled("‹ ", muted()));
+    }
     f.render_widget(
         Tabs::new(tab_titles)
-            .select(selected)
+            .select(selected - first)
             .divider(Span::styled("│", muted()))
             .block(theme::pane(title, false))
             .highlight_style(accent().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)),
@@ -106,6 +120,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Hunts => draw_hunts(f, app, body),
         Tab::Quests => draw_quests(f, app, body),
         Tab::Families => draw_families(f, app, body),
+        Tab::Skills => draw_skills(f, app, body),
         Tab::Compare => draw_compare(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
     }
@@ -121,10 +136,35 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if app.builds.skill_picker.is_some() {
         draw_skill_picker(f, app);
     }
+    if app.hunter_choice.is_some() {
+        draw_hunter_choice(f, app);
+    }
     if app.builds.piece_picker.is_some() {
         draw_piece_picker(f, app);
     }
     draw_name_prompt(f, app);
+}
+
+/// The first tab to draw so that the selected one is on screen. `widths` are the tab titles' widths; each takes two cells of padding
+/// and a divider. Tabs are dropped from the left only as far as they have to be.
+pub(super) fn first_visible_tab(widths: &[usize], selected: usize, room: usize) -> usize {
+    const EXTRA: usize = 3; // padding either side and the divider
+    const MORE: usize = 2; // the `‹ ` that says tabs are hidden
+    let width_from = |first: usize| -> usize {
+        widths[first..=selected.min(widths.len().saturating_sub(1))]
+            .iter()
+            .map(|w| w + EXTRA)
+            .sum::<usize>()
+            + if first > 0 { MORE } else { 0 }
+    };
+    if widths.is_empty() {
+        return 0;
+    }
+    let mut first = 0;
+    while first < selected && width_from(first) > room {
+        first += 1;
+    }
+    first
 }
 
 /// The key hints for the current tab, or the prompt while typing a search or command.
@@ -160,6 +200,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([
                     ("c", "craftable"),
+                    ("z", "affordable"),
                     ("o", "hide owned"),
                     ("b", "blacksmith"),
                     ("s", "sort"),
@@ -187,6 +228,13 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([("m", "monster"), ("s", "sort"), ("PgUp/PgDn", "scroll")]);
             }
+            Tab::Skills => {
+                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                if clear {
+                    keys.push(("x", "clear"));
+                }
+                keys.extend([("o", "reachable"), ("Enter", "build"), ("PgUp/PgDn", "scroll")]);
+            }
             Tab::Compare => keys.extend([("↑/↓", "move"), ("x", "remove"), ("c", "clear"), ("Enter", "craft")]),
             Tab::Families => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
@@ -206,7 +254,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 keys.extend([("o", "pieces"), ("m", "talisman"), ("e", "gender"), ("c", "class")]);
             }
         }
-        keys.extend([("?", "help"), ("q", "quit")]);
+        keys.extend([("H", "hunter"), ("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
     };
     spans.push(Span::raw("   "));
@@ -265,6 +313,19 @@ fn fit(text: &str, width: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_tab_row_starts_far_enough_along_to_show_the_selected_tab() {
+        let widths = [5, 9, 4, 8, 8, 8, 9, 6, 8, 6, 7, 6]; // 12 tabs
+        let all = widths.iter().map(|w| w + 3).sum::<usize>();
+        assert_eq!(first_visible_tab(&widths, 3, all), 0, "everything fits");
+        assert_eq!(first_visible_tab(&widths, 0, 30), 0, "the first tab is always shown from the start");
+        let first = first_visible_tab(&widths, 11, 60);
+        assert!(first > 0, "the last tab needs the row to move along");
+        let shown: usize = widths[first..].iter().map(|w| w + 3).sum::<usize>() + 2;
+        assert!(shown <= 60, "{shown}");
+        assert_eq!(first_visible_tab(&[], 0, 10), 0);
+    }
 
     #[test]
     fn fit_cuts_with_an_ellipsis() {

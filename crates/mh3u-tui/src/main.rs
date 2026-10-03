@@ -14,6 +14,7 @@ mod ui;
 mod unlocked;
 mod upgrade_path;
 mod worn;
+mod zenny;
 
 use anyhow::{Context, Result, bail};
 use app::App;

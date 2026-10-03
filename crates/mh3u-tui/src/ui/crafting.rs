@@ -23,6 +23,14 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
             let label = app.game.equipment_kind_label(p.kind).unwrap_or("?");
             let owned = if p.owned { " owned" } else { "" };
             let reason = p.reason.as_deref().map(|r| format!(" · {r}")).unwrap_or_default();
+            // the fee, dim when it is more than you have
+            let fee = match p.fee.filter(|_| !p.owned) {
+                Some(z) => Span::styled(
+                    format!(" · {} z", group_digits(u64::from(z))),
+                    if z <= app.save.zenny { good() } else { muted() },
+                ),
+                None => Span::raw(""),
+            };
             let anvil = if p.offered { theme::anvil() } else { theme::no_anvil() };
             ListItem::new(Line::from(vec![
                 mark,
@@ -32,6 +40,7 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
                 Span::raw(format!("{:<24}", fit(&p.name, 24))),
                 rarity,
                 Span::styled(format!(" {label}{owned}"), muted()),
+                fee,
                 Span::styled(reason, warn()),
             ]))
         })
@@ -52,10 +61,13 @@ pub(super) fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     if app.craft.blacksmith_only {
         title.push_str("[at the blacksmith] ");
     }
+    if app.craft.affordable_only {
+        title.push_str("[affordable now] ");
+    }
     if rows.is_empty() {
         let lines = vec![
             Line::from("No pieces to show."),
-            Line::styled("Press x to clear the search, or c / o / u to relax the filters.", muted()),
+            Line::styled("Press x to clear the search, or c / o / u / z to relax the filters.", muted()),
         ];
         empty_pane(f, left, title, true, lines);
     } else {

@@ -32,14 +32,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 
-## Planning
-
-- **Zenny goal:** how much to earn before the wishlist is affordable, and which cheap pieces to make first.
-- **Affordable now:** a Crafting filter (like `c` for materials) for pieces whose zenny cost you can pay, and a sort by cost.
-- **Skill browser:** pick a skill and see every armor piece that has it, strongest first, with a mark for the ones you own or the
-  blacksmith is offering. (The Builds tab's skill picker finds a skill by name; this would be a view of its own.)
-- **Hunter picker:** an in-app way to switch hunters (save slots) without live mode, instead of starting with `--slot`. (Live mode already follows the game's hunter.)
-
 ## Data not shown yet
 
 - Weapon **sharpness and element** (not found in the executable's data tables).

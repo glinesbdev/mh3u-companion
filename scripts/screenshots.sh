@@ -84,6 +84,11 @@ keys '/' 'jaggi' Enter
 shot families
 keys Escape
 
+keys Right                # Skills
+keys '/' 'attack' Enter
+shot skills
+keys Escape
+
 keys Right                # Compare
 shot compare
 

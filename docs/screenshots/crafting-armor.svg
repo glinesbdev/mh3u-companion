@@ -33,9 +33,10 @@
 <text x="841.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="860.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Families</text>
 <text x="947.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="966.4" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
-<text x="1043.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="1062.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Builds</text>
+<text x="966.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Skills</text>
+<text x="1033.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="1052.8" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
+<text x="1129.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>
@@ -60,6 +61,9 @@
 <text x="150.4" y="110.4" textLength="67.2" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Greaves</text>
 <text x="323.2" y="110.4" textLength="19.2" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">R2</text>
 <text x="361.6" y="110.4" textLength="38.4" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Legs</text>
+<text x="409.6" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">·</text>
+<text x="428.8" y="110.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">1,150</text>
+<text x="486.4" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">z</text>
 <text x="515.2" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="110.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Jaggi</text>
@@ -71,6 +75,9 @@
 <text x="227.2" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">S</text>
 <text x="323.2" y="130.4" textLength="19.2" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">R4</text>
 <text x="361.6" y="130.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
+<text x="409.6" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
+<text x="428.8" y="130.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">7,200</text>
+<text x="486.4" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">z</text>
 <text x="515.2" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="130.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
@@ -81,6 +88,9 @@
 <text x="227.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">X</text>
 <text x="323.2" y="150.4" textLength="19.2" lengthAdjust="spacing" fill="#ff7a93" font-weight="bold">R8</text>
 <text x="361.6" y="150.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
+<text x="409.6" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
+<text x="428.8" y="150.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">12,300</text>
+<text x="496.0" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">z</text>
 <text x="515.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="150.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Leg</text>
@@ -99,9 +109,10 @@
 <text x="246.4" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">S</text>
 <text x="323.2" y="170.4" textLength="19.2" lengthAdjust="spacing" fill="#7aa2f7" font-weight="bold">R5</text>
 <text x="361.6" y="170.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
-<text x="409.6" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">·</text>
-<text x="428.8" y="170.4" textLength="57.6" lengthAdjust="spacing" fill="#e0af68">needs:</text>
-<text x="496.0" y="170.4" textLength="19.2" lengthAdjust="spacing" fill="#e0af68">Ja</text>
+<text x="409.6" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
+<text x="428.8" y="170.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">8,300</text>
+<text x="486.4" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">z</text>
+<text x="505.6" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">·</text>
 <text x="515.2" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="170.4" textLength="153.6" lengthAdjust="spacing" fill="#8a8a8a">maneuverability.</text>
@@ -112,9 +123,9 @@
 <text x="246.4" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">X</text>
 <text x="323.2" y="190.4" textLength="19.2" lengthAdjust="spacing" fill="#ff7a93" font-weight="bold">R8</text>
 <text x="361.6" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
-<text x="409.6" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">·</text>
-<text x="428.8" y="190.4" textLength="57.6" lengthAdjust="spacing" fill="#e0af68">needs:</text>
-<text x="496.0" y="190.4" textLength="19.2" lengthAdjust="spacing" fill="#e0af68">Gr</text>
+<text x="409.6" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">·</text>
+<text x="428.8" y="190.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">13,800</text>
+<text x="496.0" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">z</text>
 <text x="515.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="190.4" textLength="19.2" lengthAdjust="spacing" fill="#a9b1d6" font-weight="bold">R2</text>
@@ -291,22 +302,20 @@
 <text x="217.6" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">clear</text>
 <text x="284.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">c</text>
 <text x="304.0" y="690.4" textLength="86.4" lengthAdjust="spacing" fill="#8a8a8a">craftable</text>
-<text x="409.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">o</text>
-<text x="428.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">hide</text>
-<text x="476.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">owned</text>
-<text x="544.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">b</text>
-<text x="563.2" y="690.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">blacksmith</text>
-<text x="678.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
-<text x="697.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
-<text x="755.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">w</text>
-<text x="774.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">wish</text>
-<text x="832.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
-<text x="851.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
-<text x="908.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
-<text x="928.0" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
-<text x="1014.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="1033.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="1091.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="1110.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="409.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">z</text>
+<text x="428.8" y="690.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">affordable</text>
+<text x="544.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">o</text>
+<text x="563.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">hide</text>
+<text x="611.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">owned</text>
+<text x="678.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">b</text>
+<text x="697.6" y="690.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">blacksmith</text>
+<text x="812.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
+<text x="832.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
+<text x="889.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">w</text>
+<text x="908.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">wish</text>
+<text x="966.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
+<text x="985.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
+<text x="1043.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
+<text x="1062.4" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
 </g>
 </svg>

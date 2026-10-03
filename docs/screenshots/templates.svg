@@ -11,31 +11,29 @@
 <text x="342.4" y="30.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68" font-weight="bold">z</text>
 <text x="361.6" y="30.4" textLength="787.2" lengthAdjust="spacing" fill="#414868">─────────────────────────────────────────────────────────────────────────────────╮</text>
 <text x="16.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">│</text>
-<text x="35.2" y="50.4" textLength="48.0" lengthAdjust="spacing" fill="#c0caf5">Items</text>
-<text x="92.8" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="112.0" y="50.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Equipment</text>
-<text x="208.0" y="50.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">17</text>
-<text x="236.8" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="256.0" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Worn</text>
-<text x="304.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="323.2" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Crafting</text>
-<text x="409.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="428.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Wishlist</text>
-<text x="515.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">8</text>
-<text x="534.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="553.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Monsters</text>
+<text x="35.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">‹</text>
+<text x="54.4" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Worn</text>
+<text x="102.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="121.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Crafting</text>
+<text x="208.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="227.2" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Wishlist</text>
+<text x="313.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">8</text>
+<text x="332.8" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="352.0" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Monsters</text>
+<text x="438.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="457.6" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Hunt</text>
+<text x="505.6" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">plan</text>
+<text x="553.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="572.8" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Quests</text>
 <text x="640.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="659.2" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Hunt</text>
-<text x="707.2" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">plan</text>
-<text x="755.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="774.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Quests</text>
-<text x="841.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="860.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Families</text>
-<text x="947.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="966.4" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
-<text x="1043.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="1062.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Builds</text>
-<line x1="1062.4" y1="53.4" x2="1120.0" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="659.2" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Families</text>
+<text x="745.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="764.8" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Skills</text>
+<text x="832.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="851.2" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
+<text x="928.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="947.2" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Builds</text>
+<line x1="947.2" y1="53.4" x2="1004.8" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">╭</text>
@@ -395,7 +393,7 @@
 <text x="947.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">gender</text>
 <text x="1024.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">c</text>
 <text x="1043.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">class</text>
-<text x="1110.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="1129.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">he</text>
+<text x="1110.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
+<text x="1129.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">hu</text>
 </g>
 </svg>

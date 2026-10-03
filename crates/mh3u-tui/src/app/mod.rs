@@ -34,6 +34,7 @@ mod crafting;
 mod families;
 #[cfg(test)]
 mod flow_tests;
+mod hunters;
 mod hunts;
 mod inventory;
 mod keys;
@@ -42,6 +43,7 @@ mod money;
 mod monsters;
 mod price_watch;
 mod quests;
+mod skills;
 mod sorting;
 mod wishlist;
 
@@ -51,6 +53,7 @@ pub use compare::{CompareTab, MAX_COMPARED};
 pub use crafting::Crafting;
 pub use crafting::Via;
 pub use families::FamiliesTab;
+pub use hunters::HunterChoice;
 pub use hunts::HuntTab;
 pub use inventory::Inventory;
 pub use inventory::TreeView;
@@ -59,6 +62,7 @@ pub use money::{group_digits, signed_zenny};
 pub use monsters::MonsterTab;
 pub use price_watch::PriceBook;
 pub use quests::QuestTab;
+pub use skills::{SkillsTab, WithSkill};
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
 pub use wishlist::WishList;
 
@@ -78,12 +82,13 @@ pub enum Tab {
     Hunts,
     Quests,
     Families,
+    Skills,
     Compare,
     Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 11] = [
+    pub const ALL: [Tab; 12] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
@@ -93,6 +98,7 @@ impl Tab {
         Tab::Hunts,
         Tab::Quests,
         Tab::Families,
+        Tab::Skills,
         Tab::Compare,
         Tab::Builds,
     ];
@@ -108,6 +114,7 @@ impl Tab {
             Tab::Hunts => "Hunt plan",
             Tab::Quests => "Quests",
             Tab::Families => "Families",
+            Tab::Skills => "Skills",
             Tab::Compare => "Compare",
             Tab::Builds => "Builds",
         }
@@ -149,6 +156,8 @@ pub struct App {
     pub families: FamiliesTab,
     /// The Quests tab.
     pub quests: QuestTab,
+    /// The Skills tab.
+    pub skills: SkillsTab,
     /// The Compare tab.
     pub compare: CompareTab,
     /// The Builds tab.
@@ -171,6 +180,8 @@ pub struct App {
     pub skill_info: bool,
     /// The upgrade tree popup, when open.
     pub tree: Option<TreeView>,
+    /// Open while choosing which save slot's hunter to show.
+    pub hunter_choice: Option<HunterChoice>,
     pub show_help: bool,
     /// First visible line of the help screen (the drawing code keeps it inside the text).
     pub help_scroll: u16,
@@ -196,6 +207,7 @@ impl App {
             .unwrap_or_default();
         let families = App::group_families(&game);
         let quest_tab = QuestTab::new(&game);
+        let skill_tab = SkillsTab::new(&game);
         let mut app = App {
             game,
             save,
@@ -210,6 +222,7 @@ impl App {
             hunts: HuntTab::default(),
             families: FamiliesTab::new(families),
             quests: quest_tab,
+            skills: skill_tab,
             compare: CompareTab::default(),
             builds,
             costs: PriceBook::new(prices),
@@ -221,6 +234,7 @@ impl App {
             searching: false,
             skill_info: false,
             tree: None,
+            hunter_choice: None,
             show_help: false,
             help_scroll: 0,
             zenny_change: None,
@@ -229,6 +243,7 @@ impl App {
         };
         app.refresh_families();
         app.refresh_quests();
+        app.refresh_skills();
         app.rebuild_learned();
         app.craft.catalog = app.build_catalog();
         app.learn_unlocked();
@@ -288,6 +303,10 @@ impl App {
             Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
             Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
             Tab::Families => (&mut self.families.state, self.families.rows.len()),
+            Tab::Skills => {
+                self.skills.scroll = 0;
+                (&mut self.skills.state, self.skills.rows.len())
+            }
             Tab::Compare => (&mut self.compare.state, self.compare.weapons.len()),
             Tab::Quests => {
                 self.quests.scroll = 0;

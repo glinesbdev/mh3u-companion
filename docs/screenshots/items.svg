@@ -33,9 +33,10 @@
 <text x="841.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="860.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Families</text>
 <text x="947.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="966.4" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
-<text x="1043.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="1062.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Builds</text>
+<text x="966.4" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Skills</text>
+<text x="1033.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="1052.8" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Compare</text>
+<text x="1129.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>
@@ -311,9 +312,11 @@
 <text x="438.4" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">spare</text>
 <text x="505.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
 <text x="524.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
-<text x="582.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="601.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="659.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="678.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="582.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
+<text x="601.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
+<text x="678.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="697.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="755.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="774.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
 </g>
 </svg>

@@ -505,7 +505,7 @@ fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
     }
     assert_eq!(app.compare.weapons.len(), crate::app::MAX_COMPARED);
     assert!(app.status.contains("holds 4"), "{}", app.status);
-    for _ in 0..6 {
+    for _ in 0..7 {
         key(&mut app, KeyCode::Right);
     }
     assert_eq!(app.tab, Tab::Compare);
@@ -513,5 +513,101 @@ fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
     assert_eq!(app.compare.weapons.len(), crate::app::MAX_COMPARED - 1);
     press(&mut app, "c");
     assert!(app.compare.weapons.is_empty());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn affordable_and_cheapest_first_use_the_forging_fee_against_the_zenny_you_have() {
+    let dir = temp_dir("afford");
+    let Some(mut app) = app_in(&dir) else { return };
+    for _ in 0..3 {
+        key(&mut app, KeyCode::Right);
+    }
+    // the second hunter has plenty of zenny: lower it so that the filter has something to cut
+    app.save.zenny = 1000;
+    app.refresh_pieces();
+    let all = app.craft.pieces.len();
+    press(&mut app, "z");
+    assert!(app.craft.affordable_only);
+    assert!(app.craft.pieces.len() < all);
+    assert!(
+        app.craft.pieces.iter().all(|p| !p.owned && p.fee.is_some_and(|f| f <= 1000)),
+        "only unowned pieces whose fee fits in 1,000 z"
+    );
+    press(&mut app, "z");
+    // cheapest first: fees climb, and pieces with no known fee come last
+    while app.craft.sort != PieceSort::Cost {
+        press(&mut app, "s");
+    }
+    let fees: Vec<u32> = app.craft.pieces.iter().map(|p| p.fee.unwrap_or(u32::MAX)).collect();
+    assert!(fees.windows(2).all(|w| w[0] <= w[1]), "sorted by fee");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_skills_tab_lists_the_armor_with_a_skill_and_hands_it_to_builds() {
+    let dir = temp_dir("skilltab");
+    let Some(mut app) = app_in(&dir) else { return };
+    for _ in 0..9 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert_eq!(app.tab, Tab::Skills);
+    press(&mut app, "/attack");
+    key(&mut app, KeyCode::Enter);
+    let skill = app.skills.selected().expect("a skill");
+    assert_eq!(app.game.skill_name(skill), Some("Attack"));
+    let pieces = app.skills.pieces_with(skill);
+    assert!(!pieces.is_empty());
+    assert!(pieces.windows(2).all(|w| w[0].points >= w[1].points), "most points first");
+    assert!(pieces.iter().all(|p| {
+        app.game
+            .armor_stats(p.kind, p.id)
+            .is_some_and(|a| a.skills.contains(&(skill, p.points)))
+    }));
+    key(&mut app, KeyCode::Enter);
+    assert_eq!(app.tab, Tab::Builds);
+    assert!(app.builds.settings.targets.iter().any(|t| t.skill == skill && t.points == 10));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn h_lists_the_hunters_in_the_save_slots_and_shows_the_one_picked() {
+    let snapshots = concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/");
+    let (Ok(first), Ok(second)) = (
+        std::fs::read(format!("{snapshots}03-latest/user1")),
+        std::fs::read(format!("{snapshots}08-after-quest2/user2")),
+    ) else {
+        eprintln!("skipped: the snapshots are not available");
+        return;
+    };
+    let Some(game_dir) = crate::guess_game_dir() else { return };
+    let dir = temp_dir("picker");
+    let saves = dir.join("saves");
+    std::fs::create_dir_all(&saves).unwrap();
+    std::fs::write(saves.join("user1"), &first).unwrap();
+    std::fs::write(saves.join("user2"), &second).unwrap();
+    let files = |slot| Files::in_dirs(&dir.join("config"), &dir.join("data"), slot);
+    std::fs::create_dir_all(dir.join("config")).unwrap();
+    std::fs::write(files(2).wishlist, "5 2\n").unwrap();
+    let mut app = App::new(GameData::load(&game_dir).unwrap(), saves.join("user1"), Some(files(1))).unwrap();
+    let (name1, name2) = (app.save.hunter_name.clone(), Save::parse(&second).unwrap().hunter_name);
+
+    press(&mut app, "H");
+    let choice = app.hunter_choice.as_ref().expect("the list of hunters");
+    assert_eq!(
+        choice.slots,
+        [(1, name1.clone()), (2, name2.clone())],
+        "an empty slot is not listed"
+    );
+    key(&mut app, KeyCode::Esc);
+    assert!(app.hunter_choice.is_none());
+
+    press(&mut app, "H");
+    key(&mut app, KeyCode::Down);
+    key(&mut app, KeyCode::Enter);
+    assert_eq!(app.save.hunter_name, name2);
+    assert_eq!(app.slot_shown(), Some(2));
+    assert_eq!(app.wish.items, [(5, 2)], "slot 2's wishlist");
+    assert!(app.status.contains("slot 2"), "{}", app.status);
     let _ = std::fs::remove_dir_all(&dir);
 }

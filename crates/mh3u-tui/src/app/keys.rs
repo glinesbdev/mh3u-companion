@@ -23,6 +23,8 @@ impl App {
             self.confirm_quit = false;
         } else if self.tree.is_some() {
             self.tree_key(code);
+        } else if self.hunter_choice.is_some() {
+            self.hunter_choice_key(code);
         } else if self.quests.choosing.is_some() {
             self.monster_choice_key(code);
         } else if self.builds.skill_picker.is_some() {
@@ -113,6 +115,7 @@ impl App {
             Tab::Hunts => self.hunts_key(code),
             Tab::Families => self.families_key(code),
             Tab::Quests => self.quests_key(code),
+            Tab::Skills => self.skills_tab_key(code),
             Tab::Compare => self.compare_key(code),
             Tab::Worn | Tab::Builds => false,
         }
@@ -143,6 +146,7 @@ impl App {
             KeyCode::Char('o') => self.craft.hide_owned = !self.craft.hide_owned,
             KeyCode::Char('b') => self.craft.blacksmith_only = !self.craft.blacksmith_only,
             KeyCode::Char('u') => self.craft.unpriced_only = !self.craft.unpriced_only,
+            KeyCode::Char('z') => self.craft.affordable_only = !self.craft.affordable_only,
             KeyCode::Char('s') => self.craft.sort = self.craft.sort.next(),
             KeyCode::Char('w') => {
                 if let Some(p) = self.craft.state.selected().and_then(|i| self.craft.pieces.get(i)) {
@@ -208,6 +212,7 @@ impl App {
                 }
             }
             KeyCode::Char('?') => self.show_help = true,
+            KeyCode::Char('H') => self.open_hunter_picker(),
             // put the highlighted weapon in the comparison
             KeyCode::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
             KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
@@ -241,6 +246,7 @@ impl App {
             Tab::Items => &mut self.inv.item_search,
             Tab::Families => &mut self.families.search,
             Tab::Quests => &mut self.quests.search,
+            Tab::Skills => &mut self.skills.search,
             _ => &mut self.craft.search,
         }
     }

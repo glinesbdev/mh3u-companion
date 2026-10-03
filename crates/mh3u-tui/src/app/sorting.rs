@@ -7,6 +7,8 @@ pub enum PieceSort {
     Name,
     CraftableFirst,
     OwnedFirst,
+    /// Cheapest forging fee first; pieces with no known fee last.
+    Cost,
 }
 
 impl PieceSort {
@@ -15,7 +17,8 @@ impl PieceSort {
             PieceSort::GameOrder => PieceSort::Name,
             PieceSort::Name => PieceSort::CraftableFirst,
             PieceSort::CraftableFirst => PieceSort::OwnedFirst,
-            PieceSort::OwnedFirst => PieceSort::GameOrder,
+            PieceSort::OwnedFirst => PieceSort::Cost,
+            PieceSort::Cost => PieceSort::GameOrder,
         }
     }
 
@@ -25,6 +28,7 @@ impl PieceSort {
             PieceSort::Name => "name",
             PieceSort::CraftableFirst => "craftable first",
             PieceSort::OwnedFirst => "owned first",
+            PieceSort::Cost => "cheapest first",
         }
     }
 }

@@ -10,6 +10,8 @@ pub struct Crafting {
     pub hide_owned: bool,
     /// Show only pieces you own that have no forging cost in the ledger yet.
     pub unpriced_only: bool,
+    /// Show only pieces you do not own whose forging fee you can pay now.
+    pub affordable_only: bool,
     /// Show only pieces the blacksmith is offering (see `mh3u_core::blacksmith`).
     pub blacksmith_only: bool,
     pub sort: PieceSort,
@@ -28,6 +30,7 @@ impl Default for Crafting {
             craftable_only: false,
             hide_owned: false,
             unpriced_only: false,
+            affordable_only: false,
             blacksmith_only: false,
             sort: PieceSort::GameOrder,
             pieces: Vec::new(),
@@ -65,6 +68,8 @@ pub struct Piece {
     pub owned: bool,
     /// True when the blacksmith is offering the piece (see `App::at_blacksmith`).
     pub offered: bool,
+    /// What the blacksmith charges for the step that gets it (making it, or upgrading into it); `None` when not known.
+    pub fee: Option<u32>,
     /// When searching: why the piece matched, if not by name (e.g. "skill: Poison").
     pub reason: Option<String>,
 }
@@ -188,6 +193,10 @@ pub(super) fn sort_pieces(pieces: &mut [(u32, Piece)], sort: PieceSort, words: u
             .then_with(|| group(a, b))
             .then_with(|| within(a, b)),
         PieceSort::OwnedFirst => (!a.1.owned).cmp(&!b.1.owned).then_with(|| group(a, b)).then_with(|| within(a, b)),
+        PieceSort::Cost => {
+            let fee = |p: &(u32, Piece)| p.1.fee.unwrap_or(u32::MAX);
+            fee(a).cmp(&fee(b)).then_with(|| group(a, b)).then_with(|| within(a, b))
+        }
     });
 }
 
@@ -206,6 +215,15 @@ impl App {
             .filter(|u| !u.materials.iter().any(placeholder))
             .or_else(|| self.craft.learned_upgrade.get(&(kind, id)));
         (create, upgrade)
+    }
+
+    /// What the blacksmith charges for the step that gets a piece, by the route the plan takes. `None` when that fee is not known.
+    pub fn fee(&self, kind: u8, id: u16) -> Option<u32> {
+        let route = match self.plan(kind, id)?.via {
+            Via::Create => Route::Create,
+            Via::Upgrade => Route::Upgrade,
+        };
+        self.cost(kind, id, route).map(|(fee, _)| fee)
     }
 
     /// The cheapest way to get a weapon from what is in the equipment box, by forging fees. `None` for armor and for a weapon with no
@@ -316,6 +334,7 @@ impl App {
             Tab::Items => &self.inv.item_search,
             Tab::Families => &self.families.search,
             Tab::Quests => &self.quests.search,
+            Tab::Skills => &self.skills.search,
             _ => &self.craft.search,
         }
     }
@@ -325,6 +344,7 @@ impl App {
             Tab::Items => self.refresh_box(),
             Tab::Families => self.refresh_families(),
             Tab::Quests => self.refresh_quests(),
+            Tab::Skills => self.refresh_skills(),
             _ => self.refresh_pieces(),
         }
     }
@@ -410,6 +430,7 @@ impl App {
                 craftable: self.can_make_now(kind, id),
                 owned: self.save.owns_equipment(kind, id),
                 offered: self.at_blacksmith(kind, id),
+                fee: self.fee(kind, id),
                 reason,
             };
             let unpriced = piece.owned && self.cost(kind, id, Route::Create).is_none() && self.cost(kind, id, Route::Upgrade).is_none();
@@ -417,6 +438,7 @@ impl App {
                 && (!self.craft.hide_owned || !piece.owned)
                 && (!self.craft.unpriced_only || unpriced)
                 && (!self.craft.blacksmith_only || piece.offered)
+                && (!self.craft.affordable_only || (!piece.owned && piece.fee.is_some_and(|f| f <= self.save.zenny)))
             {
                 scored.push((score, piece));
             }
@@ -474,6 +496,7 @@ mod tests {
             craftable,
             owned,
             offered: false,
+            fee: None,
             reason: None,
         }
     }
