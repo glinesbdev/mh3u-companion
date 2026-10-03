@@ -96,11 +96,10 @@ A feature is not done until:
 ## Before every commit
 
 ```
-cargo fmt --all
-cargo clippy --all-targets -- -D warnings
-cargo test --all
+scripts/check.sh                                   # fmt --check, clippy -D warnings, tests: what CI runs, stopping at the first failure
 cargo build --release && scripts/screenshots.sh   # when anything drawn could have changed
 ```
 
-CI runs the first three on every push. One purpose per commit, with a message that says why; refactors and behaviour changes go in
+Do not pipe the checks through `tail` or `grep` and read the last line: that hides a failing exit status. CI runs `scripts/check.sh`'s
+three commands on every push. One purpose per commit, with a message that says why; refactors and behaviour changes go in
 separate commits so a "pure move" can be trusted to be one. Pushing is the owner's call.

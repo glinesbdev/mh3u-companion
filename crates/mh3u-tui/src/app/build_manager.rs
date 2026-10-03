@@ -87,9 +87,20 @@ pub struct Choice {
     pub detail: String,
 }
 
+/// What the piece popup's choice is put into.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PickFor {
+    /// The highlighted slot of the highlighted template.
+    Template,
+    /// The weapon the build search is for.
+    BuildWeapon,
+}
+
 /// The popup for choosing the piece of one template slot.
 pub struct PiecePicker {
-    pub kind: u8,
+    pub slot: templates::Slot,
+    /// What the choice is for.
+    pub target: PickFor,
     pub text: String,
     pub state: ListState,
     pub choices: Vec<Choice>,
@@ -113,7 +124,9 @@ impl App {
     /// Every armor piece and talisman the build search may use: what the equipment box holds and, as the pool setting says, what the
     /// blacksmith is offering or every piece in the game.
     pub(super) fn build_pool(&self) -> Vec<Candidate> {
-        let usable = |stats: &mh3u_core::armor::ArmorStats| builds::usable(stats, self.builds.settings.gender, self.builds.settings.class);
+        let usable = |stats: &mh3u_core::armor::ArmorStats| {
+            builds::usable(stats, self.builds.settings.gender, self.builds.settings.effective_class())
+        };
         let mut pool: Vec<Candidate> = Vec::new();
         let mut seen: HashSet<(u8, u16)> = HashSet::new();
         for e in &self.save.equipment_box {
@@ -255,6 +268,7 @@ impl App {
                     state: ListState::default().with_selected(Some(0)),
                 });
             }
+            KeyCode::Char('p') => self.open_piece_picker(templates::Slot::Weapon, PickFor::BuildWeapon),
             KeyCode::Char('f') => {
                 self.builds.focus = match self.builds.focus {
                     BuildFocus::Skills => BuildFocus::Sets,
@@ -370,13 +384,16 @@ impl App {
                     self.save_templates();
                 }
             }
-            KeyCode::Char(']') | KeyCode::Char('.') => self.builds.template_slot = (self.builds.template_slot + 1) % templates::SLOTS.len(),
+            KeyCode::Char(']') | KeyCode::Char('.') => {
+                self.builds.template_slot = (self.builds.template_slot + 1) % templates::Slot::ALL.len()
+            }
             KeyCode::Char('[') | KeyCode::Char(',') => {
-                self.builds.template_slot = (self.builds.template_slot + templates::SLOTS.len() - 1) % templates::SLOTS.len();
+                let slots = templates::Slot::ALL.len();
+                self.builds.template_slot = (self.builds.template_slot + slots - 1) % slots;
             }
             KeyCode::Enter => {
                 if selected.is_some() {
-                    self.open_piece_picker();
+                    self.open_piece_picker(templates::Slot::ALL[self.builds.template_slot], PickFor::Template);
                 }
             }
             KeyCode::Char('w') => self.wish_template(false),
@@ -431,21 +448,30 @@ impl App {
             }
             NameAction::SaveSet(i) => {
                 let Some(found) = self.builds.results.get(i) else { return };
-                let pieces = found.pieces.iter().map(|&p| self.template_piece_of(&self.builds.pool[p])).collect();
-                self.builds.templates.push(Template {
+                let mut pieces: Vec<templates::Piece> =
+                    found.pieces.iter().map(|&p| self.template_piece_of(&self.builds.pool[p])).collect();
+                pieces.extend(self.builds.settings.weapon.map(|(kind, id)| templates::Piece {
+                    kind,
+                    id,
+                    skills: Vec::new(),
+                }));
+                let mut t = Template {
                     name: name.clone(),
                     pieces,
-                });
+                };
+                t.sort();
+                self.builds.templates.push(t);
                 self.builds.template_state.select(Some(self.builds.templates.len() - 1));
                 self.status = format!("saved template {name}; f switches to the templates");
             }
             NameAction::FromWorn => {
-                let pieces = self
-                    .worn_armor()
-                    .into_iter()
-                    .map(|(kind, e)| templates::Piece {
+                let armor = self.worn_armor().into_iter().map(|(kind, e)| (kind, e.id));
+                let weapon = self.worn_weapon().map(|e| (e.kind, e.id));
+                let pieces = armor
+                    .chain(weapon)
+                    .map(|(kind, id)| templates::Piece {
                         kind,
-                        id: e.id,
+                        id,
                         skills: Vec::new(),
                     })
                     .collect();
@@ -453,7 +479,7 @@ impl App {
                     name: name.clone(),
                     pieces,
                 };
-                t.pieces.sort_by_key(|p| templates::SLOTS.iter().position(|&k| k == p.kind));
+                t.sort();
                 self.builds.templates.push(t);
                 self.builds.template_state.select(Some(self.builds.templates.len() - 1));
                 self.status = format!("saved what you are wearing as {name}");
@@ -481,7 +507,7 @@ impl App {
 
     /// The pieces that can go in the slot of `kind`, matching what was typed: empty the slot, then the ones you own, the ones the
     /// blacksmith offers and the rest.
-    pub(super) fn piece_choices(&self, kind: u8, typed: &str) -> Vec<Choice> {
+    pub(super) fn piece_choices(&self, slot: templates::Slot, typed: &str) -> Vec<Choice> {
         let words: Vec<String> = typed.split_whitespace().map(str::to_lowercase).collect();
         let mut scored: Vec<(u32, Choice)> = Vec::new();
         let mut consider = |name: String, detail: String, availability: Availability, piece: templates::Piece| {
@@ -506,7 +532,38 @@ impl App {
                 },
             ));
         };
-        if kind == 6 {
+        if slot == templates::Slot::Weapon {
+            for kind in (7..=19u8).filter(|&k| k != 12) {
+                for id in self.game.piece_ids(kind) {
+                    let (Some(name), Some(w)) = (self.game.piece_name(kind, id), self.game.weapon_stats(kind, id)) else {
+                        continue;
+                    };
+                    let availability = if self.owns_slot(kind, id) {
+                        Availability::Owned
+                    } else if self.at_blacksmith(kind, id) {
+                        Availability::OnOffer
+                    } else {
+                        Availability::Unavailable
+                    };
+                    let detail = format!(
+                        "{} R{} attack {}",
+                        self.game.equipment_kind_label(kind).unwrap_or("?"),
+                        w.rarity,
+                        w.attack
+                    );
+                    consider(
+                        name.to_string(),
+                        detail,
+                        availability,
+                        templates::Piece {
+                            kind,
+                            id,
+                            skills: Vec::new(),
+                        },
+                    );
+                }
+            }
+        } else if slot == templates::Slot::Talisman {
             for e in self.save.equipment_box.iter().filter(|e| e.kind == 6) {
                 let skills = e.talisman_skills();
                 let detail = skills
@@ -517,7 +574,7 @@ impl App {
                 let name = self.game.equipment_name(6, e.id).unwrap_or("Talisman").to_string();
                 consider(name, detail, Availability::Owned, templates::Piece { kind: 6, id: e.id, skills });
             }
-        } else {
+        } else if let Some(kind) = slot.kind() {
             for id in self.game.piece_ids(kind) {
                 let (Some(name), Some(stats)) = (self.game.piece_name(kind, id), self.game.armor_stats(kind, id)) else {
                     continue;
@@ -561,11 +618,11 @@ impl App {
         out
     }
 
-    pub(super) fn open_piece_picker(&mut self) {
-        let kind = templates::SLOTS[self.builds.template_slot];
-        let choices = self.piece_choices(kind, "");
+    pub(super) fn open_piece_picker(&mut self, slot: templates::Slot, target: PickFor) {
+        let choices = self.piece_choices(slot, "");
         self.builds.piece_picker = Some(PiecePicker {
-            kind,
+            slot,
+            target,
             text: String::new(),
             state: ListState::default().with_selected(Some(0)),
             choices,
@@ -574,7 +631,7 @@ impl App {
 
     pub(super) fn piece_key(&mut self, code: KeyCode) {
         let Some(picker) = self.builds.piece_picker.as_mut() else { return };
-        let (kind, mut text) = (picker.kind, picker.text.clone());
+        let (slot, mut text) = (picker.slot, picker.text.clone());
         match code {
             KeyCode::Esc => self.builds.piece_picker = None,
             KeyCode::Down | KeyCode::Up => {
@@ -593,7 +650,7 @@ impl App {
                         text.pop();
                     }
                 }
-                let choices = self.piece_choices(kind, &text);
+                let choices = self.piece_choices(slot, &text);
                 if let Some(picker) = self.builds.piece_picker.as_mut() {
                     picker.text = text;
                     picker.choices = choices;
@@ -604,9 +661,17 @@ impl App {
                 let Some(picker) = self.builds.piece_picker.take() else { return };
                 let at = picker.state.selected().unwrap_or(0);
                 let Some(choice) = picker.choices.into_iter().nth(at) else { return };
-                if let Some(i) = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len()) {
-                    self.builds.templates[i].set(kind, choice.piece);
-                    self.save_templates();
+                match picker.target {
+                    PickFor::Template => {
+                        if let Some(i) = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len()) {
+                            self.builds.templates[i].set(slot, choice.piece);
+                            self.save_templates();
+                        }
+                    }
+                    PickFor::BuildWeapon => {
+                        self.builds.settings.weapon = choice.piece.map(|p| (p.kind, p.id));
+                        self.builds_changed();
+                    }
                 }
             }
             _ => {}
@@ -618,13 +683,20 @@ impl App {
         let Some(found) = self.builds.result_state.selected().and_then(|i| self.builds.results.get(i)) else {
             return;
         };
-        let missing: Vec<(u8, u16)> = found
+        let mut missing: Vec<(u8, u16)> = found
             .pieces
             .iter()
             .map(|&i| &self.builds.pool[i])
             .filter(|c| c.kind != 6 && !c.owned && !self.save.owns_equipment(c.kind, c.id))
             .map(|c| (c.kind, c.id))
             .collect();
+        // the weapon the set is for, if you do not have it
+        missing.extend(
+            self.builds
+                .settings
+                .weapon
+                .filter(|&(kind, id)| !self.save.owns_equipment(kind, id)),
+        );
         self.wish_pieces(missing);
     }
 
@@ -633,11 +705,13 @@ impl App {
         let Some(t) = self.builds.template_state.selected().and_then(|i| self.builds.templates.get(i)) else {
             return;
         };
-        let slot_kind = templates::SLOTS[self.builds.template_slot];
+        let slot = templates::Slot::ALL[self.builds.template_slot];
         let missing: Vec<(u8, u16)> = t
             .pieces
             .iter()
-            .filter(|p| p.kind != 6 && (!only_slot || p.kind == slot_kind) && !self.save.owns_equipment(p.kind, p.id))
+            .filter(|p| {
+                p.kind != 6 && (!only_slot || templates::Slot::of_kind(p.kind) == Some(slot)) && !self.save.owns_equipment(p.kind, p.id)
+            })
             .map(|p| (p.kind, p.id))
             .collect();
         self.wish_pieces(missing);

@@ -74,8 +74,8 @@ dark theme; your terminal's own palette applies when you run it.
 - **Spare items**: on the Items tab each item shows how many can go, and `u` shows only those with something spare. You keep what the wishlist's shopping list needs and enough for the most any one piece you do not own takes; the rest is spare. An item no recipe uses, or only pieces you already own use, is all spare. The details say why. The game's sell prices are not known, so it shows counts, not zenny.
 - **Hunt plan**: for the materials your wishlist is still short of, which monsters to hunt. The first hunt is the one that gives the most of them, the next picks up what it left, and so on; each shows the best chance for each material, how it drops (carve, capture, part break...) and the other monsters that also give it. `r` limits the plan to low, high or G rank and Enter jumps to the monster's full drops on the Monsters tab. Materials no monster gives (ores, bugs, fish) are listed apart. It is called a hunt plan, not farming, because the game has a farm of its own.
 - **Families**: armor grouped by the family in its name (Agnaktor, Zinogre...), since the game has no table of sets. For the highlighted family a table shows each variant (the base set and the S, U, X and Z versions made from tougher monsters' parts) against head, body, arms, waist and legs, with a mark for every piece: owned, on offer at the blacksmith, or not yet. Below it, the best variant of each slot you own. `/` searches, `o` shows only families you own something of, and Enter looks the family up on the Crafting tab.
-- **Builds**: pick the skills you want (`a`, then type part of the name) and how many points (`+`/`-`, 10 is where a skill's first effect starts) and the app lists the head, body, arms, waist and legs pieces, plus one of your talismans, that reach them, sturdiest first. `o` chooses which pieces it looks at: only the armor you own, plus what the blacksmith is offering (the default), or every piece in the game, to plan ahead for gear you cannot get yet (those show as not on offer yet); `m` turns the talisman on and off, `e` limits the pieces to those a male or female hunter can wear and `c` to blademaster or gunner armor (pieces for both always pass). The details show each piece (owned, or whether you can make it now and what it costs) and the totals as on the Worn tab, with each wanted skill marked reached or not. `w` puts the pieces you do not own on the wishlist.
-- **Build templates**: `s` on a found set saves it under a name, and `n` (in the templates list, reached with `f`) saves the armor you are wearing. A template is a full set you keep and can change: `[` and `]` pick a slot, Enter opens a list of every piece for it (owned first, then what the blacksmith offers, then the rest; type to find one, or empty the slot) and the totals update as you swap. `w` puts all the pieces you do not own on the wishlist and `W` only the highlighted slot's; `r` renames and `x` deletes. Templates remember a piece by its kind and id, a talisman by its skills.
+- **Builds**: pick the skills you want (`a`, then type part of the name) and how many points (`+`/`-`, 10 is where a skill's first effect starts) and the app lists the head, body, arms, waist and legs pieces, plus one of your talismans, that reach them, sturdiest first. `o` chooses which pieces it looks at: only the armor you own, plus what the blacksmith is offering (the default), or every piece in the game, to plan ahead for gear you cannot get yet (those show as not on offer yet); `m` turns the talisman on and off, `p` picks the weapon the set is for (its type picks the armor class, since bows and bowguns take gunner armor, and it is saved with a template and its missing pieces go to the wishlist with the rest), `e` limits the pieces to those a male or female hunter can wear and `c` to blademaster or gunner armor (pieces for both always pass). The details show each piece (owned, or whether you can make it now and what it costs) and the totals as on the Worn tab, with each wanted skill marked reached or not. `w` puts the pieces you do not own on the wishlist.
+- **Build templates**: `s` on a found set saves it under a name, and `n` (in the templates list, reached with `f`) saves the armor you are wearing. A template is a full set you keep and can change: `[` and `]` pick a slot (head, body, arms, waist, legs, talisman and weapon), Enter opens a list of every piece for it (owned first, then what the blacksmith offers, then the rest; type to find one, or empty the slot) and the totals update as you swap. `w` puts all the pieces you do not own on the wishlist and `W` only the highlighted slot's; `r` renames and `x` deletes. Templates remember a piece by its kind and id, a talisman by its skills.
 - **Per hunter**: the wanted skills, the options and the templates are kept per save slot beside the wishlist: `builds.txt` and `templates.txt` for slot 1, `builds-2.txt`, `templates-2.txt` and so on for the others. Not counted yet: decorations and skill levels above the first (10 points).
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
@@ -129,6 +129,7 @@ wrong data.
 - `crates/mh3u-tui`: the terminal app (`app/` holds the state and keys by feature, `ui/` the drawing).
 - `crates/mh3u-tools`: developer commands used to reverse-engineer the formats: `savediff`, `items`, `recipe`, `arcls`, `arcx`,
   `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `unlock-monsters`, `drops`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
+- `scripts/check.sh`: the checks CI runs (format, clippy, tests); run it before every commit.
 - `scripts/screenshots.sh`: regenerates `docs/screenshots/*.svg` by running the app in tmux in a sandbox (needs a save and the release build; `mh3u-tools ansi2svg` draws the pictures).
 - `docs/architecture.md`: how the code is organised and how to add a tab.
 - `docs/code-guidelines.md`: how to change it without letting it get tangled (rules, limits, tests, the checklist for a feature).
@@ -141,12 +142,9 @@ wrong data.
 ## Development
 
 ```
-cargo fmt --all
-cargo clippy --all-targets -- -D warnings
-cargo test --all
+scripts/check.sh   # cargo fmt --check, clippy -D warnings, cargo test: the same three CI runs
 ```
-
-CI runs the same three. See `docs/code-guidelines.md` before changing the code.
+ See `docs/code-guidelines.md` before changing the code.
 
 ## License
 

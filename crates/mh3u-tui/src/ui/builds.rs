@@ -44,7 +44,10 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     if let Some(g) = app.builds.settings.gender {
         pool += &format!(" · {}", g.label().to_lowercase());
     }
-    if let Some(c) = app.builds.settings.class {
+    if let Some((kind, id)) = app.builds.settings.weapon {
+        let class = crate::builds::weapon_class(kind).label().to_lowercase();
+        pool += &format!(" · for {} ({class})", app.game.equipment_name(kind, id).unwrap_or("?"));
+    } else if let Some(c) = app.builds.settings.class {
         pool += &format!(" · {}", c.label().to_lowercase());
     }
     let rows: Vec<ListItem> = app
@@ -109,27 +112,32 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
 
 /// One slot of a set to show: the piece and its stats.
 pub(super) struct Shown {
+    kind: u8,
     id: u16,
-    stats: mh3u_core::armor::ArmorStats,
+    /// What the piece adds to a set's totals; a weapon adds none.
+    stats: Option<mh3u_core::armor::ArmorStats>,
 }
 
 /// The slots of a set piece by piece (owned, or what it takes to make it), then what the set adds up to. `cursor` marks a slot.
-pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 6], cursor: Option<usize>) -> Vec<Line<'static>> {
+pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 7], cursor: Option<usize>) -> Vec<Line<'static>> {
     let zenny = app.save.zenny;
     let mut lines: Vec<Line> = Vec::new();
     let mut parts: Vec<(u8, &mh3u_core::armor::ArmorStats)> = Vec::new();
-    for (n, (&kind, shown)) in crate::templates::SLOTS.iter().zip(slots).enumerate() {
+    for (n, (slot, shown)) in crate::templates::Slot::ALL.iter().zip(slots).enumerate() {
         let marker = if cursor == Some(n) {
             Span::styled("▶ ", accent())
         } else {
             Span::raw("  ")
         };
-        let label = Span::styled(format!("{:<9}", crate::templates::slot_label(kind)), muted());
+        let label = Span::styled(format!("{:<9}", slot.label()), muted());
         let Some(c) = shown else {
             lines.push(Line::from(vec![marker, label, Span::styled("nothing", muted())]));
             continue;
         };
-        parts.push((kind, &c.stats));
+        let kind = c.kind;
+        if let Some(stats) = &c.stats {
+            parts.push((kind, stats));
+        }
         let name = app.game.equipment_name(kind, c.id).unwrap_or("Talisman");
         let mut spans = vec![marker, label, Span::styled(format!("{:<24}", fit(name, 24)), bold())];
         if app.owns_slot(kind, c.id) {
@@ -144,7 +152,12 @@ pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 6], cursor: Option<us
             } else {
                 spans.push(Span::styled("not on offer yet", bad()));
             }
-            if let Some((cost, _)) = app.cost(kind, c.id, Route::Create) {
+            // a weapon is got the cheapest way, which may be several steps; a piece of armor is made
+            let cost = match app.cheapest_path(kind, c.id) {
+                Some(path) => Some(path.zenny()),
+                None => app.cost(kind, c.id, Route::Create).map(|(cost, _)| cost),
+            };
+            if let Some(cost) = cost {
                 spans.push(Span::styled(
                     format!("  {} z", group_digits(u64::from(cost))),
                     if cost <= zenny { muted() } else { bad() },
@@ -188,14 +201,19 @@ pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
             ),
         ];
     };
-    let mut slots: [Option<Shown>; 6] = Default::default();
+    let mut slots: [Option<Shown>; 7] = Default::default();
     for c in found.pieces.iter().map(|&i| &app.builds.pool[i]) {
-        if let Some(n) = crate::templates::SLOTS.iter().position(|&k| k == c.kind) {
-            slots[n] = Some(Shown {
+        if let Some(slot) = crate::templates::Slot::of_kind(c.kind) {
+            slots[slot.index()] = Some(Shown {
+                kind: c.kind,
                 id: c.id,
-                stats: c.stats.clone(),
+                stats: Some(c.stats.clone()),
             });
         }
+    }
+    // the weapon the set is for
+    if let Some((kind, id)) = app.builds.settings.weapon {
+        slots[crate::templates::Slot::Weapon.index()] = Some(Shown { kind, id, stats: None });
     }
     let mut lines = set_lines(app, &slots, None);
     lines.push(Line::raw(""));
@@ -221,10 +239,14 @@ pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
             ],
         );
     };
-    let mut slots: [Option<Shown>; 6] = Default::default();
+    let mut slots: [Option<Shown>; 7] = Default::default();
     for p in &t.pieces {
-        if let (Some(n), Some(stats)) = (crate::templates::SLOTS.iter().position(|&k| k == p.kind), app.piece_stats(p)) {
-            slots[n] = Some(Shown { id: p.id, stats });
+        if let Some(slot) = crate::templates::Slot::of_kind(p.kind) {
+            slots[slot.index()] = Some(Shown {
+                kind: p.kind,
+                id: p.id,
+                stats: app.piece_stats(p),
+            });
         }
     }
     let mut lines = set_lines(app, &slots, Some(app.builds.template_slot));
@@ -271,13 +293,7 @@ pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
     f.render_widget(Clear, popup);
     let [input, list] = Layout::vertical([Constraint::Length(1), Constraint::Min(1)]).areas(popup.inner(Margin::new(1, 1)));
     f.render_widget(
-        theme::pane(
-            format!(
-                " {} · type to find · Enter choose · Esc close ",
-                crate::templates::slot_label(picker.kind)
-            ),
-            true,
-        ),
+        theme::pane(format!(" {} · type to find · Enter choose · Esc close ", picker.slot.label()), true),
         popup,
     );
     f.render_widget(

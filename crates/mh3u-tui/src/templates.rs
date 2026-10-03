@@ -3,18 +3,77 @@
 //! A piece is remembered by its equipment kind and id, so the template survives a reload of the game data. A talisman has no
 //! fixed stats (they are in the save record), so its skills are kept with it.
 
-/// The slots of a set in display order: head, body, arms, waist, legs, talisman.
-pub const SLOTS: [u8; 6] = [5, 1, 2, 3, 4, 6];
+/// A slot of a set. The armor slots and the talisman hold one equipment kind each; the weapon slot holds a weapon of any type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Slot {
+    Head,
+    Body,
+    Arms,
+    Waist,
+    Legs,
+    Talisman,
+    Weapon,
+}
 
-pub fn slot_label(kind: u8) -> &'static str {
-    match kind {
-        5 => "Head",
-        1 => "Body",
-        2 => "Arms",
-        3 => "Waist",
-        4 => "Legs",
-        _ => "Talisman",
+impl Slot {
+    /// In display order.
+    pub const ALL: [Slot; 7] = [
+        Slot::Head,
+        Slot::Body,
+        Slot::Arms,
+        Slot::Waist,
+        Slot::Legs,
+        Slot::Talisman,
+        Slot::Weapon,
+    ];
+
+    /// The slot a piece of this equipment kind goes in, if it goes in any (kind 12 does not exist).
+    pub fn of_kind(kind: u8) -> Option<Slot> {
+        Some(match kind {
+            5 => Slot::Head,
+            1 => Slot::Body,
+            2 => Slot::Arms,
+            3 => Slot::Waist,
+            4 => Slot::Legs,
+            6 => Slot::Talisman,
+            7..=11 | 13..=19 => Slot::Weapon,
+            _ => return None,
+        })
     }
+
+    /// The equipment kind of an armor slot or the talisman; a weapon slot has none (any weapon type).
+    pub fn kind(self) -> Option<u8> {
+        match self {
+            Slot::Head => Some(5),
+            Slot::Body => Some(1),
+            Slot::Arms => Some(2),
+            Slot::Waist => Some(3),
+            Slot::Legs => Some(4),
+            Slot::Talisman => Some(6),
+            Slot::Weapon => None,
+        }
+    }
+
+    pub fn index(self) -> usize {
+        Slot::ALL.iter().position(|&s| s == self).unwrap_or(0)
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Slot::Head => "Head",
+            Slot::Body => "Body",
+            Slot::Arms => "Arms",
+            Slot::Waist => "Waist",
+            Slot::Legs => "Legs",
+            Slot::Talisman => "Talisman",
+            Slot::Weapon => "Weapon",
+        }
+    }
+}
+
+/// The label of the slot a piece of this kind goes in.
+pub fn slot_label(kind: u8) -> &'static str {
+    Slot::of_kind(kind).map_or("?", Slot::label)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,16 +87,21 @@ pub struct Piece {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Template {
     pub name: String,
-    /// At most one piece per kind.
+    /// At most one piece per slot.
     pub pieces: Vec<Piece>,
 }
 
 impl Template {
-    /// Put `piece` in its slot, replacing what was there; `None` empties the slot of `kind`.
-    pub fn set(&mut self, kind: u8, piece: Option<Piece>) {
-        self.pieces.retain(|p| p.kind != kind);
+    /// Put `piece` in `slot`, replacing what was there; `None` empties the slot.
+    pub fn set(&mut self, slot: Slot, piece: Option<Piece>) {
+        self.pieces.retain(|p| Slot::of_kind(p.kind) != Some(slot));
         self.pieces.extend(piece);
-        self.pieces.sort_by_key(|p| SLOTS.iter().position(|&k| k == p.kind));
+        self.sort();
+    }
+
+    /// Keep the pieces in the order of the slots.
+    pub fn sort(&mut self) {
+        self.pieces.sort_by_key(|p| Slot::of_kind(p.kind).map(Slot::index));
     }
 }
 
@@ -76,9 +140,7 @@ pub fn parse(text: &str) -> Vec<Template> {
                 let (Ok(kind), Ok(id)) = (kind.parse::<u8>(), id.parse::<u16>()) else {
                     continue;
                 };
-                if !SLOTS.contains(&kind) {
-                    continue;
-                }
+                let Some(slot) = Slot::of_kind(kind) else { continue };
                 let skills = rest
                     .first()
                     .map(|s| {
@@ -91,7 +153,7 @@ pub fn parse(text: &str) -> Vec<Template> {
                     })
                     .unwrap_or_default();
                 if let Some(t) = out.last_mut() {
-                    t.set(kind, Some(Piece { kind, id, skills }));
+                    t.set(slot, Some(Piece { kind, id, skills }));
                 }
             }
             _ => {}
@@ -126,10 +188,11 @@ mod tests {
             name: "Attack for Rathian".into(),
             pieces: Vec::new(),
         };
-        t.set(4, Some(armor(4, 12)));
-        t.set(5, Some(armor(5, 10)));
+        t.set(Slot::Legs, Some(armor(4, 12)));
+        t.set(Slot::Head, Some(armor(5, 10)));
+        t.set(Slot::Weapon, Some(armor(14, 3)));
         t.set(
-            6,
+            Slot::Talisman,
             Some(Piece {
                 kind: 6,
                 id: 1,
@@ -138,8 +201,8 @@ mod tests {
         );
         assert_eq!(
             t.pieces.iter().map(|p| p.kind).collect::<Vec<_>>(),
-            [5, 4, 6],
-            "head, legs, talisman"
+            [5, 4, 6, 14],
+            "head, legs, talisman, weapon"
         );
         let other = Template {
             name: "Empty".into(),
@@ -155,15 +218,20 @@ mod tests {
             name: "x".into(),
             pieces: vec![armor(5, 1)],
         };
-        t.set(5, Some(armor(5, 2)));
+        t.set(Slot::Head, Some(armor(5, 2)));
         assert_eq!(t.pieces.iter().find(|p| p.kind == 5).map(|p| p.id), Some(2));
-        t.set(5, None);
+        t.set(Slot::Head, None);
         assert!(t.pieces.iter().all(|p| p.kind != 5));
+        // a weapon of any type fills the one weapon slot
+        t.set(Slot::Weapon, Some(armor(7, 1)));
+        t.set(Slot::Weapon, Some(armor(17, 9)));
+        assert_eq!(t.pieces.len(), 1);
+        assert_eq!(t.pieces.first().map(|p| (p.kind, p.id)), Some((17, 9)));
     }
 
     #[test]
     fn bad_lines_are_skipped() {
-        let text = "piece\t5\t1\t\ntemplate\t\ntemplate\tReal\npiece\tx\t1\npiece\t9\t1\t\npiece\t5\t7\t3:4,bad,5:x\nnonsense\n";
+        let text = "piece\t5\t1\t\ntemplate\t\ntemplate\tReal\npiece\tx\t1\npiece\t12\t1\t\npiece\t5\t7\t3:4,bad,5:x\nnonsense\n";
         let parsed = parse(text);
         assert_eq!(parsed.len(), 1, "a piece before any template and a nameless template are dropped");
         assert_eq!(parsed[0].name, "Real");
@@ -176,6 +244,20 @@ mod tests {
             }],
             "unknown kinds and bad skills are skipped"
         );
+    }
+
+    #[test]
+    fn slots_know_their_kinds() {
+        assert_eq!(Slot::of_kind(5), Some(Slot::Head));
+        assert_eq!(Slot::of_kind(6), Some(Slot::Talisman));
+        for weapon in [7, 11, 13, 19] {
+            assert_eq!(Slot::of_kind(weapon), Some(Slot::Weapon));
+        }
+        assert_eq!(Slot::of_kind(12), None);
+        assert_eq!(Slot::of_kind(0), None);
+        assert_eq!(Slot::Weapon.kind(), None);
+        assert_eq!(Slot::ALL.iter().map(|s| s.index()).collect::<Vec<_>>(), [0, 1, 2, 3, 4, 5, 6]);
+        assert_eq!(slot_label(14), "Weapon");
     }
 
     #[test]

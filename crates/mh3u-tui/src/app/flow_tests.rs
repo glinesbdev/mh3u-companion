@@ -238,3 +238,47 @@ fn the_spare_filter_keeps_only_items_with_something_to_spare() {
     assert_eq!(app.inv.box_view.len(), all);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swapped() {
+    use mh3u_core::armor::ArmorClass;
+    let dir = temp_dir("weapon");
+    let Some(mut app) = app_in(&dir) else { return };
+    key(&mut app, KeyCode::Left); // Builds
+    press(&mut app, "aauto");
+    key(&mut app, KeyCode::Enter);
+    let before = app.builds.pool.len();
+
+    // choose a bow: gunner armor only from then on
+    let bow = app.game.piece_ids(17).next().expect("a bow");
+    let name = app.game.piece_name(17, bow).unwrap().to_string();
+    press(&mut app, "p");
+    assert!(app.builds.piece_picker.is_some());
+    press(&mut app, &name);
+    key(&mut app, KeyCode::Enter);
+    let (kind, _) = app.builds.settings.weapon.expect("a weapon was chosen");
+    assert_eq!(kind, 17);
+    assert_eq!(app.builds.settings.effective_class(), Some(ArmorClass::Gunner));
+    assert!(
+        app.builds
+            .pool
+            .iter()
+            .filter(|c| c.kind != 6)
+            .all(|c| c.stats.class != Some(ArmorClass::Blademaster))
+    );
+    assert!(app.builds.pool.len() < before, "the blademaster-only armor dropped out");
+
+    // saved as a template with the weapon, and the weapon slot can be emptied
+    press(&mut app, "fs");
+    key(&mut app, KeyCode::Enter);
+    assert!(
+        app.builds.templates[0].pieces.iter().any(|p| p.kind == 17),
+        "the weapon is in the template"
+    );
+    press(&mut app, "f");
+    press(&mut app, "]]]]]]"); // head, body, arms, waist, legs, talisman, then the weapon
+    key(&mut app, KeyCode::Enter);
+    key(&mut app, KeyCode::Enter); // the first choice empties the slot
+    assert!(app.builds.templates[0].pieces.iter().all(|p| p.kind != 17));
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -51,11 +51,11 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ),
     (
         "",
-        "o  which pieces to use: owned only, plus what the blacksmith offers, or everything in the game (to plan ahead);  m  use your talisman;  e  gender and c  blademaster/gunner filters (pieces for both always pass)",
+        "o  which pieces to use: owned only, plus what the blacksmith offers, or everything in the game (to plan ahead);  m  use your talisman;  e  gender and c  blademaster/gunner filters (pieces for both always pass);  p  choose the weapon the set is for: its type picks the class (bows and bowguns wear gunner armor), and it goes into a saved template",
     ),
     (
         "",
-        "s on a set saves it as a template;  w  put the missing pieces on the wishlist.  In the templates: [ ] pick a slot, Enter swaps its piece (type to find one), n saves what you wear, W wishes only the slot's piece, r rename, x delete. Skills, options and templates are kept per hunter.",
+        "s on a set saves it as a template;  w  put the missing pieces on the wishlist.  In the templates: [ ] pick a slot (head... talisman, weapon), Enter swaps its piece (type to find one), n saves what you wear, W wishes only the slot's piece, r rename, x delete. Skills, options and templates are kept per hunter.",
     ),
     (
         "Any weapon",

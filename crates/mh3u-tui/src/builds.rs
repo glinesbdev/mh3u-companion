@@ -296,6 +296,23 @@ pub struct Settings {
     pub gender: Option<Gender>,
     /// Only pieces for this class (`None`: any).
     pub class: Option<ArmorClass>,
+    /// The weapon the set is for, as (equipment kind, id). It decides the class (see `weapon_class`) and goes into a saved template.
+    pub weapon: Option<(u8, u16)>,
+}
+
+/// The armor class a weapon type is worn with: bows and bowguns take gunner armor, everything else blademaster armor.
+pub fn weapon_class(kind: u8) -> ArmorClass {
+    match kind {
+        11 | 13 | 17 => ArmorClass::Gunner,
+        _ => ArmorClass::Blademaster,
+    }
+}
+
+impl Settings {
+    /// The class the search filters by: the weapon's if there is one, otherwise the chosen filter.
+    pub fn effective_class(&self) -> Option<ArmorClass> {
+        self.weapon.map(|(kind, _)| weapon_class(kind)).or(self.class)
+    }
 }
 
 /// Whether the filters let a piece through. Pieces for both genders (or classes) always pass, and so does a piece whose flags
@@ -320,6 +337,7 @@ impl Default for Settings {
             use_talisman: true,
             gender: None,
             class: None,
+            weapon: None,
         }
     }
 }
@@ -354,6 +372,13 @@ impl Settings {
                         _ => None,
                     }
                 }
+                (Some("weapon"), Some(kind), Some(id)) => {
+                    if let (Ok(kind), Ok(id)) = (kind.parse::<u8>(), id.parse::<u16>())
+                        && crate::templates::Slot::of_kind(kind) == Some(crate::templates::Slot::Weapon)
+                    {
+                        out.weapon = Some((kind, id));
+                    }
+                }
                 (Some("class"), Some(v), _) => {
                     out.class = match v {
                         "blademaster" => Some(ArmorClass::Blademaster),
@@ -380,6 +405,9 @@ impl Settings {
             Some(ArmorClass::Gunner) => "class gunner\n",
             _ => "",
         };
+        if let Some((kind, id)) = self.weapon {
+            text += &format!("weapon {kind} {id}\n");
+        }
         text
     }
 }
@@ -539,6 +567,7 @@ mod tests {
             use_talisman: true,
             gender: Some(Gender::Female),
             class: Some(ArmorClass::Gunner),
+            weapon: Some((17, 34)),
         };
         assert_eq!(Settings::parse(&s.format()), s);
         let parsed = Settings::parse("skill x 3\nskill 5 10\nskill 5 20\nnonsense\n");
@@ -572,5 +601,29 @@ mod tests {
         assert_eq!(Settings::parse("offered 1\n").pool, Pool::OnOffer);
         assert_eq!(Settings::parse("pool all\n").pool, Pool::All);
         assert_eq!(Pool::Owned.next().next().next(), Pool::Owned);
+    }
+
+    #[test]
+    fn a_weapon_decides_the_class_and_bad_weapon_lines_are_ignored() {
+        let mut s = Settings::default();
+        assert_eq!(s.effective_class(), None);
+        s.class = Some(ArmorClass::Gunner);
+        assert_eq!(s.effective_class(), Some(ArmorClass::Gunner));
+        s.weapon = Some((7, 1));
+        assert_eq!(
+            s.effective_class(),
+            Some(ArmorClass::Blademaster),
+            "a great sword overrides the filter"
+        );
+        for gunner in [11, 13, 17] {
+            assert_eq!(weapon_class(gunner), ArmorClass::Gunner);
+        }
+        assert_eq!(weapon_class(19), ArmorClass::Blademaster);
+        assert_eq!(
+            Settings::parse("weapon 5 3\nweapon x 1\nweapon 12 1\n").weapon,
+            None,
+            "armor and unknown kinds are not weapons"
+        );
+        assert_eq!(Settings::parse("weapon 17 34\n").weapon, Some((17, 34)));
     }
 }

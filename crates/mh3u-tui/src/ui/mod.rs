@@ -184,8 +184,8 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 use crate::app::BuildFocus;
                 keys.push(("f", "switch list"));
                 match app.builds.focus {
-                    BuildFocus::Skills => keys.extend([("a", "add skill"), ("+/-", "points"), ("x", "remove")]),
-                    BuildFocus::Sets => keys.extend([("s", "save as template"), ("w", "wish")]),
+                    BuildFocus::Skills => keys.extend([("a", "add skill"), ("+/-", "points"), ("x", "remove"), ("p", "weapon")]),
+                    BuildFocus::Sets => keys.extend([("s", "save as template"), ("w", "wish"), ("p", "weapon")]),
                     BuildFocus::Templates => keys.extend([("Enter", "swap piece"), ("n", "from worn"), ("w", "wish"), ("x", "delete")]),
                 }
                 keys.extend([("o", "pieces"), ("m", "talisman"), ("e", "gender"), ("c", "class")]);
