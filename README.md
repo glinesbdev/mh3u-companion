@@ -19,9 +19,10 @@ what you own and what you need to craft or upgrade gear.
     match first: matches on a name, type or skill come first (grouped by slot), then the weaker ones (loose fuzzy matches, or
     pieces that merely need a material with that name), also grouped. `x` or `Esc` clears the search.
   - Armor details show rarity, slots, base defense, gender (Male / Female / Both) and type (Blademaster / Gunner / Both).
-  - `c` shows only what you can make now. `o` hides pieces you already own. `s` cycles the sort: game order, name, craftable
+  - `c` shows only what you can make now. `o` hides pieces you already own. `b` shows only what the blacksmith is offering (see below). `s` cycles the sort: game order, name, craftable
     first, owned first. Like pieces always stay together in the order head, body, arms, waist, legs, talisman, then the weapon
     types; the sort orders them within each group. (Craftable first and owned first split the list by that flag, then group.)
+- **Blacksmith unlock**: the details panel says whether the blacksmith offers a piece. This is inferred, not read from the game: a piece is on offer once you hold 1 of the first material in its recipe (starting gear always is, and Yukumo-style special pieces follow some other rule). On a save from the start of the game it predicted exactly the two pieces the blacksmith offered beyond the starting gear. It has not been checked for weapons or against a late-game save, and it cannot tell whether a piece stays on offer after you spend the material.
 - **Wishlist**: press `w` on a piece in the Crafting tab to add it (marked ★). If it can only be obtained by upgrading and you
   don't own a parent weapon, the parents it needs are added with it, back to the first weapon you own or can make from scratch
   (pieces that can be made from scratch never pull in parents). Removing a piece also removes the parents that were added

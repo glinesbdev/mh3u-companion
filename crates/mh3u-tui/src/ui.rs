@@ -113,7 +113,14 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 if clear {
                     keys.push(("x", "clear"));
                 }
-                keys.extend([("c", "craftable"), ("o", "hide owned"), ("s", "sort"), ("w", "wish"), ("t", "tree")]);
+                keys.extend([
+                    ("c", "craftable"),
+                    ("o", "hide owned"),
+                    ("b", "blacksmith"),
+                    ("s", "sort"),
+                    ("w", "wish"),
+                    ("t", "tree"),
+                ]);
             }
             Tab::Items => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
@@ -233,6 +240,7 @@ Crafting      /  fuzzy search: name, type, skill, material,
 Esc or x      clear the search on the current tab
               c  only what you can make now
               o  hide pieces you already own
+              b  only pieces the blacksmith is offering (see below)
               u  only pieces you own that have no price recorded yet
               s  sort (game order, name, craftable first, owned first)
               w  add to the wishlist (★), with the parent weapons
@@ -242,6 +250,10 @@ Wishlist      w or x  remove the selected piece, and the parents
 Equipment     s  sort (box order, name, rarity, type, worn first)
 Any weapon    t  upgrade tree: the line down to it and everything
                  it upgrades into (↑/↓ scroll, t or Esc close)
+
+The blacksmith line is inferred, not read from the game: a piece is on
+offer once you hold 1 of the first material in its recipe (starting gear
+always is). It matched the one early save checked.
 
 A piece is craftable if you have the materials to create it, or to
 upgrade it and you own a parent weapon. Upgrading uses up the parent,
@@ -520,6 +532,26 @@ fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
     lines
 }
 
+/// Whether the blacksmith offers a piece. Inferred from the recipe (see `Recipe::unlock`), so it says "needs" and not "locked".
+fn unlock_line(app: &App, kind: u8, id: u16) -> Option<Line<'static>> {
+    use mh3u_core::recipes::Unlock;
+    let label = |text: &str, style: Style| -> Line<'static> {
+        Line::from(vec![Span::styled("Blacksmith  ", muted()), Span::styled(text.to_string(), style)])
+    };
+    Some(match app.unlock(kind, id)? {
+        Unlock::Starter => label("✔ starting gear, always on offer", good()),
+        Unlock::Open => label("✔ on offer (you hold its first material)", good()),
+        Unlock::Locked(item) => label(
+            &format!(
+                "✘ not on offer yet: needs 1 {} in the pouch or box",
+                app.game.item_name(item).unwrap_or("?")
+            ),
+            warn(),
+        ),
+        Unlock::Special => label("a special piece, unlocked some other way", muted()),
+    })
+}
+
 /// The details of one piece of equipment: stats, then what it takes to create or upgrade it with the materials you have.
 /// `craftable` is `Some` on the Crafting tab, where the piece may not be owned; `None` on the Equipment tab.
 fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<bool>) -> Vec<Line<'static>> {
@@ -533,6 +565,7 @@ fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<boo
     } else if let Some(w) = app.game.weapon_stats(kind, id) {
         lines.extend(weapon_lines(w));
     }
+    lines.extend(unlock_line(app, kind, id));
     lines.push(Line::raw(""));
     if let Some(recipe) = app.create_recipe(kind, id) {
         lines.push(cost_heading("Create from scratch", app.cost(kind, id, Route::Create), zenny));
@@ -647,6 +680,9 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     if app.unpriced_only {
         title.push_str("[owned, no price yet] ");
     }
+    if app.blacksmith_only {
+        title.push_str("[at the blacksmith] ");
+    }
     if rows.is_empty() {
         let lines = vec![
             Line::from("No pieces to show."),
@@ -753,6 +789,9 @@ fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
                 (Via::Upgrade, false) => "Upgrade (you don't own a parent weapon)",
             };
             piece_lines.push(Line::styled(how, muted()));
+            if plan.via == Via::Create {
+                piece_lines.extend(unlock_line(app, kind, id));
+            }
             let route = if plan.via == Via::Create { Route::Create } else { Route::Upgrade };
             piece_lines.push(match app.cost(kind, id, route) {
                 Some((c, _)) => {

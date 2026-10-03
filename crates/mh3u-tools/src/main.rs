@@ -37,6 +37,31 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
+        // unlock-guess <user1> <game_dir>: armor pieces whose first listed material is in the pouch or box
+        Some("unlock-guess") if args.len() == 3 => {
+            let save = Save::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;
+            let data = GameData::load(Path::new(&args[2]))?;
+            println!("hunter: {}", save.hunter_name);
+            for kind in [5u8, 1, 2, 3, 4] {
+                for id in 1..2000u16 {
+                    let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.equipment_name(kind, id)) else {
+                        continue;
+                    };
+                    if name.is_empty() || recipe.flag == 1 {
+                        continue;
+                    }
+                    let first = recipe.materials[0].id;
+                    if save.item_count(first) > 0 {
+                        println!(
+                            "kind {kind} id {id:>3} {name:<24} first material {} x{}",
+                            data.item_name(first).unwrap_or("?"),
+                            save.item_count(first)
+                        );
+                    }
+                }
+            }
+            Ok(())
+        }
         // items <user1> <game_dir>: print pouch, item box and equipment box with names
         Some("items") if args.len() == 3 => {
             let save = Save::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;

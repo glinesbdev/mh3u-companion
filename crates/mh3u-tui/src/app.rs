@@ -388,6 +388,8 @@ pub struct App {
     pub hide_owned: bool,
     /// Show only pieces you own that have no forging cost in the ledger yet.
     pub unpriced_only: bool,
+    /// Crafting list shows only pieces the blacksmith is offering (see `Recipe::unlock`).
+    pub blacksmith_only: bool,
     pub piece_sort: PieceSort,
     pub box_sort: BoxSort,
     pub equip_sort: EquipSort,
@@ -457,6 +459,7 @@ impl App {
             craftable_only: false,
             hide_owned: false,
             unpriced_only: false,
+            blacksmith_only: false,
             piece_sort: PieceSort::GameOrder,
             box_sort: BoxSort::BoxOrder,
             equip_sort: EquipSort::BoxOrder,
@@ -680,6 +683,24 @@ impl App {
         kids
     }
 
+    /// Whether the blacksmith offers a piece you can create, by the inferred rule in `Recipe::unlock`. `None` when the game
+    /// data has no create recipe for it (a weapon reached only by upgrading).
+    pub fn unlock(&self, kind: u8, id: u16) -> Option<mh3u_core::recipes::Unlock> {
+        self.game.recipe(kind, id).map(|r| r.unlock(|item| self.save.item_count(item)))
+    }
+
+    /// Whether the piece should be on the blacksmith's list now: unlocked or starting gear, or a weapon you own a parent of.
+    pub fn at_blacksmith(&self, kind: u8, id: u16) -> bool {
+        use mh3u_core::recipes::Unlock;
+        match self.unlock(kind, id) {
+            Some(Unlock::Starter | Unlock::Open) => true,
+            Some(Unlock::Locked(_) | Unlock::Special) => false,
+            None => self
+                .upgrade_recipe(kind, id)
+                .is_some_and(|u| u.parents.iter().any(|&p| self.save.owns_equipment(kind, p))),
+        }
+    }
+
     /// Open the upgrade tree for the highlighted weapon. Armor has no upgrade line in the game data, so nothing opens for it.
     fn open_tree(&mut self) {
         let Some((kind, id)) = self.highlighted_equipment() else { return };
@@ -797,7 +818,11 @@ impl App {
                 reason,
             };
             let unpriced = piece.owned && self.cost(kind, id, Route::Create).is_none() && self.cost(kind, id, Route::Upgrade).is_none();
-            if (!self.craftable_only || piece.craftable) && (!self.hide_owned || !piece.owned) && (!self.unpriced_only || unpriced) {
+            if (!self.craftable_only || piece.craftable)
+                && (!self.hide_owned || !piece.owned)
+                && (!self.unpriced_only || unpriced)
+                && (!self.blacksmith_only || self.at_blacksmith(kind, id))
+            {
                 scored.push((score, piece));
             }
         }
@@ -1421,6 +1446,10 @@ impl App {
             }
             KeyCode::Char('o') if self.tab == Tab::Crafting => {
                 self.hide_owned = !self.hide_owned;
+                self.refresh_pieces();
+            }
+            KeyCode::Char('b') if self.tab == Tab::Crafting => {
+                self.blacksmith_only = !self.blacksmith_only;
                 self.refresh_pieces();
             }
             KeyCode::Char('u') if self.tab == Tab::Crafting => {

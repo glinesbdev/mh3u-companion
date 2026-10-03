@@ -75,8 +75,19 @@ Not yet checked against the game's own screens. Sharpness and element are not in
 executable's data or rodata sections as plain bytes, 16-bit values, cumulative values or scaled values (a table in an archive
 or in code is still possible).
 
+## Blacksmith unlock (inferred)
+
+Nothing in the save or the recipe tables says outright which pieces the blacksmith offers. The recipe records do carry two
+small fields: `flag` (header byte 0) is 1 only on starting gear, and `tier` (tail byte 0) is 1 on starting gear, 2 on ordinary
+pieces and 0 on special village and event pieces (Yukumo armor and a few earrings). For the ordinary pieces the app uses the rule a
+published database states: **at least 1 of the first material in the recipe, in the pouch or box**. Support: the game's material
+order matches that database's, and on a save from the start of the game (one Jaggi Hide in the box) the rule picks out exactly
+Jaggi Greaves and Jaggi Leggings, which were the only pieces the blacksmith offered beyond the starting gear. That is one
+observation. Unchecked: weapons (the rule also fires for Jaggid Shotels on that save, with no observation either way), a late-game
+save, and whether a piece stays on offer once the material is gone. `recipes.rs` has the rule and a test for the early-game save.
+
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
 - Weapon sharpness and element; talisman data.
-- Which pieces the blacksmith has unlocked.
+- Which pieces the blacksmith has unlocked, as the game stores it. The app infers it (see below).

@@ -66,10 +66,43 @@ pub struct Upgrade {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Recipe {
     pub materials: Vec<ItemStack>,
-    /// Header byte 0 (`1` on the first-tier pieces); meaning not decoded.
+    /// Header byte 0: `1` marks the starting gear (always offered by the blacksmith).
     pub flag: u8,
-    /// Tail byte 0 (1 or 2 so far); meaning not decoded.
+    /// Tail byte 0: 1 on starting gear, 2 on ordinary pieces, 0 on special village and event pieces (Yukumo armor and the like).
     pub tier: u8,
+}
+
+/// Whether the blacksmith offers a piece, judged from its recipe and what the hunter holds.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Unlock {
+    /// Starting gear, always on offer.
+    Starter,
+    /// The first listed material is in the pouch or box.
+    Open,
+    /// Not on offer until the hunter holds the first listed material (its item id).
+    Locked(u16),
+    /// Village and event pieces (Yukumo armor and the like): not unlocked by the usual rule.
+    Special,
+}
+
+impl Recipe {
+    /// The blacksmith rule, as inferred (not read from the game): a piece is on offer once you hold at least one of the first
+    /// material in its recipe. Two facts support it: the website the data was checked against states it, and on a save at the
+    /// start of the game it predicts exactly the two pieces the blacksmith offered beyond the starting gear (both Jaggi legs,
+    /// whose first material is a Jaggi Hide the hunter held). Recipe flag 1 marks starting gear and tier 0 the special pieces.
+    pub fn unlock(&self, held: impl Fn(u16) -> u32) -> Unlock {
+        if self.flag == 1 {
+            return Unlock::Starter;
+        }
+        if self.tier == 0 {
+            return Unlock::Special;
+        }
+        match self.materials.first() {
+            Some(first) if held(first.id) > 0 => Unlock::Open,
+            Some(first) => Unlock::Locked(first.id),
+            None => Unlock::Special,
+        }
+    }
 }
 
 fn be16(d: &[u8], o: usize) -> u16 {
@@ -174,6 +207,32 @@ pub fn parse_upgrades(data: &[u8]) -> Result<HashMap<(u8, u16), Upgrade>> {
 mod tests {
     use super::*;
 
+    fn recipe(flag: u8, tier: u8, items: &[u16]) -> Recipe {
+        Recipe {
+            materials: items.iter().map(|&id| ItemStack { id, count: 2 }).collect(),
+            flag,
+            tier,
+        }
+    }
+
+    #[test]
+    fn a_piece_unlocks_when_its_first_material_is_held() {
+        let held = |id: u16| if id == 443 { 1 } else { 0 };
+        assert_eq!(recipe(0, 2, &[443, 440]).unlock(held), Unlock::Open);
+        assert_eq!(
+            recipe(0, 2, &[440, 443]).unlock(held),
+            Unlock::Locked(440),
+            "only the first material counts"
+        );
+    }
+
+    #[test]
+    fn starting_gear_and_special_pieces_ignore_the_materials() {
+        assert_eq!(recipe(1, 1, &[214]).unlock(|_| 0), Unlock::Starter);
+        assert_eq!(recipe(0, 0, &[214]).unlock(|_| 5), Unlock::Special);
+        assert_eq!(recipe(0, 2, &[]).unlock(|_| 5), Unlock::Special);
+    }
+
     #[test]
     fn parses_alloy_helm_record() {
         // Header (flag 1, id 8), Machalite x3, Earth Crystal x2, Iron Ore x3, empty slot, tail (tier 1).
@@ -221,5 +280,30 @@ mod tests {
             }
         );
         assert!(up[&(7, 0)].materials.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod real_data {
+    use super::*;
+    use crate::save::Save;
+
+    /// On a save from the start of the game the blacksmith offered the starting gear and two more pieces, both Jaggi legs.
+    /// The unlock rule must predict exactly those two (kind 4, ids 11 and 12). Only armor was observed, so weapons are left
+    /// out. Skips without the save or extracted data.
+    #[test]
+    fn the_unlock_rule_predicts_the_two_jaggi_legs_at_the_start_of_the_game() {
+        let save = Save::parse(&fixture!("03-latest/user1")).unwrap();
+        let Ok(data) = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/live/rpx_data.bin")) else {
+            return;
+        };
+        let recipes = parse(&data).unwrap();
+        let mut open: Vec<(u8, u16)> = recipes
+            .iter()
+            .filter(|((kind, _), r)| (1..=5).contains(kind) && r.unlock(|id| save.item_count(id)) == Unlock::Open)
+            .map(|(key, _)| *key)
+            .collect();
+        open.sort_unstable();
+        assert_eq!(open, [(4, 11), (4, 12)]);
     }
 }
