@@ -15,6 +15,7 @@ Everything that reads a file or the running game. No terminal code.
 | `arc`, `gmd`, `rpx` | The game's archive, text-table and executable formats. |
 | `gamedata` | Loads a game dump once and answers questions about it: names, descriptions, recipes, stats, drops. Everything else asks `GameData`. |
 | `recipes`, `armor`, `weapons`, `drops` | The tables found in the executable's data section (offsets are for the US v32 build and are checked on load). `drops` also indexes the lists by item and by monster. |
+| `quest` | The quest files (`quest/us/*.quest`): texts, monsters and the two reward boxes. |
 | `blacksmith` | The rule for which pieces the blacksmith offers (a monster that drops the piece's first material has been hunted). |
 | `prices` | The forging-cost ledger and the tracker that learns costs from play. |
 | `live`, `livesave`, `procmem`, `edit` | Live mode: find the save in Cemu's memory, follow it, and (debug only) write to it. |
@@ -34,6 +35,7 @@ app/
   monsters.rs       Monsters tab
   hunts.rs          Hunt plan tab (state, refresh, keys)
   families.rs       Families tab (armor grouped by set name)
+  quests.rs         Quests tab (search, sort, wishlist stars)
   wishlist.rs       the wishlist, parent weapons, the shopping list
   blacksmith.rs     what is on offer, and the pieces remembered as seen on offer
   build_manager.rs  Builds tab: BuildManager (its state), templates, the popups that edit them

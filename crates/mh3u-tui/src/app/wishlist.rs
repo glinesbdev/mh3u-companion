@@ -133,6 +133,7 @@ impl App {
         self.save_wishlist();
         self.hunts.stale = true;
         self.refresh_box();
+        self.refresh_quests();
     }
 
     pub(super) fn save_wishlist(&mut self) {

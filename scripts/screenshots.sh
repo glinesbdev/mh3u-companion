@@ -73,6 +73,11 @@ shot monsters
 keys Right                # Hunt plan
 shot hunts
 
+keys Right                # Quests
+keys '/' 'arzuros capture' Enter
+shot quests
+keys Escape
+
 keys Right                # Families
 keys '/' 'jaggi' Enter
 shot families

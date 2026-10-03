@@ -315,6 +315,7 @@ impl App {
         match self.tab {
             Tab::Items => &self.inv.item_search,
             Tab::Families => &self.families.search,
+            Tab::Quests => &self.quests.search,
             _ => &self.craft.search,
         }
     }
@@ -323,6 +324,7 @@ impl App {
         match self.tab {
             Tab::Items => self.refresh_box(),
             Tab::Families => self.refresh_families(),
+            Tab::Quests => self.refresh_quests(),
             _ => self.refresh_pieces(),
         }
     }

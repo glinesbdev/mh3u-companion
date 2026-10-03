@@ -26,10 +26,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 - **Smarter hunt plans.** The Hunt plan tab picks the monsters that cover the most missing materials, but not yet: how many hunts a
   material is likely to take (from the chances and the number of carves), limiting the plan to the ranks the hunter has reached
-  (**Needs:** the save's hunter rank found), or including quests that give the materials as rewards (**Needs:** the quest files).
-- **Quest finder:** which quests have a monster (or a reward). **Needs:** the `.quest` files decoded (QTDS: text, then binary data;
-  monsters, rewards and the quest rank are in the binary part). Quests are spread over several folders (`quest/us`, `quest/btl`,
-  `quest/support` and `DLC/us`); the finder should cover them all and say which come from downloadable content.
+  (**Needs:** the save's hunter rank found), or including the quests that give the materials as rewards (the Quests tab has them; the plan does not use them yet).
+- **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards. Not decoded: the stage (map), the
+  zenny reward and fees, the small monsters and the quest's rank (low, high or G) and where it is given (village or hub).
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 

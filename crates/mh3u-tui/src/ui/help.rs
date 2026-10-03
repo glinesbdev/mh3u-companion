@@ -42,6 +42,10 @@ pub(super) const HELP: &[(&str, &str)] = &[
         "the monsters to hunt, best first, for the materials the wishlist is short of: each hunt covers as many as it can and the next picks up the rest; r  limit it to one rank;  Enter  show that monster's drops",
     ),
     (
+        "Quests",
+        "every quest in the game: its goal, client, time limit, monsters and both reward boxes with the chance of each item;  /  search by name, goal, monster or reward item;  s  sort (game order, name, stars, wishlist first);  ★ = it gives something the wishlist is short of;  PageUp/PageDown  scroll",
+    ),
+    (
         "Families",
         "armor grouped by family (Agnaktor, Zinogre...), with a table of which variants (base, S, U, X, Z) of each piece you own or the blacksmith offers;  /  search;  o  only sets you own a piece of;  Enter  show the family on the Crafting tab",
     ),

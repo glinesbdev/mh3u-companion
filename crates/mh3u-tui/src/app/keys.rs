@@ -110,6 +110,7 @@ impl App {
             Tab::Monsters => self.monsters_key(code),
             Tab::Hunts => self.hunts_key(code),
             Tab::Families => self.families_key(code),
+            Tab::Quests => self.quests_key(code),
             Tab::Worn | Tab::Builds => false,
         }
     }
@@ -234,6 +235,7 @@ impl App {
         match self.tab {
             Tab::Items => &mut self.inv.item_search,
             Tab::Families => &mut self.families.search,
+            Tab::Quests => &mut self.quests.search,
             _ => &mut self.craft.search,
         }
     }

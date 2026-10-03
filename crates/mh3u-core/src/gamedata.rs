@@ -71,8 +71,27 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    quests: Vec<crate::quest::Quest>,
     skills: Vec<String>,
     equipment: HashMap<u8, EquipmentTable>,
+}
+
+/// Where the English quest files are, relative to the dump's game folder.
+const QUEST_DIR: &str = "content/nativeCafe/quest/us";
+
+/// Every quest in the dump, by id. A dump without them gives none, and a file that does not read is skipped.
+fn load_quests(game_dir: &Path) -> Vec<crate::quest::Quest> {
+    let Ok(files) = std::fs::read_dir(game_dir.join(QUEST_DIR)) else {
+        return Vec::new();
+    };
+    let mut quests: Vec<crate::quest::Quest> = files
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|x| x == "quest"))
+        .filter_map(|p| crate::quest::parse(&std::fs::read(p).ok()?).ok())
+        .filter(|q| q.title != "DUMMY" && !q.title.is_empty())
+        .collect();
+    quests.sort_by_key(|q| q.id);
+    quests
 }
 
 /// Join the game's hard-wrapped text lines into one line. A line ending in a hyphen joins to the next with no space.
@@ -138,9 +157,15 @@ impl GameData {
             armor,
             weapons,
             drops,
+            quests: load_quests(game_dir),
             skills: names("Skill_Type_eng")?,
             equipment,
         })
+    }
+
+    /// The quests, by id.
+    pub fn quests(&self) -> &[crate::quest::Quest] {
+        &self.quests
     }
 
     /// Every item id and name, for searching by name.

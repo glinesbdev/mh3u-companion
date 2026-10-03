@@ -27,6 +27,7 @@ pub mod live;
 pub mod livesave;
 pub mod prices;
 pub mod procmem;
+pub mod quest;
 pub mod recipes;
 pub mod rpx;
 pub mod save;

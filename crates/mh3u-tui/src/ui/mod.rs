@@ -18,6 +18,7 @@ mod hunts;
 mod items;
 mod monsters;
 mod pieces;
+mod quests;
 mod tree;
 mod wishlist;
 mod worn;
@@ -32,6 +33,7 @@ use hunts::draw_hunts;
 use items::{draw_items, wrap_items};
 use monsters::draw_monsters;
 use pieces::{cost_spans, piece_details, unlock_line};
+use quests::draw_quests;
 use tree::draw_tree;
 use wishlist::draw_wishlist;
 use worn::{draw_worn, totals_lines};
@@ -100,6 +102,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Crafting => draw_crafting(f, app, body),
         Tab::Wishlist => draw_wishlist(f, app, body),
         Tab::Hunts => draw_hunts(f, app, body),
+        Tab::Quests => draw_quests(f, app, body),
         Tab::Families => draw_families(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
     }
@@ -173,6 +176,13 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Worn => keys.push(("i", "skill info")),
             Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
             Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
+            Tab::Quests => {
+                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                if clear {
+                    keys.push(("x", "clear"));
+                }
+                keys.extend([("s", "sort"), ("PgUp/PgDn", "scroll")]);
+            }
             Tab::Families => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {

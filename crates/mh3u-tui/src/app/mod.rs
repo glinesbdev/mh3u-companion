@@ -40,6 +40,7 @@ mod live;
 mod money;
 mod monsters;
 mod price_watch;
+mod quests;
 mod sorting;
 mod wishlist;
 
@@ -55,6 +56,7 @@ pub use live::EditConsole;
 pub use money::{group_digits, signed_zenny};
 pub use monsters::MonsterTab;
 pub use price_watch::PriceBook;
+pub use quests::QuestTab;
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
 pub use wishlist::WishList;
 
@@ -72,12 +74,13 @@ pub enum Tab {
     Wishlist,
     Monsters,
     Hunts,
+    Quests,
     Families,
     Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 9] = [
+    pub const ALL: [Tab; 10] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
@@ -85,6 +88,7 @@ impl Tab {
         Tab::Wishlist,
         Tab::Monsters,
         Tab::Hunts,
+        Tab::Quests,
         Tab::Families,
         Tab::Builds,
     ];
@@ -98,6 +102,7 @@ impl Tab {
             Tab::Wishlist => "Wishlist",
             Tab::Monsters => "Monsters",
             Tab::Hunts => "Hunt plan",
+            Tab::Quests => "Quests",
             Tab::Families => "Families",
             Tab::Builds => "Builds",
         }
@@ -137,6 +142,8 @@ pub struct App {
     pub hunts: HuntTab,
     /// The Families tab.
     pub families: FamiliesTab,
+    /// The Quests tab.
+    pub quests: QuestTab,
     /// The Builds tab.
     pub builds: BuildManager,
     /// Forging costs seen in the game and the watcher that finds them.
@@ -183,6 +190,7 @@ impl App {
             .map(|t| Unlocked::parse(&t))
             .unwrap_or_default();
         let families = App::group_families(&game);
+        let quest_tab = QuestTab::new(&game);
         let mut app = App {
             game,
             save,
@@ -196,6 +204,7 @@ impl App {
             monsters: MonsterTab::default(),
             hunts: HuntTab::default(),
             families: FamiliesTab::new(families),
+            quests: quest_tab,
             builds,
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
@@ -212,6 +221,7 @@ impl App {
             quit: false,
         };
         app.refresh_families();
+        app.refresh_quests();
         app.rebuild_learned();
         app.craft.catalog = app.build_catalog();
         app.learn_unlocked();
@@ -271,6 +281,10 @@ impl App {
             Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
             Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
             Tab::Families => (&mut self.families.state, self.families.rows.len()),
+            Tab::Quests => {
+                self.quests.scroll = 0;
+                (&mut self.quests.state, self.quests.rows.len())
+            }
             Tab::Builds => match self.builds.focus {
                 BuildFocus::Sets => (&mut self.builds.result_state, self.builds.results.len()),
                 BuildFocus::Skills => (&mut self.builds.target_state, self.builds.settings.targets.len()),

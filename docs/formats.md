@@ -146,3 +146,22 @@ blacksmith's list.
 The drop tables are not in the order of the name table: their rows are the name table's order with small creatures slipped in
 between (and no row for the fish), so a row number is not a name id. `drops.rs` maps the rows by their contents (`ROW_RUNS`); rows that
 belong to no named monster are left out. Earlier versions showed the later monsters' drops under the wrong names.
+
+## Quests (`quest/us/q_NNNNN.quest`, found 2026-10-03)
+
+`QTDS`, a u32 version (5), then the texts, then a binary part. A text is five strings (English, French, German, Italian, Spanish),
+each a u32 length and the bytes (UTF-8, `\r\n` for line breaks). In order: the **title** (`Bear Trap`), the quest id (u16), the main
+**goal** (`Capture an Arzuros`), the star rank (u8) and one more byte, five empty strings, the time limit in minutes (u16), the
+failure condition, six bytes, the **client** and the **description**. All 413 files of the US dump read this way.
+
+The binary part (442 bytes for most quests, longer for 59 with extra data) starts right after the description. Found so far:
+
+| Offset | What | How sure |
+|---|---|---|
+| 2 | kind: 1 slay, 2 deliver, 4 capture, 5 hunt (others: special goals) | matches the goal text on every quest looked at |
+| 10 + 11 k (k < 5) | large monster records: the first byte is the monster's id in the name table, 0 for none | matches the goal text (including two-monster hunts) |
+| 71 + 4 k (k < 43) | rewards `[item u16, quantity, chance]`; even k is the main box (monster parts), odd k the second box (supplies); chance 0 = always | the boxes add up to 100 on 412 of 413 quests (quest 1707's main box adds up to 110); the Arzuros capture quest matches what a hunter received |
+| 327 on | stage, fees, zenny, spawn lists | not decoded |
+
+The quest folders: `quest/us` holds the English quests; `quest/eu` has the same files (byte for byte, for the one compared; every quest holds all five languages); `quest/btl` and
+`quest/support` hold other kinds of files (`.quest_btl`, `.supp`) that are not read. The `DLC/us` folder was empty in this dump.

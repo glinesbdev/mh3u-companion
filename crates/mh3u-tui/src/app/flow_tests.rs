@@ -199,7 +199,7 @@ fn the_families_tab_groups_armor_searches_and_opens_the_crafting_search() {
     let dir = temp_dir("families");
     let Some(mut app) = app_in(&dir) else { return };
     assert!(app.families.rows.len() > 50, "dozens of armor families");
-    for _ in 0..7 {
+    for _ in 0..8 {
         key(&mut app, KeyCode::Right);
     }
     assert_eq!(app.tab, Tab::Families);
@@ -280,5 +280,53 @@ fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swappe
     key(&mut app, KeyCode::Enter);
     key(&mut app, KeyCode::Enter); // the first choice empties the slot
     assert!(app.builds.templates[0].pieces.iter().all(|p| p.kind != 17));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_quests_tab_finds_a_quest_by_its_monster_or_a_reward_and_stars_what_the_wishlist_needs() {
+    let dir = temp_dir("quests");
+    let Some(mut app) = app_in(&dir) else { return };
+    assert!(app.quests.rows.len() > 300, "every quest is listed");
+    for _ in 0..7 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert_eq!(app.tab, Tab::Quests);
+    press(&mut app, "/arzuros capture");
+    key(&mut app, KeyCode::Enter);
+    let quest = app.quests.selected(app.game.quests()).expect("a quest");
+    assert_eq!((quest.id, quest.title.as_str(), quest.stars), (1204, "Bear Trap", 2));
+    assert_eq!(quest.monsters, [42], "Arzuros");
+
+    // search by a reward item instead
+    press(&mut app, "x");
+    press(&mut app, "/rathian shell");
+    key(&mut app, KeyCode::Enter);
+    assert!(!app.quests.rows.is_empty());
+    let best = &app.game.quests()[app.quests.rows[0].quest];
+    assert!(
+        best.monsters.contains(&1)
+            || best
+                .rewards
+                .iter()
+                .flatten()
+                .any(|r| app.game.item_name(r.item) == Some("Rathian Shell")),
+        "the best match is a Rathian quest or gives a Rathian Shell: {}",
+        best.title
+    );
+
+    // a wished piece that takes an Arzuros part puts a star on the quests that give it
+    press(&mut app, "x");
+    let piece = app
+        .game
+        .piece_ids(5)
+        .find(|&id| app.game.piece_name(5, id) == Some("Arzuros Helm S"))
+        .expect("Arzuros Helm S");
+    app.wish.items = vec![(5, piece)];
+    app.after_wishlist_change();
+    assert!(
+        app.quests.rows.iter().any(|r| r.needed > 0),
+        "some quest gives a part the wishlist lacks"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
