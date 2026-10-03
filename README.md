@@ -121,6 +121,7 @@ wrong data.
   `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `unlock-monsters`, `drops`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
 - `scripts/screenshots.sh`: regenerates `docs/screenshots/*.svg` by running the app in tmux in a sandbox (needs a save and the release build; `mh3u-tools ansi2svg` draws the pictures).
 - `docs/architecture.md`: how the code is organised and how to add a tab.
+- `docs/code-guidelines.md`: how to change it without letting it get tangled (rules, limits, tests, the checklist for a feature).
 - `docs/ideas.md`: ideas for the app, with what each one needs.
 - `docs/formats.md`: what is known about each file format, and how confident that knowledge is.
 - `docs/live.md`: how live mode finds and reads the game's data.
@@ -130,10 +131,12 @@ wrong data.
 ## Development
 
 ```
-cargo test
-cargo clippy --all-targets
-cargo fmt
+cargo fmt --all
+cargo clippy --all-targets -- -D warnings
+cargo test --all
 ```
+
+CI runs the same three. See `docs/code-guidelines.md` before changing the code.
 
 ## License
 

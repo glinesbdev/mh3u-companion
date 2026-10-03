@@ -1,5 +1,7 @@
 # How the code is organised
 
+(How to *change* it cleanly is in `code-guidelines.md`.)
+
 Three crates in one workspace. The rule that keeps it tidy: **`mh3u-core` knows nothing about the screen, and the screen knows
 nothing about byte offsets.**
 

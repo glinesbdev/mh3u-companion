@@ -1,36 +1,24 @@
 # Ideas
 
-Things the app could do, roughly grouped. "Needs" says what is missing before it can be built. Nothing here is promised; add to the
-list as ideas turn up.
+Things the app does **not** do yet. "Needs" says what is missing before one can be built. Nothing here is promised.
+
+Keep this file honest: when an idea is built, **delete it from here** in the same commit (and put what was learned in the README,
+`formats.md` or `architecture.md`). When part of an idea is built, cut the idea down to what is left. New ideas go in the group they
+belong to.
 
 ## Build manager
 
-Built (the Builds tab): wanted skills with points, a search over owned and on-offer armor plus a talisman with gender and class
-filters, sets ranked by base defense, totals with each goal marked, the missing pieces to the wishlist, and build templates (saved
-sets you can edit slot by slot, kept per hunter). All of it is saved per hunter. Left to do is what is not struck out below.
+The Builds tab searches armor sets for wanted skills and keeps build templates (see the README). Left to do:
 
-Say which skills you want (for example Attack Up (S), Perception and a gem slot) and get the armor pieces to wear.
-
-- Pick skills and the points you want; search head, body, arms, waist and legs (and a talisman) for sets that reach them.
-- Filters: only pieces you own, only pieces you can craft now, only pieces the blacksmith is offering (the `b` rule), a rarity cap,
-  blademaster or gunner, male or female.
-- Rank by total defense, resistances, spare gem slots; show the worn-gear totals (the Worn tab's maths) for each result, and let any
-  result be saved as a template (below) or put on the wishlist.
-- Torso Up is part of the maths (it doubles the body piece), so the search has to try body pieces last.
-- **Build templates, saved between sessions.** A template is a named full set: weapon (optional), head, body, arms, waist, legs and a
-  talisman. Templates are kept in a file beside the wishlist, so they survive restarts, and you can keep as many as you like
-  ("Attack Up for Rathian", "Fire resist for Lagiacrus", ...).
-  - **Mix and match:** every slot of a template can be swapped for another piece (from the search results, the owned gear or the
-    full list) and the totals update as you go: defense, resistances, gem slots and skill points, as on the Worn tab.
-  - **To the wishlist, piece by piece or whole:** add any single piece of a template to the wishlist, or add the whole template in one
-    go. The shopping list then covers what is missing for exactly that set. Pieces you already own are left out of the totals, as
-    the wishlist does now, and removing the template's pieces again should not remove pieces that other wishlist entries still need.
-  - A template remembers a piece by its kind and id (not its position), so it keeps working after the game's data is reloaded.
-  - A template can also start from what you are wearing now ("save my current set as a template").
-- **Needs:** talismans (no save has one yet to decode the equipment record from), and decorations or jewels (not decoded) if sets
-  should count gems. Templates themselves can be built before that, as armor-only sets. Skill tiers above 10 points (15, 20) and their effect names are not decoded; the search can target the
-  first tier only until they are. A reference tool for this exists (an armor set search for MH3U); its data has no prices but it is a
-  good model for the search.
+- **More filters:** only pieces you can craft now, a rarity cap.
+- **More ways to rank** the sets: by resistances, by spare gem slots, "pieces I own first". Today it is by base defense, then by how
+  many pieces you own.
+- **A weapon in a template**, and a search for sets that suit a weapon.
+- **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
+- **Skill levels above the first** (15, 20 points) and their effect names. **Needs:** the skill effect tables decoded.
+- **Decorations (jewels)**: count the gems in the slots. **Needs:** decorations decoded, and a way to know what is socketed.
+- **A second talisman skill and talisman slots.** **Needs:** a talisman with two skills and one with slots in a save, to tell the
+  record's fields apart (only a one-skill Pawn Talisman has been seen).
 
 ## Where to get things
 
@@ -38,9 +26,8 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
   drop, and group them so one hunt covers several items. The Monsters tab already stars what the wishlist needs; this would go
   further and say "hunt X in high rank for 4 of your 7 missing materials".
 - **Quest finder:** which quests have a monster (or a reward). **Needs:** the `.quest` files decoded (QTDS: text, then binary data;
-  monsters, rewards and the quest rank are in the binary part).
-- Quests are spread over several folders (`quest/us`, `quest/btl`, `quest/support` and `DLC/us`); the quest finder should cover them
-  all and say which come from downloadable content.
+  monsters, rewards and the quest rank are in the binary part). Quests are spread over several folders (`quest/us`, `quest/btl`,
+  `quest/support` and `DLC/us`); the finder should cover them all and say which come from downloadable content.
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 
@@ -55,24 +42,21 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
 - **Affordable now:** a Crafting filter (like `c` for materials) for pieces whose zenny cost you can pay, and a sort by cost.
 - **Weapon comparison:** two or three weapons side by side (attack, affinity, slots, rarity, and sharpness and element once found).
 - **Skill browser:** pick a skill and see every armor piece that has it, strongest first, with a mark for the ones you own or the
-  blacksmith is offering. (Search already finds a skill by name; this would be a view of its own and the first step of the build
-  manager's search.)
-- **Hunter picker:** the wishlist is now per save slot (chosen with `--slot`), like the remembered blacksmith list. Build templates should
-  follow the same rule, and an in-app way to pick the hunter would replace `--slot`.
+  blacksmith is offering. (The Builds tab's skill picker finds a skill by name; this would be a view of its own.)
+- **Hunter picker:** an in-app way to switch hunters (save slots) instead of starting with `--slot`.
 
 ## Data not shown yet
 
 - Weapon **sharpness and element** (not found in the executable's data tables).
 - **Armor maximum defense** (six growth bytes decide it; no formula yet).
 - Which body part each **part-break** list is.
-- **Talisman** skills and slots, and **decorations**.
 - Skill **effect names and higher tiers**.
 - Monster weaknesses, hit points and parts (probably in each monster's archive; nothing decoded).
 - Palico (Felyne) equipment and the guild card, quest progress and play time in the save.
 - **Item values:** sell and buy price, rarity and carry limit of each item (a published list has them; the game's table is not found).
 - **Hunter's Notes** (the monster descriptions in the text archive): show them on the Monsters tab. **Needs:** the mapping from a note to
   a monster, which is not the monster id order.
-- How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the first-material rule).
+- How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the hunt rule).
 - Other languages: the text archive also has French, German, Italian and Spanish names and descriptions; a language option would only
   need the archive path to change.
 
@@ -93,9 +77,10 @@ Say which skills you want (for example Attack Up (S), Perception and a gem slot)
 
 - Notify when a wishlist piece becomes craftable (the materials just arrived).
 - Show the quest's drops as they land, matched against the wishlist.
-- Record each blacksmith visit's list (the unlock check could then be verified against what the game shows, not inferred).
+- Record each blacksmith visit's list (the unlock rule could then be checked against what the game shows).
 - Notice when a quest ends and log what it gave (items, zenny), to build a personal history of drops that could be compared with the
   published chances.
+- Search for sets off the UI thread, if a very large pool ever makes the Builds tab slow (it takes a few milliseconds today).
 
 ## Checks that need the game
 
@@ -109,15 +94,11 @@ Not features, but they would settle open questions in the notes. Each takes a fe
   Silhouette Casque (about 24 pieces). Read the price off the forge list; a price recorded that way already wins over the table.
 - **Weapon attack numbers.** The decoded attack matches a published list for about 97% of weapons but was not compared with the game's
   own screens. A handful of weapons across types would do (the details are in `docs/formats.md`).
-- **Torso Up** with a real set: does the body piece's own Torso Up count double? The Worn tab assumes not.
-- **Talisman.** Get one into the WornTester save so the equipment record's tail can be decoded (skills, slots); then a second with
-  different skills to tell the fields apart.
+- **Torso Up** with a real set: does the body piece's own Torso Up count double? The Worn tab and the Builds search assume not.
 
 ## Project
 
-- A GitHub Actions workflow running `cargo fmt --check`, `cargo clippy` and `cargo test` on every push (the tests that need game files
-  skip themselves, so it can run without them).
-- Screen-drawing tests with ratatui's `TestBackend`, so a layout change that breaks a tab is caught without running the app.
+- Screen-drawing tests with ratatui's `TestBackend`, so a layout change that breaks a tab is caught without running the app (today
+  `scripts/screenshots.sh` does this by hand).
 - Release builds for Linux attached to a GitHub release; a `cargo install` line in the README. The repository is private for now;
   making it public needs a look through the history and docs for anything personal first.
-- Keep `scripts/screenshots.sh` in step with the tab order when tabs are added (its key paths depend on it).
