@@ -2,6 +2,7 @@ mod app;
 mod builds;
 mod commands;
 mod search;
+mod templates;
 mod theme;
 mod tree;
 mod ui;

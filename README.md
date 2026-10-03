@@ -22,6 +22,10 @@ what you own and what you need to craft or upgrade gear.
 
 ![Monsters and their drops, with what the wishlist needs starred](docs/screenshots/monsters.svg)
 
+![Builds: sets that reach a wanted skill, with the totals](docs/screenshots/builds.svg)
+
+![A saved build template, slot by slot](docs/screenshots/templates.svg)
+
 </details>
 
 The pictures are drawn from the app's own output by `scripts/screenshots.sh` (the hunter name is replaced), using the colors of a
@@ -60,7 +64,9 @@ dark theme; your terminal's own palette applies when you run it.
   upgrade only for pieces that have no create recipe. Each save slot has its own wishlist (`--slot n`), saved in
   `~/.config/mh3u-companion/` (or under `$XDG_CONFIG_HOME`): `wishlist.txt` for slot 1, `wishlist-2.txt` and `wishlist-3.txt` for the others.
 - **Upgrade tree**: `t` on a weapon (in Crafting, Equipment or Wishlist) opens its tree: the line of weapons from the first one down to it, a note where other branches leave that line, and everything it can be upgraded into, each marked owned or not with rarity and attack. `↑`/`↓` scroll, `t` or `Esc` close. Armor has no upgrade line in the game data, so it has no tree.
-- **Builds**: pick the skills you want (`a`, then type part of the name) and how many points (`+`/`-`, 10 is where a skill's first effect starts) and the app lists the head, body, arms, waist and legs pieces, plus one of your talismans, that reach them, sturdiest first. It looks at the armor you own and, unless you turn that off with `o`, the pieces the blacksmith is offering; `m` turns the talisman on and off. The details show each piece (owned, or whether you can make it now and what it costs) and the totals as on the Worn tab, with each wanted skill marked reached or not. `w` puts the pieces you do not own on the wishlist. The wanted skills and the two options are kept per hunter in `builds.txt` (`builds-2.txt`, `builds-3.txt` for the other slots) beside the wishlist. Not counted yet: decorations, skill levels above the first (10 points), and a gender or blademaster/gunner filter.
+- **Builds**: pick the skills you want (`a`, then type part of the name) and how many points (`+`/`-`, 10 is where a skill's first effect starts) and the app lists the head, body, arms, waist and legs pieces, plus one of your talismans, that reach them, sturdiest first. It looks at the armor you own and, unless you turn that off with `o`, the pieces the blacksmith is offering; `m` turns the talisman on and off, `e` limits the pieces to those a male or female hunter can wear and `c` to blademaster or gunner armor (pieces for both always pass). The details show each piece (owned, or whether you can make it now and what it costs) and the totals as on the Worn tab, with each wanted skill marked reached or not. `w` puts the pieces you do not own on the wishlist.
+- **Build templates**: `s` on a found set saves it under a name, and `n` (in the templates list, reached with `f`) saves the armor you are wearing. A template is a full set you keep and can change: `[` and `]` pick a slot, Enter opens a list of every piece for it (owned first, then what the blacksmith offers, then the rest; type to find one, or empty the slot) and the totals update as you swap. `w` puts all the pieces you do not own on the wishlist and `W` only the highlighted slot's; `r` renames and `x` deletes. Templates remember a piece by its kind and id, a talisman by its skills.
+- **Per hunter**: the wanted skills, the options and the templates are kept per save slot beside the wishlist: `builds.txt` and `templates.txt` for slot 1, `builds-2.txt`, `templates-2.txt` and so on for the others. Not counted yet: decorations and skill levels above the first (10 points).
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
   line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set

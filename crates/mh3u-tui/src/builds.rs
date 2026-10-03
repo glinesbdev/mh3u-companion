@@ -5,7 +5,7 @@
 //! the rest of the set is not left bare. The body piece goes last, because Torso Up doubles it (see `worn`).
 
 use crate::worn::{self, TORSO_UP};
-use mh3u_core::armor::ArmorStats;
+use mh3u_core::armor::{ArmorClass, ArmorStats, Gender};
 
 /// A skill and the points wanted in it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -218,6 +218,24 @@ pub struct Settings {
     pub include_offered: bool,
     /// Try the talismans you own.
     pub use_talisman: bool,
+    /// Only pieces this gender can wear (`None`: any).
+    pub gender: Option<Gender>,
+    /// Only pieces for this class (`None`: any).
+    pub class: Option<ArmorClass>,
+}
+
+/// Whether the filters let a piece through. Pieces for both genders (or classes) always pass, and so does a piece whose flags
+/// are unknown.
+pub fn usable(stats: &ArmorStats, gender: Option<Gender>, class: Option<ArmorClass>) -> bool {
+    let gender_ok = match (gender, stats.gender) {
+        (Some(want), Some(have)) => have == Gender::Both || have == want,
+        _ => true,
+    };
+    let class_ok = match (class, stats.class) {
+        (Some(want), Some(have)) => have == ArmorClass::Both || have == want,
+        _ => true,
+    };
+    gender_ok && class_ok
 }
 
 impl Default for Settings {
@@ -226,6 +244,8 @@ impl Default for Settings {
             targets: Vec::new(),
             include_offered: true,
             use_talisman: true,
+            gender: None,
+            class: None,
         }
     }
 }
@@ -245,6 +265,20 @@ impl Settings {
                 }
                 (Some("offered"), Some(v), _) => out.include_offered = v != "0",
                 (Some("talisman"), Some(v), _) => out.use_talisman = v != "0",
+                (Some("gender"), Some(v), _) => {
+                    out.gender = match v {
+                        "male" => Some(Gender::Male),
+                        "female" => Some(Gender::Female),
+                        _ => None,
+                    }
+                }
+                (Some("class"), Some(v), _) => {
+                    out.class = match v {
+                        "blademaster" => Some(ArmorClass::Blademaster),
+                        "gunner" => Some(ArmorClass::Gunner),
+                        _ => None,
+                    }
+                }
                 _ => {}
             }
         }
@@ -258,6 +292,16 @@ impl Settings {
             u8::from(self.include_offered),
             u8::from(self.use_talisman)
         );
+        text += match self.gender {
+            Some(Gender::Male) => "gender male\n",
+            Some(Gender::Female) => "gender female\n",
+            _ => "",
+        };
+        text += match self.class {
+            Some(ArmorClass::Blademaster) => "class blademaster\n",
+            Some(ArmorClass::Gunner) => "class gunner\n",
+            _ => "",
+        };
         text
     }
 }
@@ -390,6 +434,8 @@ mod tests {
             targets: vec![Target { skill: 11, points: 10 }, Target { skill: 37, points: 15 }],
             include_offered: false,
             use_talisman: true,
+            gender: Some(Gender::Female),
+            class: Some(ArmorClass::Gunner),
         };
         assert_eq!(Settings::parse(&s.format()), s);
         let parsed = Settings::parse("skill x 3\nskill 5 10\nskill 5 20\nnonsense\n");
@@ -399,5 +445,21 @@ mod tests {
             "bad and repeated lines are skipped"
         );
         assert_eq!(Settings::parse(""), Settings::default());
+    }
+
+    #[test]
+    fn the_filters_let_pieces_for_both_through() {
+        let mut a = stats(1, &[]);
+        a.gender = Some(Gender::Female);
+        a.class = Some(ArmorClass::Both);
+        assert!(usable(&a, None, None));
+        assert!(usable(&a, Some(Gender::Female), Some(ArmorClass::Gunner)));
+        assert!(!usable(&a, Some(Gender::Male), None));
+        a.gender = Some(Gender::Both);
+        a.class = Some(ArmorClass::Blademaster);
+        assert!(usable(&a, Some(Gender::Male), Some(ArmorClass::Blademaster)));
+        assert!(!usable(&a, None, Some(ArmorClass::Gunner)));
+        a.gender = None;
+        assert!(usable(&a, Some(Gender::Male), None), "unknown flags are not held against a piece");
     }
 }

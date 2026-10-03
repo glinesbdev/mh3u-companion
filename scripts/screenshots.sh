@@ -68,3 +68,12 @@ keys i
 keys Right Right Right    # Monsters (Crafting, Wishlist, Monsters)
 keys s s                  # the ones the wishlist needs first
 shot monsters
+
+keys Right                # Builds
+keys a
+keys 'psychic'
+keys Enter
+shot builds
+keys f s Enter            # save the best set as a template
+keys f                    # the templates list, with the saved set in full
+shot templates
