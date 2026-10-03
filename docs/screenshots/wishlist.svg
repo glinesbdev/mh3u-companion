@@ -16,11 +16,15 @@
 <text x="112.0" y="50.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Equipment</text>
 <text x="208.0" y="50.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">17</text>
 <text x="236.8" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="256.0" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Crafting</text>
-<text x="342.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="361.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Wishlist</text>
-<text x="448.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">8</text>
-<line x1="361.6" y1="53.4" x2="457.6" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="256.0" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Worn</text>
+<text x="304.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="323.2" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Crafting</text>
+<text x="409.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="428.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Wishlist</text>
+<text x="515.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">8</text>
+<line x1="428.8" y1="53.4" x2="524.8" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="534.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="553.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Monsters</text>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>

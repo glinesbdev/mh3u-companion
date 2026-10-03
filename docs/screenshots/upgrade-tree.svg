@@ -16,11 +16,15 @@
 <text x="112.0" y="50.4" textLength="86.4" lengthAdjust="spacing" fill="#c0caf5">Equipment</text>
 <text x="208.0" y="50.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">17</text>
 <text x="236.8" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="256.0" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Crafting</text>
-<line x1="256.0" y1="53.4" x2="332.8" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
-<text x="342.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
-<text x="361.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Wishlist</text>
-<text x="448.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">8</text>
+<text x="256.0" y="50.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Worn</text>
+<text x="304.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="323.2" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Crafting</text>
+<line x1="323.2" y1="53.4" x2="400.0" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="409.6" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="428.8" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Wishlist</text>
+<text x="515.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">8</text>
+<text x="534.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="553.6" y="50.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5">Monsters</text>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>
@@ -69,10 +73,15 @@
 <text x="409.6" y="150.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blades</text>
 <text x="515.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
-<text x="534.4" y="150.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">R3</text>
-<text x="572.8" y="150.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7">◆◇◇</text>
-<text x="620.8" y="150.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Attack</text>
-<text x="688.0" y="150.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">672</text>
+<text x="534.4" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">A</text>
+<text x="553.6" y="150.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">fearsome</text>
+<text x="640.0" y="150.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">steel</text>
+<text x="697.6" y="150.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">sword</text>
+<text x="755.2" y="150.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">with</text>
+<text x="803.2" y="150.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">giant,</text>
+<text x="870.4" y="150.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">talon-like</text>
+<text x="976.0" y="150.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">spikes</text>
+<text x="1043.2" y="150.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">that</text>
 <text x="1139.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">╭</text>
@@ -91,8 +100,6 @@
 <text x="294.4" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">atk</text>
 <text x="332.8" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">336</text>
 <text x="1033.6" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="1043.2" y="190.4" textLength="19.2" lengthAdjust="spacing" fill="#e0af68">re</text>
-<text x="1072.0" y="190.4" textLength="57.6" lengthAdjust="spacing" fill="#e0af68">(pouch</text>
 <text x="1139.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -118,6 +125,8 @@
 <text x="486.4" y="230.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">other</text>
 <text x="544.0" y="230.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">upgrade(s)</text>
 <text x="1033.6" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
+<text x="1043.2" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#e0af68">re</text>
+<text x="1072.0" y="230.4" textLength="57.6" lengthAdjust="spacing" fill="#e0af68">(pouch</text>
 <text x="1139.2" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -129,7 +138,6 @@
 <text x="409.6" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">atk</text>
 <text x="448.0" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">528</text>
 <text x="1033.6" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="1052.8" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">data)</text>
 <text x="1139.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -156,6 +164,7 @@
 <text x="486.4" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">atk</text>
 <text x="524.8" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">672</text>
 <text x="1033.6" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
+<text x="1052.8" y="290.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">data)</text>
 <text x="1139.2" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -310,6 +319,10 @@
 <text x="16.0" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="515.2" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
+<text x="534.4" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#f7768e">✘︎</text>
+<text x="553.6" y="590.4" textLength="28.8" lengthAdjust="spacing" fill="#f7768e">Not</text>
+<text x="592.0" y="590.4" textLength="86.4" lengthAdjust="spacing" fill="#f7768e">available</text>
+<text x="688.0" y="590.4" textLength="38.4" lengthAdjust="spacing" fill="#f7768e">yet.</text>
 <text x="1139.2" y="590.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="610.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="515.2" y="610.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>

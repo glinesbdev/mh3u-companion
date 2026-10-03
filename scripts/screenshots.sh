@@ -34,9 +34,12 @@ shot() { # shot <name>
   echo "wrote docs/screenshots/$1.svg"
 }
 
+keys p Down Down Down Down Down Down Down Down   # the pouch, on Jaggi Hide
 shot items
+keys p                    # back to the box
 
-keys Right Right          # Crafting
+
+keys Right Right Right    # Crafting (Items, Equipment, Worn, Crafting)
 keys '/' 'jaggi greaves' Enter
 shot crafting-armor
 keys Escape               # clear the search
@@ -53,6 +56,15 @@ keys Escape
 keys Right                # Wishlist
 shot wishlist
 
-keys Left Left             # Equipment
+keys Left Left Left       # Equipment (back past Crafting and Worn)
 keys s                    # sort by name
 shot equipment
+
+keys Right                # Worn
+keys i                    # with what each skill does
+shot worn
+keys i
+
+keys Right Right Right    # Monsters (Crafting, Wishlist, Monsters)
+keys s s                  # the ones the wishlist needs first
+shot monsters

@@ -16,7 +16,11 @@ what you own and what you need to craft or upgrade gear.
 
 ![Equipment box, sorted by name](docs/screenshots/equipment.svg)
 
-![Items](docs/screenshots/items.svg)
+![Items, with where the highlighted item drops](docs/screenshots/items.svg)
+
+![Worn gear and its skill totals](docs/screenshots/worn.svg)
+
+![Monsters and their drops, with what the wishlist needs starred](docs/screenshots/monsters.svg)
 
 </details>
 
