@@ -417,7 +417,7 @@ impl App {
     }
 
     /// Finish the name popup: save, or rename.
-    pub(super) fn finish_name(&mut self, prompt: NamePrompt) {
+    pub(super) fn finish_name(&mut self, prompt: &NamePrompt) {
         let name = templates::clean_name(&prompt.text);
         if name.is_empty() {
             self.status = "a template needs a name".to_string();
@@ -472,7 +472,7 @@ impl App {
             KeyCode::Char(c) => prompt.text.push(c),
             KeyCode::Enter => {
                 if let Some(prompt) = self.builds.name_prompt.take() {
-                    self.finish_name(prompt);
+                    self.finish_name(&prompt);
                 }
             }
             _ => {}

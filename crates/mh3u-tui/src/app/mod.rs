@@ -190,6 +190,13 @@ impl App {
             .unwrap_or_default();
         let wishlist: Vec<(u8, u16)> = entries.iter().map(|&(k, i, _)| (k, i)).collect();
         let auto_parents = entries.iter().filter(|e| e.2).map(|&(k, i, _)| (k, i)).collect();
+        let builds = BuildManager::load(read(files.as_ref().map(|f| &f.builds)), read(files.as_ref().map(|f| &f.templates)));
+        let prices = read(files.as_ref().map(|f| &f.prices))
+            .map(|t| Ledger::parse(&t))
+            .unwrap_or_default();
+        let unlocked = read(files.as_ref().map(|f| &f.unlocked))
+            .map(|t| Unlocked::parse(&t))
+            .unwrap_or_default();
         let mut app = App {
             game,
             save,
@@ -225,17 +232,13 @@ impl App {
             wishlist,
             auto_parents,
             wish_state: ListState::default().with_selected(Some(0)),
-            builds: BuildManager::load(read(files.as_ref().map(|f| &f.builds)), read(files.as_ref().map(|f| &f.templates))),
-            files: files.clone(),
+            builds,
+            files,
             show_help: false,
             help_scroll: 0,
             live: None,
-            prices: read(files.as_ref().map(|f| &f.prices))
-                .map(|t| Ledger::parse(&t))
-                .unwrap_or_default(),
-            unlocked: read(files.as_ref().map(|f| &f.unlocked))
-                .map(|t| Unlocked::parse(&t))
-                .unwrap_or_default(),
+            prices,
+            unlocked,
             learned_create: HashMap::new(),
             learned_upgrade: HashMap::new(),
             tracker: PriceTracker::default(),

@@ -349,7 +349,7 @@ impl PriceTracker {
         if (!quiet && !too_old) || (!too_old && self.pending.unfinished()) {
             return None;
         }
-        evaluate(std::mem::take(&mut self.pending), book)
+        evaluate(&std::mem::take(&mut self.pending), book)
     }
 }
 
@@ -400,7 +400,7 @@ pub enum SkipReason {
 /// piece's recipes (for an upgrade, with one of its parent weapons vanishing too). If the game data has no recipe for the
 /// route used, what vanished (provided nothing increased) is taken as the recipe and reported as learned. Anything else is
 /// not attributed.
-fn evaluate(p: Pending, book: &dyn RecipeBook) -> Option<Outcome> {
+fn evaluate(p: &Pending, book: &dyn RecipeBook) -> Option<Outcome> {
     let added: Vec<(u8, u16)> = p
         .pieces
         .iter()
