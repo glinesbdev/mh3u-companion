@@ -1,7 +1,7 @@
 //! The Hunt plan tab: which monsters to hunt for the materials the wishlist is short of.
 
 use super::*;
-use crate::hunts::{self, Plan, RankFilter};
+use crate::hunts::{self, Origin, Plan, QuestOffer, RankFilter};
 
 /// The Hunt plan tab: the plan, the ranks it may use, and the highlighted hunt.
 pub struct HuntTab {
@@ -30,9 +30,11 @@ impl App {
         let mut missing: Vec<(u16, u32)> = self.missing_for_wishlist().into_iter().collect();
         missing.sort_unstable();
         let drops = self.game.drops();
+        let quests = self.quest_offers();
         self.hunts.plan = hunts::plan(
             &missing,
             |item| drops.sources(item),
+            &quests,
             self.hunts.filter,
             |m| self.game.monster_name(m).is_some(),
         );
@@ -41,20 +43,49 @@ impl App {
         self.hunts.state.select((len > 0).then_some(at));
     }
 
+    /// What each quest gives, for the plan. Tutorials (no star rank) are left out.
+    fn quest_offers(&self) -> Vec<QuestOffer> {
+        self.game
+            .quests()
+            .iter()
+            .filter(|q| q.stars > 0)
+            .map(|q| QuestOffer {
+                id: q.id,
+                rewards: q
+                    .rewards
+                    .iter()
+                    .enumerate()
+                    .flat_map(|(second, box_)| box_.iter().map(move |r| (r.item, r.percent, r.quantity, second == 1)))
+                    .collect(),
+            })
+            .collect()
+    }
+
     pub(super) fn hunts_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('r') => {
                 self.hunts.filter = self.hunts.filter.next();
                 self.refresh_hunts();
             }
-            // show the hunt's monster on the Monsters tab
+            // show the step's monster on the Monsters tab, or its quest on the Quests tab
             KeyCode::Enter => {
-                let Some(step) = self.hunts.state.selected().and_then(|i| self.hunts.plan.steps.get(i)) else {
+                let Some(origin) = self
+                    .hunts
+                    .state
+                    .selected()
+                    .and_then(|i| self.hunts.plan.steps.get(i))
+                    .map(|s| s.origin)
+                else {
                     return true;
                 };
-                self.monsters.selected = Some(step.monster);
-                self.monsters.scroll = 0;
-                self.tab = Tab::Monsters;
+                match origin {
+                    Origin::Monster { monster, .. } => {
+                        self.monsters.selected = Some(monster);
+                        self.monsters.scroll = 0;
+                        self.tab = Tab::Monsters;
+                    }
+                    Origin::Quest(id) => self.show_quest(id),
+                }
             }
             _ => return false,
         }

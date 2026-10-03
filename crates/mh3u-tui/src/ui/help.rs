@@ -39,7 +39,7 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ("Monsters", "what each monster drops; s sort, ★ = the wishlist still needs it"),
     (
         "Hunt plan",
-        "the monsters to hunt, best first, for the materials the wishlist is short of: each hunt covers as many as it can and the next picks up the rest; r  limit it to one rank;  Enter  show that monster's drops",
+        "the monsters to hunt and the quests to do, best first, for the materials the wishlist is short of: each step covers as many as it can and the next picks up the rest; r  limit it to one rank (quests only count with every rank);  Enter  show that monster's drops or that quest",
     ),
     (
         "Quests",

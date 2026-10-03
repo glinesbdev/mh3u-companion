@@ -145,14 +145,20 @@ fn the_hunt_plan_follows_the_wishlist_and_opens_the_monsters_drops() {
         !app.hunts.stale && !app.hunts.plan.steps.is_empty(),
         "a plan was made when the tab opened"
     );
-    let first = app.hunts.plan.steps[0].monster;
     press(&mut app, "r");
     assert_eq!(app.hunts.filter.label(), "Low rank");
-    let shown = app.hunts.plan.steps.first().map(|s| s.monster);
+    let first = app.hunts.plan.steps.first().expect("a step").origin;
     key(&mut app, KeyCode::Enter);
-    assert_eq!(app.tab, Tab::Monsters, "Enter shows the monster");
-    assert_eq!(app.monsters.selected, shown);
-    let _ = first;
+    match first {
+        crate::hunts::Origin::Monster { monster, .. } => {
+            assert_eq!(app.tab, Tab::Monsters, "Enter shows the monster");
+            assert_eq!(app.monsters.selected, Some(monster));
+        }
+        crate::hunts::Origin::Quest(id) => {
+            assert_eq!(app.tab, Tab::Quests, "Enter shows the quest");
+            assert_eq!(app.quests.selected(app.game.quests()).map(|q| q.id), Some(id));
+        }
+    }
     app.wish.items.clear();
     app.after_wishlist_change();
     assert!(app.hunts.stale, "a wishlist change makes the plan stale");
@@ -328,5 +334,48 @@ fn the_quests_tab_finds_a_quest_by_its_monster_or_a_reward_and_stars_what_the_wi
         app.quests.rows.iter().any(|r| r.needed > 0),
         "some quest gives a part the wishlist lacks"
     );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_hunt_plan_sends_you_to_a_quest_for_what_no_monster_drops() {
+    use crate::hunts::Origin;
+    let dir = temp_dir("questplan");
+    let Some(mut app) = app_in(&dir) else { return };
+    // a head piece with a missing material that no monster drops but some quest rewards
+    let quest_items: HashSet<u16> = app
+        .game
+        .quests()
+        .iter()
+        .filter(|q| q.stars > 0)
+        .flat_map(|q| q.rewards.iter().flatten().map(|r| r.item))
+        .collect();
+    let piece = app
+        .game
+        .piece_ids(5)
+        .find(|&id| {
+            !app.save.owns_equipment(5, id)
+                && app.plan(5, id).is_some_and(|p| {
+                    p.materials.iter().any(|m| {
+                        app.save.item_count(m.id) < u32::from(m.count)
+                            && app.game.drops().sources(m.id).is_empty()
+                            && quest_items.contains(&m.id)
+                    })
+                })
+        })
+        .expect("a piece that needs a quest reward");
+    app.wish.items = vec![(5, piece)];
+    app.after_wishlist_change();
+    for _ in 0..6 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert!(
+        app.hunts.plan.steps.iter().any(|s| matches!(s.origin, Origin::Quest(_))),
+        "a quest step: {:?}",
+        app.hunts.plan
+    );
+    // quests only count when every rank is allowed
+    press(&mut app, "r");
+    assert!(app.hunts.plan.steps.iter().all(|s| matches!(s.origin, Origin::Monster { .. })));
     let _ = std::fs::remove_dir_all(&dir);
 }

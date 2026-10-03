@@ -1,6 +1,7 @@
 //! The Hunt plan tab.
 
 use super::*;
+use crate::hunts::{How, Origin};
 
 /// The hunts that cover what the wishlist is still short of, best first, and the highlighted one in full.
 pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
@@ -13,10 +14,22 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .enumerate()
         .map(|(n, step)| {
+            let (what, name, detail) = match step.origin {
+                Origin::Monster { monster, rank } => (
+                    "Hunt",
+                    app.game.monster_name(monster).unwrap_or("?").to_string(),
+                    rank.label().to_string(),
+                ),
+                Origin::Quest(id) => match app.game.quests().iter().find(|q| q.id == id) {
+                    Some(q) => ("Quest", one_line(&q.title), format!("{}★", q.stars)),
+                    None => ("Quest", format!("#{id}"), String::new()),
+                },
+            };
             ListItem::new(Line::from(vec![
                 Span::styled(format!("{:>2}  ", n + 1), muted()),
-                Span::raw(format!("{:<18}", fit(app.game.monster_name(step.monster).unwrap_or("?"), 17))),
-                Span::styled(format!("{:<10}", step.rank.label()), muted()),
+                Span::styled(format!("{what:<6}"), accent()),
+                Span::raw(format!("{:<20}", fit(&name, 19))),
+                Span::styled(format!("{detail:<10}"), muted()),
                 Span::styled(format!("{} item(s)", step.covers.len()), warn()),
             ]))
         })
@@ -31,9 +44,9 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
     };
     if rows.is_empty() {
         let text = if app.wish.items.is_empty() {
-            "Put pieces on the wishlist (Crafting tab, w) and the hunts that get their materials are planned here."
+            "Put pieces on the wishlist (Crafting tab, w) and the hunts and quests that get their materials are planned here."
         } else if unsourced.is_some() {
-            "No monster in these ranks drops what you are missing."
+            "No monster or quest in these ranks gives what you are missing."
         } else {
             "The wishlist has nothing missing."
         };
@@ -53,7 +66,7 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
         f.render_widget(
             Paragraph::new(lines)
                 .wrap(Wrap { trim: false })
-                .block(theme::pane(" Not from a hunt ", false)),
+                .block(theme::pane(" Not from a hunt or quest ", false)),
             note_area,
         );
     }
@@ -77,7 +90,7 @@ fn unsourced_line(app: &App) -> Option<Vec<Line<'static>>> {
     Some(vec![
         Line::raw(names.join(", ")),
         Line::styled(
-            "Gathering, the shop, or a rank this plan leaves out (r changes the ranks).",
+            "Gathering, the shop, or a rank this plan leaves out (quests only count when every rank is allowed; r changes the ranks).",
             muted(),
         ),
     ])
@@ -87,7 +100,7 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
     let Some(step) = app.hunts.state.selected().and_then(|i| app.hunts.plan.steps.get(i)) else {
         return vec![
             Line::styled(
-                "A hunt plan covers the materials your wishlist is short of with as few hunts as it can.",
+                "A hunt plan covers the materials your wishlist is short of with as few hunts and quests as it can.",
                 muted(),
             ),
             Line::raw(""),
@@ -95,46 +108,66 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
                 Span::styled("r", accent().add_modifier(Modifier::BOLD)),
                 Span::styled(" limit it to one rank   ", muted()),
                 Span::styled("Enter", accent().add_modifier(Modifier::BOLD)),
-                Span::styled(" show the monster's drops", muted()),
+                Span::styled(" show the monster's drops or the quest", muted()),
             ]),
         ];
     };
-    let monster = app.game.monster_name(step.monster).unwrap_or("?");
-    let mut lines = vec![
-        Line::from(vec![
-            Span::styled(monster.to_string(), bold()),
-            Span::styled(format!("  {}", step.rank.label()), muted()),
-        ]),
-        Line::styled(
-            "The best chance for each material it gives. A carve or a break may give it more than once.",
-            muted(),
-        ),
-        Line::raw(""),
-    ];
+    let mut lines = match step.origin {
+        Origin::Monster { monster, rank } => vec![
+            Line::from(vec![
+                Span::styled(app.game.monster_name(monster).unwrap_or("?").to_string(), bold()),
+                Span::styled(format!("  {}", rank.label()), muted()),
+            ]),
+            Line::styled(
+                "The best chance for each material it gives. A carve or a break may give it more than once.",
+                muted(),
+            ),
+            Line::raw(""),
+        ],
+        Origin::Quest(id) => quest_heading(app, id),
+    };
     for cover in &step.covers {
         let item = app.game.item_name(cover.item).unwrap_or("?");
         let have = app.save.item_count(cover.item);
+        let (chance, how) = match cover.how {
+            How::Drop(method) => (Span::styled(format!("{:>3}%  ", cover.percent), good()), method.label()),
+            How::Reward { second_box, quantity } => (
+                if cover.percent == 0 {
+                    Span::styled("always ", good())
+                } else {
+                    Span::styled(format!("{:>3}%  ", cover.percent), good())
+                },
+                format!("{} x{quantity}", if second_box { "second reward" } else { "main reward" }),
+            ),
+        };
         lines.push(Line::from(vec![
             Span::raw(format!("  {:<24}", fit(item, 24))),
-            Span::styled(format!("{:>3}%  ", cover.best.percent), good()),
-            Span::raw(format!("{:<14}", cover.best.method.label())),
+            chance,
+            Span::raw(format!("{how:<18}")),
             Span::styled(format!("have {have}, need {} more", cover.missing), muted()),
         ]));
         // where else it comes from
-        let others: Vec<String> = app
-            .game
-            .drops()
-            .sources(cover.item)
-            .iter()
-            .filter(|s| (s.monster, s.rank) != (step.monster, step.rank))
-            .filter_map(|s| Some((app.game.monster_name(s.monster)?, s)))
-            .map(|(name, s)| format!("{name} ({}, {}%)", s.rank.label().replace(" rank", ""), s.percent))
-            .fold(Vec::new(), |mut acc, text| {
-                if !acc.contains(&text) {
-                    acc.push(text);
-                }
-                acc
-            });
+        let mut best: Vec<((String, &'static str), u8)> = Vec::new();
+        for s in app.game.drops().sources(cover.item) {
+            if step.origin
+                == (Origin::Monster {
+                    monster: s.monster,
+                    rank: s.rank,
+                })
+            {
+                continue;
+            }
+            let Some(name) = app.game.monster_name(s.monster) else { continue };
+            let key = (name.to_string(), s.rank.label());
+            match best.iter_mut().find(|(k, _)| *k == key) {
+                Some((_, p)) => *p = (*p).max(s.percent),
+                None => best.push((key, s.percent)),
+            }
+        }
+        let others: Vec<String> = best
+            .into_iter()
+            .map(|((name, rank), p)| format!("{name} ({}, {p}%)", rank.replace(" rank", "")))
+            .collect();
         if !others.is_empty() {
             let shown: Vec<&str> = others.iter().take(4).map(String::as_str).collect();
             let more = others.len().saturating_sub(4);
@@ -142,5 +175,34 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
             lines.push(Line::styled(format!("      also: {}{tail}", shown.join(", ")), muted()));
         }
     }
+    lines
+}
+
+/// Texts in the quest files break lines for the game's small windows; the screen wants them on one.
+fn one_line(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// The top of a quest step's details: its title, goal, kind and monsters.
+fn quest_heading(app: &App, id: u16) -> Vec<Line<'static>> {
+    let Some(q) = app.game.quests().iter().find(|q| q.id == id) else {
+        return vec![Line::styled(format!("Quest {id}"), bold()), Line::raw("")];
+    };
+    let monsters: Vec<&str> = q.monsters.iter().filter_map(|&m| app.game.monster_name(m)).collect();
+    let mut lines = vec![
+        Line::from(vec![
+            Span::styled(one_line(&q.title), bold()),
+            Span::styled(format!("  {}★  {} min", q.stars, q.minutes), muted()),
+        ]),
+        Line::raw(one_line(&q.goal)),
+    ];
+    if !monsters.is_empty() {
+        lines.push(Line::from(vec![Span::styled("Monsters ", muted()), Span::raw(monsters.join(", "))]));
+    }
+    lines.push(Line::styled(
+        "The best chance for each material among its rewards (a box is rolled several times).",
+        muted(),
+    ));
+    lines.push(Line::raw(""));
     lines
 }

@@ -151,6 +151,20 @@ impl App {
         self.quests.state.select((len > 0).then_some(at));
     }
 
+    /// Open the Quests tab on one quest: search by its title and highlight it.
+    pub(super) fn show_quest(&mut self, id: u16) {
+        let Some(title) = self.game.quests().iter().find(|q| q.id == id).map(|q| q.title.clone()) else {
+            return;
+        };
+        self.quests.search = title.split_whitespace().collect::<Vec<_>>().join(" ");
+        self.quests.sort = QuestSort::Id;
+        self.refresh_quests();
+        let at = self.quests.rows.iter().position(|r| self.game.quests()[r.quest].id == id);
+        self.quests.state.select(at.or(Some(0)));
+        self.quests.scroll = 0;
+        self.tab = Tab::Quests;
+    }
+
     pub(super) fn quests_key(&mut self, code: KeyCode) -> bool {
         match code {
             KeyCode::Char('/') => self.searching = true,

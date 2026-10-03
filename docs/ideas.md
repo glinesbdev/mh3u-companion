@@ -24,9 +24,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Where to get things
 
-- **Smarter hunt plans.** The Hunt plan tab picks the monsters that cover the most missing materials, but not yet: how many hunts a
-  material is likely to take (from the chances and the number of carves), limiting the plan to the ranks the hunter has reached
-  (**Needs:** the save's hunter rank found), or including the quests that give the materials as rewards (the Quests tab has them; the plan does not use them yet).
+- **Smarter hunt plans.** The Hunt plan picks the monsters and quests that cover the most missing materials, but not yet: how many runs
+  a material is likely to take (from the chances and the number of carves and reward rolls), or limiting the plan to the ranks the
+  hunter has reached (**Needs:** the save's hunter rank found, and a quest's rank, which is not decoded).
 - **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards. Not decoded: the stage (map), the
   zenny reward and fees, the small monsters and the quest's rank (low, high or G) and where it is given (village or hub).
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
