@@ -1,3 +1,4 @@
+mod ansi2svg;
 use anyhow::{Context, Result, bail};
 use mh3u_core::{
     arc::Arc,
@@ -35,6 +36,16 @@ fn main() -> Result<()> {
                     hex(&c.after)
                 );
             }
+            Ok(())
+        }
+        // ansi2svg <capture> <out.svg> [FROM=TO ...]: draw a colored terminal capture as an SVG, replacing text first
+        Some("ansi2svg") if args.len() >= 3 => {
+            let capture = std::fs::read_to_string(&args[1]).with_context(|| args[1].clone())?;
+            let replacements: Vec<(String, String)> = args[3..]
+                .iter()
+                .filter_map(|a| a.split_once('=').map(|(f, t)| (f.to_string(), t.to_string())))
+                .collect();
+            std::fs::write(&args[2], ansi2svg::render(&capture, &replacements))?;
             Ok(())
         }
         // unlock-guess <user1> <game_dir>: armor pieces whose first listed material is in the pouch or box
@@ -204,7 +215,7 @@ fn main() -> Result<()> {
         // cemu-host <game_dir> <outdir>: start Cemu on the game and record every save block found in its memory
         Some("cemu-host") if args.len() == 3 => cemu_host(Path::new(&args[1]), Path::new(&args[2])),
         _ => bail!(
-            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | cemu-host <game_dir> <outdir>"
+            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | ansi2svg <capture> <out.svg> [FROM=TO...] | cemu-host <game_dir> <outdir>"
         ),
     }
 }

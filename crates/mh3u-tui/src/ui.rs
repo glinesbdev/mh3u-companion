@@ -1,4 +1,4 @@
-use crate::app::{App, Tab, TreeView, Via, group_digits, signed_zenny};
+use crate::app::{App, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
 use mh3u_core::prices::{Route, Source};
 use ratatui::{
@@ -31,7 +31,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let title = Line::from(vec![
         Span::styled(" MH3U Companion ", accent().add_modifier(Modifier::BOLD)),
         Span::styled("— ", muted()),
-        Span::styled(app.save.hunter_name.clone(), bold()),
+        Span::styled(app.save.hunter_name.clone(), theme::plain().add_modifier(Modifier::BOLD)),
         Span::styled(" · ", muted()),
         Span::styled(
             format!("{} z ", group_digits(u64::from(app.save.zenny))),
@@ -253,7 +253,9 @@ Any weapon    t  upgrade tree: the line down to it and everything
 
 The blacksmith line is inferred, not read from the game: a piece is on
 offer once you hold 1 of the first material in its recipe (starting gear
-always is). It matched the one early save checked.
+always is), and the game never takes it off the list, so the app
+remembers every piece it has seen on offer. An anvil marks those in the
+crafting list, and the unowned ones on the wishlist. It matched the one early save checked.
 
 A piece is craftable if you have the materials to create it, or to
 upgrade it and you own a parent weapon. Upgrading uses up the parent,
@@ -532,23 +534,24 @@ fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
     lines
 }
 
-/// Whether the blacksmith offers a piece. Inferred from the recipe (see `Recipe::unlock`), so it says "needs" and not "locked".
+/// Whether the blacksmith offers a piece. Inferred from the recipe (see `Recipe::unlock`) and from pieces seen on offer
+/// before, so it says "not seen on offer yet" and not "locked".
 fn unlock_line(app: &App, kind: u8, id: u16) -> Option<Line<'static>> {
-    use mh3u_core::recipes::Unlock;
     let label = |text: &str, style: Style| -> Line<'static> {
         Line::from(vec![Span::styled("Blacksmith  ", muted()), Span::styled(text.to_string(), style)])
     };
-    Some(match app.unlock(kind, id)? {
-        Unlock::Starter => label("✔ starting gear, always on offer", good()),
-        Unlock::Open => label("✔ on offer (you hold its first material)", good()),
-        Unlock::Locked(item) => label(
+    Some(match app.offer(kind, id)? {
+        Offer::Starter => label("✔ starting gear, always on offer", good()),
+        Offer::Holding => label("✔ on offer (you hold its first material)", good()),
+        Offer::Earlier => label("✔ on offer (seen earlier; the list never shrinks)", good()),
+        Offer::Needs(item) => label(
             &format!(
-                "✘ not on offer yet: needs 1 {} in the pouch or box",
+                "not seen on offer yet: hold 1 {} (pouch or box) to unlock it for good",
                 app.game.item_name(item).unwrap_or("?")
             ),
             warn(),
         ),
-        Unlock::Special => label("a special piece, unlocked some other way", muted()),
+        Offer::Special => label("a special piece, unlocked some other way", muted()),
     })
 }
 
@@ -657,10 +660,13 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
             let label = app.game.equipment_kind_label(p.kind).unwrap_or("?");
             let owned = if p.owned { " owned" } else { "" };
             let reason = p.reason.as_deref().map(|r| format!(" · {r}")).unwrap_or_default();
+            let anvil = if p.offered { theme::anvil() } else { theme::no_anvil() };
             ListItem::new(Line::from(vec![
                 mark,
                 star,
-                Span::raw(format!(" {:<26}", p.name)),
+                Span::raw(" "),
+                anvil,
+                Span::raw(format!("{:<24}", fit(&p.name, 24))),
                 rarity,
                 Span::styled(format!(" {label}{owned}"), muted()),
                 Span::styled(reason, warn()),
@@ -714,6 +720,15 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     );
 }
 
+/// `text` cut to at most `width` characters, with an ellipsis when it was cut.
+fn fit(text: &str, width: usize) -> String {
+    if text.chars().count() <= width {
+        text.to_string()
+    } else {
+        format!("{}…", text.chars().take(width - 1).collect::<String>())
+    }
+}
+
 fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
 
@@ -730,8 +745,15 @@ fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 Span::raw("")
             };
+            // an anvil marks a piece the blacksmith is offering that you don't own yet
+            let anvil = if !app.save.owns_equipment(kind, id) && app.at_blacksmith(kind, id) {
+                theme::anvil()
+            } else {
+                theme::no_anvil()
+            };
             ListItem::new(Line::from(vec![
-                Span::raw(format!("{name:<22}")),
+                anvil,
+                Span::raw(format!("{:<20}", fit(name, 20))),
                 Span::styled(format!("{label:<14}"), muted()),
                 state,
             ]))

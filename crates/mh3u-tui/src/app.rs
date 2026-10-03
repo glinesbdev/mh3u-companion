@@ -1,3 +1,4 @@
+use crate::unlocked::Unlocked;
 use crate::{commands, search};
 use anyhow::{Context, Result};
 use mh3u_core::{
@@ -139,6 +140,21 @@ impl EquipSort {
     }
 }
 
+/// Whether the blacksmith offers a piece (inferred, see `Recipe::unlock`), once pieces seen on offer before are counted.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Offer {
+    /// Starting gear.
+    Starter,
+    /// The first material is in the pouch or box now.
+    Holding,
+    /// Seen on offer earlier (the blacksmith never takes a piece off the list).
+    Earlier,
+    /// Not seen on offer: holding 1 of this item (id) would unlock it.
+    Needs(u16),
+    /// Village and event pieces, unlocked some other way.
+    Special,
+}
+
 /// The upgrade tree popup for one weapon.
 pub struct TreeView {
     pub kind: u8,
@@ -172,6 +188,8 @@ pub struct Piece {
     pub craftable: bool,
     /// True when the equipment box already holds this piece.
     pub owned: bool,
+    /// True when the blacksmith is offering the piece (see `App::at_blacksmith`).
+    pub offered: bool,
     /// When searching: why the piece matched, if not by name (e.g. "skill: Poison").
     pub reason: Option<String>,
 }
@@ -421,6 +439,9 @@ pub struct App {
     /// Forging costs seen in the game (see `mh3u_core::prices`) and the watcher that finds them.
     prices: Ledger,
     prices_path: Option<PathBuf>,
+    /// Pieces seen on offer at the blacksmith, per hunter, saved next to the ledger.
+    unlocked: Unlocked,
+    unlocked_path: Option<PathBuf>,
     /// Recipes learned from play (see `prices::Outcome::Learned`), for pieces the game data has no recipe for.
     learned_create: HashMap<(u8, u16), Recipe>,
     learned_upgrade: HashMap<(u8, u16), Upgrade>,
@@ -480,6 +501,12 @@ impl App {
                 .and_then(|p| std::fs::read_to_string(p).ok())
                 .map(|t| Ledger::parse(&t))
                 .unwrap_or_default(),
+            unlocked: prices_path
+                .as_ref()
+                .and_then(|p| std::fs::read_to_string(p.with_file_name("unlocked.tsv")).ok())
+                .map(|t| Unlocked::parse(&t))
+                .unwrap_or_default(),
+            unlocked_path: prices_path.as_ref().map(|p| p.with_file_name("unlocked.tsv")),
             prices_path,
             learned_create: HashMap::new(),
             learned_upgrade: HashMap::new(),
@@ -494,6 +521,7 @@ impl App {
         };
         app.rebuild_learned();
         app.catalog = app.build_catalog();
+        app.learn_unlocked();
         app.refresh_box();
         app.refresh_equipment();
         app.refresh_pieces();
@@ -683,21 +711,58 @@ impl App {
         kids
     }
 
-    /// Whether the blacksmith offers a piece you can create, by the inferred rule in `Recipe::unlock`. `None` when the game
-    /// data has no create recipe for it (a weapon reached only by upgrading).
-    pub fn unlock(&self, kind: u8, id: u16) -> Option<mh3u_core::recipes::Unlock> {
-        self.game.recipe(kind, id).map(|r| r.unlock(|item| self.save.item_count(item)))
+    /// Whether the blacksmith offers a piece you can create, by the inferred rule in `Recipe::unlock` plus the pieces seen on
+    /// offer before. `None` when the game data has no create recipe for it (a weapon reached only by upgrading).
+    pub fn offer(&self, kind: u8, id: u16) -> Option<Offer> {
+        use mh3u_core::recipes::Unlock;
+        Some(match self.game.recipe(kind, id)?.unlock(|item| self.save.item_count(item)) {
+            Unlock::Starter => Offer::Starter,
+            Unlock::Open => Offer::Holding,
+            Unlock::Locked(_) if self.unlocked.contains(&self.save.hunter_name, (kind, id)) => Offer::Earlier,
+            Unlock::Locked(item) => Offer::Needs(item),
+            Unlock::Special => Offer::Special,
+        })
     }
 
-    /// Whether the piece should be on the blacksmith's list now: unlocked or starting gear, or a weapon you own a parent of.
+    /// Whether the piece should be on the blacksmith's list now: on offer or starting gear, or a weapon you own a parent of.
     pub fn at_blacksmith(&self, kind: u8, id: u16) -> bool {
-        use mh3u_core::recipes::Unlock;
-        match self.unlock(kind, id) {
-            Some(Unlock::Starter | Unlock::Open) => true,
-            Some(Unlock::Locked(_) | Unlock::Special) => false,
+        match self.offer(kind, id) {
+            Some(Offer::Starter | Offer::Holding | Offer::Earlier) => true,
+            Some(Offer::Needs(_) | Offer::Special) => false,
             None => self
                 .upgrade_recipe(kind, id)
                 .is_some_and(|u| u.parents.iter().any(|&p| self.save.owns_equipment(kind, p))),
+        }
+    }
+
+    /// Remember every piece seen on offer: those whose first material is held now, and those whose price was seen or learned
+    /// in play (it must have been on the list to be crafted). Saved next to the ledger when something new turns up.
+    fn learn_unlocked(&mut self) {
+        use mh3u_core::recipes::Unlock;
+        let hunter = self.save.hunter_name.clone();
+        let mut changed = false;
+        for kind in (1..=5u8).chain(7..=19) {
+            for id in 1..2000u16 {
+                let Some(recipe) = self.game.recipe(kind, id) else { continue };
+                let real = self.game.equipment_name(kind, id).is_some_and(|n| !n.is_empty() && n != "DUMMY");
+                if real && recipe.unlock(|item| self.save.item_count(item)) == Unlock::Open {
+                    changed |= self.unlocked.add(&hunter, (kind, id));
+                }
+            }
+        }
+        for e in self.prices.entries() {
+            if matches!(e.source, Source::Seen | Source::Learned) && e.route == Route::Create {
+                changed |= self.unlocked.add(&hunter, (e.kind, e.id));
+            }
+        }
+        if changed && let Some(path) = &self.unlocked_path {
+            let result = path
+                .parent()
+                .map_or(Ok(()), std::fs::create_dir_all)
+                .and_then(|()| std::fs::write(path, self.unlocked.format()));
+            if let Err(e) = result {
+                self.status = format!("could not save unlocked pieces: {e}");
+            }
         }
     }
 
@@ -815,13 +880,14 @@ impl App {
                 name: entry.name.clone(),
                 craftable: self.can_make_now(kind, id),
                 owned: self.save.owns_equipment(kind, id),
+                offered: self.at_blacksmith(kind, id),
                 reason,
             };
             let unpriced = piece.owned && self.cost(kind, id, Route::Create).is_none() && self.cost(kind, id, Route::Upgrade).is_none();
             if (!self.craftable_only || piece.craftable)
                 && (!self.hide_owned || !piece.owned)
                 && (!self.unpriced_only || unpriced)
-                && (!self.blacksmith_only || self.at_blacksmith(kind, id))
+                && (!self.blacksmith_only || piece.offered)
             {
                 scored.push((score, piece));
             }
@@ -957,6 +1023,7 @@ impl App {
         let (old, new) = (self.save.zenny, save.zenny);
         self.zenny_change = next_zenny_change(self.zenny_change, old, new, Instant::now());
         self.save = save;
+        self.learn_unlocked();
         self.refresh_box();
         self.refresh_equipment();
         self.refresh_pieces();
@@ -1602,6 +1669,7 @@ mod tests {
             name: name.to_owned(),
             craftable,
             owned,
+            offered: false,
             reason: None,
         }
     }

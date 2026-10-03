@@ -3,6 +3,26 @@
 A terminal app for Monster Hunter 3 Ultimate (Wii U, played in Cemu). It reads your save file and your own game dump to show
 what you own and what you need to craft or upgrade gear.
 
+![Crafting: an armor piece with its stats, blacksmith status, cost and the materials you have](docs/screenshots/crafting-armor.svg)
+
+<details>
+<summary>More screenshots</summary>
+
+![Wishlist with a shopping list for everything on it](docs/screenshots/wishlist.svg)
+
+![The upgrade tree of a weapon](docs/screenshots/upgrade-tree.svg)
+
+![Weapon details](docs/screenshots/crafting-weapon.svg)
+
+![Equipment box, sorted by name](docs/screenshots/equipment.svg)
+
+![Items](docs/screenshots/items.svg)
+
+</details>
+
+The pictures are drawn from the app's own output by `scripts/screenshots.sh` (the hunter name is replaced), using the colors of a
+dark theme; your terminal's own palette applies when you run it.
+
 ## What it does
 
 - **Items**: item pouch and item box, with names and quantities. The header shows your hunter name and zenny. `/` is a fuzzy
@@ -19,14 +39,14 @@ what you own and what you need to craft or upgrade gear.
     match first: matches on a name, type or skill come first (grouped by slot), then the weaker ones (loose fuzzy matches, or
     pieces that merely need a material with that name), also grouped. `x` or `Esc` clears the search.
   - Armor details show rarity, slots, base defense, gender (Male / Female / Both) and type (Blademaster / Gunner / Both).
-  - `c` shows only what you can make now. `o` hides pieces you already own. `b` shows only what the blacksmith is offering (see below). `s` cycles the sort: game order, name, craftable
+  - `c` shows only what you can make now. `o` hides pieces you already own. `b` shows only what the blacksmith is offering (see below), and an anvil marks those pieces in the list. `s` cycles the sort: game order, name, craftable
     first, owned first. Like pieces always stay together in the order head, body, arms, waist, legs, talisman, then the weapon
     types; the sort orders them within each group. (Craftable first and owned first split the list by that flag, then group.)
-- **Blacksmith unlock**: the details panel says whether the blacksmith offers a piece. This is inferred, not read from the game: a piece is on offer once you hold 1 of the first material in its recipe (starting gear always is, and Yukumo-style special pieces follow some other rule). On a save from the start of the game it predicted exactly the two pieces the blacksmith offered beyond the starting gear. It has not been checked for weapons or against a late-game save, and it cannot tell whether a piece stays on offer after you spend the material.
+- **Blacksmith unlock**: the details panel says whether the blacksmith offers a piece. This is inferred, not read from the game: a piece is on offer once you hold 1 of the first material in its recipe (starting gear always is, and Yukumo-style special pieces follow some other rule). The game never takes a piece off the list, so the app remembers every piece it has seen on offer (per hunter, in `unlocked.tsv` next to the price ledger) and keeps showing it as on offer after you spend the material; a piece unlocked before you first ran the app, whose material you no longer hold, shows as not seen yet. On a save from the start of the game the rule predicted exactly the two pieces the blacksmith offered beyond the starting gear. It has not been checked for weapons or against a late-game save.
 - **Wishlist**: press `w` on a piece in the Crafting tab to add it (marked ★). If it can only be obtained by upgrading and you
   don't own a parent weapon, the parents it needs are added with it, back to the first weapon you own or can make from scratch
   (pieces that can be made from scratch never pull in parents). Removing a piece also removes the parents that were added
-  automatically for it, unless another wishlisted piece still needs them; parents you added yourself are kept. The Wishlist tab lists your pieces. On the right,
+  automatically for it, unless another wishlisted piece still needs them; parents you added yourself are kept. The Wishlist tab lists your pieces, with an anvil on those the blacksmith is offering that you don't own yet. On the right,
   the highlighted piece shows what it needs by itself (have / need), and below it is one running shopping list for everything
   on the wishlist (have / need / still missing). Pieces you already own are left out of the totals. For each
   piece it plans "create from scratch" whenever that is possible, because upgrading uses up the parent weapon, and plans an
@@ -36,7 +56,7 @@ what you own and what you need to craft or upgrade gear.
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
   line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set
-  `NO_COLOR=1` for plain text. Below 100 columns the panes stack instead of sitting side by side.
+  `NO_COLOR=1` for plain text. The anvil is a Nerd Font glyph (Unicode has no anvil); `MH3U_ICONS=plain` draws a hammer and pick instead for terminals without a Nerd Font. Below 100 columns the panes stack instead of sitting side by side.
 - **Sorting**: `s` on the Items tab sorts the item box by box order, name or quantity.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
@@ -84,7 +104,8 @@ wrong data.
 - `crates/mh3u-core`: parsers (save, `.arc` archives, `.gmd` text, `.rpx` executable, recipes, armor stats) and `GameData`.
 - `crates/mh3u-tui`: the terminal app.
 - `crates/mh3u-tools`: developer commands used to reverse-engineer the formats: `savediff`, `items`, `recipe`, `arcls`, `arcx`,
-  `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
+  `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
+- `scripts/screenshots.sh`: regenerates `docs/screenshots/*.svg` by running the app in tmux in a sandbox (needs a save and the release build; `mh3u-tools ansi2svg` draws the pictures).
 - `docs/formats.md`: what is known about each file format, and how confident that knowledge is.
 - `docs/live.md`: how live mode finds and reads the game's data.
 - `docs/prices.md`: the forging-cost ledger and the search for where the game stores prices.

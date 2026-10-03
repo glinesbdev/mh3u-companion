@@ -83,8 +83,10 @@ pieces and 0 on special village and event pieces (Yukumo armor and a few earring
 published database states: **at least 1 of the first material in the recipe, in the pouch or box**. Support: the game's material
 order matches that database's, and on a save from the start of the game (one Jaggi Hide in the box) the rule picks out exactly
 Jaggi Greaves and Jaggi Leggings, which were the only pieces the blacksmith offered beyond the starting gear. That is one
-observation. Unchecked: weapons (the rule also fires for Jaggid Shotels on that save, with no observation either way), a late-game
-save, and whether a piece stays on offer once the material is gone. `recipes.rs` has the rule and a test for the early-game save.
+observation. Unchecked: weapons (the rule also fires for Jaggid Shotels on that save, with no observation either way) and a late-game
+save. The game never removes a piece from the blacksmith's list, so holding the material is only a way to find out a piece is on
+offer; the app remembers each piece it has seen on offer in `unlocked.tsv` next to the price ledger, and treats a piece as on offer from
+then on. `recipes.rs` has the rule and a test for the early-game save.
 
 ## Not found / not decoded
 

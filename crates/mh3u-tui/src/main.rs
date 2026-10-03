@@ -4,6 +4,7 @@ mod search;
 mod theme;
 mod tree;
 mod ui;
+mod unlocked;
 
 use anyhow::{Context, Result, bail};
 use app::App;

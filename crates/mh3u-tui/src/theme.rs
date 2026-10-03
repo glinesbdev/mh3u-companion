@@ -70,12 +70,38 @@ pub fn selection() -> Style {
 
 pub const SELECTION_MARK: &str = "▶ ";
 
-/// A rounded pane. The pane that has focus gets the accent border and a bold title.
-pub fn pane<'a>(title: impl Into<String>, active: bool) -> Block<'a> {
+/// The terminal's normal text color, for text drawn on a border that would otherwise tint it.
+pub fn plain() -> Style {
+    Style::new().fg(Color::Reset)
+}
+
+/// A rounded pane. The pane that has focus gets the accent border and a bold title in the accent color; the others get a dark
+/// border and a title in the secondary text color. A title given as a styled `Line` keeps its own styles. (A title with no style
+/// of its own would take the border's color, which is too dark to read.)
+pub fn pane<'a>(title: impl Into<Line<'a>>, active: bool) -> Block<'a> {
+    let base = if active { selection() } else { muted() };
     Block::bordered()
         .border_type(BorderType::Rounded)
         .border_style(if active { accent() } else { faint() })
-        .title(Line::styled(title.into(), if active { bold() } else { Style::new() }))
+        .title(title.into().patch_style(base))
+}
+
+/// Which symbols to draw: Nerd Font glyphs by default (the anvil), plain Unicode with `MH3U_ICONS=plain`.
+fn plain_icons() -> bool {
+    static PLAIN: OnceLock<bool> = OnceLock::new();
+    *PLAIN.get_or_init(|| std::env::var("MH3U_ICONS").is_ok_and(|v| v.eq_ignore_ascii_case("plain")))
+}
+
+/// An anvil marks a piece the blacksmith is offering. Two cells wide (the glyph and a space it may spill into), so rows with and
+/// without it line up. Nerd Fonts have an anvil (`nf-md-anvil`); there is no anvil in Unicode, so the plain fallback is the
+/// hammer and pick.
+pub fn anvil() -> Span<'static> {
+    Span::styled(if plain_icons() { "⚒ " } else { "\u{f089b} " }, accent())
+}
+
+/// The blank that takes the place of [`anvil`], so rows line up.
+pub fn no_anvil() -> Span<'static> {
+    Span::raw("  ")
 }
 
 /// Side by side when the terminal is wide enough, stacked when it is not.
@@ -216,6 +242,12 @@ mod tests {
         let narrow = split(Rect::new(0, 0, 80, 40), 50);
         assert_eq!(narrow[0].x, narrow[1].x);
         assert!(narrow[1].y > narrow[0].y);
+    }
+
+    #[test]
+    fn the_anvil_and_its_blank_are_the_same_width() {
+        assert_eq!(anvil().content.chars().count(), no_anvil().content.chars().count());
+        assert!(anvil().content.ends_with(' '), "the glyph may spill into the cell after it");
     }
 
     #[test]
