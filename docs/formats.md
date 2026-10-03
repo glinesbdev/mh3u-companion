@@ -117,6 +117,14 @@ drop (ores, bugs, fish) are not covered either.
 The game never removes a piece from the blacksmith's list, so the app remembers each piece it has seen on offer in `unlocked.tsv`
 next to the price ledger. `blacksmith.rs` has the rule and tests on the saves before and after the Arzuros quest.
 
+## The blacksmith's menu order
+
+The menu lists the pieces on offer in the order of the executable's recipe tables (see `recipes.rs`), not by piece id. For the head
+menu of one hunter it showed Leather Headgear (1), Piscine Mask (2), Chainmail Headgear (3), Hunter's Helm (4) and Cap (5), Alloy
+Helm (8) and Cap (9), Bone Helm (6) and Cap (7), Jaggi Helm (10) and Cap (11), Arzuros Helm (56) and Cap (57). The table has rows
+1, 66, 2, 3, 4, 5, 8, 9, 6, 7, 12-15, 10, 11, 56, 57..., so the menu is the table with the rows that are not on offer left out. Where the
+game records which rows are on offer is not found yet (`:scan`, see `docs/live.md`).
+
 ## Monster hit zones
 
 Each monster's archive `arc/enemy/emNNN.arc` (NNN = the monster's id in the name table) holds `enemy\emNNN\em_status00`, a "SME" block.

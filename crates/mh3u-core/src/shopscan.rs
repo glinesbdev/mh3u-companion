@@ -104,6 +104,141 @@ pub fn scan(mem: &ProcMem, wanted: &HashSet<u16>, min_len: usize, keep: usize) -
     Ok(found)
 }
 
+/// How a row of flags (one per piece) could be stored.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Layout {
+    /// One byte per flag, 0 or 1.
+    Bytes,
+    /// A big-endian u16 per flag, 0 or 1.
+    Words,
+    /// A big-endian u32 per flag, 0 or 1.
+    Dwords,
+    /// Packed bits, the first flag in the top bit of the first byte.
+    BitsMsb,
+    /// Packed bits, the first flag in the lowest bit of the first byte.
+    BitsLsb,
+    /// Packed in big-endian u32 words, the first flag in the lowest bit of the first word.
+    BitsWord,
+}
+
+pub const LAYOUTS: [Layout; 6] = [
+    Layout::Bytes,
+    Layout::Words,
+    Layout::Dwords,
+    Layout::BitsMsb,
+    Layout::BitsLsb,
+    Layout::BitsWord,
+];
+
+impl Layout {
+    /// Flag `i` of an array starting at `data[0]`; `None` if it is not a clean flag (a value other than 0 or 1) or past the end.
+    fn flag(self, data: &[u8], i: usize) -> Option<bool> {
+        let value = |width: usize| -> Option<bool> {
+            let at = i * width;
+            let cell = data.get(at..at + width)?;
+            match (cell[..width - 1].iter().all(|&b| b == 0), cell[width - 1]) {
+                (true, 0) => Some(false),
+                (true, 1) => Some(true),
+                _ => None,
+            }
+        };
+        match self {
+            Layout::Bytes => value(1),
+            Layout::Words => value(2),
+            Layout::Dwords => value(4),
+            Layout::BitsMsb => Some(data.get(i / 8)? >> (7 - i % 8) & 1 == 1),
+            Layout::BitsLsb => Some(data.get(i / 8)? >> (i % 8) & 1 == 1),
+            Layout::BitsWord => Some(data.get((i / 32) * 4 + 3 - (i % 32) / 8)? >> (i % 8) & 1 == 1),
+        }
+    }
+}
+
+/// A place where the flags of a pattern are, with at most `max_miss` flags different.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FlagHit {
+    pub host: u64,
+    pub layout: Layout,
+    pub misses: usize,
+    /// Which pattern (by position in the list given to `scan_flags`).
+    pub pattern: usize,
+}
+
+/// Every offset in `data` (below `start_below`) where the flags of `pattern` are found in `layout`, with up to `max_miss` different.
+pub fn flag_matches(data: &[u8], pattern: &[bool], layout: Layout, max_miss: usize, start_below: usize) -> Vec<(usize, usize)> {
+    let mut out = Vec::new();
+    // A cheap test that rules out nearly every offset before the full comparison. For flags stored as numbers: the first flag that
+    // is set must read 1. For packed bits: the first byte may differ from the pattern's first eight flags by at most `max_miss` bits.
+    let anchor = pattern.iter().position(|&f| f);
+    let first_byte = (pattern.len() >= 8).then(|| {
+        let bits = |i: usize| u8::from(pattern[i]);
+        match layout {
+            Layout::BitsMsb => (0, (0..8).fold(0u8, |b, i| b | bits(i) << (7 - i))),
+            _ => (
+                if layout == Layout::BitsWord { 3 } else { 0 },
+                (0..8).fold(0u8, |b, i| b | bits(i) << i),
+            ),
+        }
+    });
+    let width = match layout {
+        Layout::Words => 2,
+        Layout::Dwords => 4,
+        _ => 1,
+    };
+    for o in 0..data.len().min(start_below) {
+        let plausible = match layout {
+            Layout::Bytes | Layout::Words | Layout::Dwords => anchor.is_none_or(|a| data.get(o + a * width + width - 1) == Some(&1)),
+            _ => first_byte.is_none_or(|(at, want)| data.get(o + at).is_some_and(|&b| ((b ^ want).count_ones() as usize) <= max_miss)),
+        };
+        if !plausible {
+            continue;
+        }
+        let mut misses = 0;
+        let mut ok = true;
+        for (i, &want) in pattern.iter().enumerate() {
+            match layout.flag(&data[o..], i) {
+                Some(got) if got == want => {}
+                Some(_) => {
+                    misses += 1;
+                    if misses > max_miss {
+                        ok = false;
+                        break;
+                    }
+                }
+                None => {
+                    ok = false;
+                    break;
+                }
+            }
+        }
+        if ok {
+            out.push((o, misses));
+        }
+    }
+    out
+}
+
+/// Search the emulator's memory for any of the flag patterns in any layout. Best (fewest misses) first, at most `keep`.
+pub fn scan_flags(mem: &ProcMem, patterns: &[Vec<bool>], max_miss: usize, keep: usize) -> io::Result<Vec<FlagHit>> {
+    let mut hits = Vec::new();
+    mem.for_each_chunk(4096, |addr, data| {
+        for (pattern, flags) in patterns.iter().enumerate() {
+            for layout in LAYOUTS {
+                for (o, misses) in flag_matches(data, flags, layout, max_miss, CHUNK_LEN) {
+                    hits.push(FlagHit {
+                        host: addr + o as u64,
+                        layout,
+                        misses,
+                        pattern,
+                    });
+                }
+            }
+        }
+    })?;
+    hits.sort_by_key(|h| (h.misses, h.host));
+    hits.truncate(keep);
+    Ok(hits)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -166,6 +301,46 @@ mod tests {
         // an id repeated ends the run, and a run that only goes up is not "shuffled"
         let up = be(&[3, 5, 9, 12], 4);
         assert!(runs(&up, &wanted, 4, 4, up.len(), Order::Shuffled).is_empty());
+    }
+
+    #[test]
+    fn flags_are_found_in_each_layout() {
+        let pattern = [true, false, true, true, false, false, true, false, true, true];
+        let at = |bytes: &[u8]| {
+            let mut d = vec![0xffu8; 3];
+            d.extend_from_slice(bytes);
+            d.extend_from_slice(&[0xff; 3]);
+            d
+        };
+        let per = |w: usize| -> Vec<u8> {
+            pattern
+                .iter()
+                .flat_map(|&f| (0..w).map(move |k| u8::from(f && k == w - 1)))
+                .collect()
+        };
+        for (layout, w) in [(Layout::Bytes, 1), (Layout::Words, 2), (Layout::Dwords, 4)] {
+            let d = at(&per(w));
+            assert_eq!(flag_matches(&d, &pattern, layout, 0, d.len()), vec![(3, 0)], "{layout:?}");
+        }
+        // bits: 1011 0010 11 -> MSB first 0xb2 0xc0; LSB first 0x4d 0x03
+        let d = at(&[0xb2, 0xc0]);
+        assert_eq!(flag_matches(&d, &pattern, Layout::BitsMsb, 0, d.len()), vec![(3, 0)]);
+        let d = at(&[0x4d, 0x03]);
+        assert_eq!(flag_matches(&d, &pattern, Layout::BitsLsb, 0, d.len()), vec![(3, 0)]);
+        // word layout: flag 0 is the lowest bit of the last byte of the first word
+        let d = at(&[0, 0, 0, 0x4d]);
+        assert!(flag_matches(&d, &pattern[..8], Layout::BitsWord, 0, d.len()).contains(&(3, 0)));
+    }
+
+    #[test]
+    fn a_flag_that_is_not_zero_or_one_is_not_a_flag_and_misses_are_counted() {
+        let d = [0u8, 1, 1, 7, 0];
+        assert!(flag_matches(&d, &[false, true, true, true], Layout::Bytes, 0, d.len()).is_empty());
+        let d = [0u8, 1, 1, 1, 0];
+        assert_eq!(
+            flag_matches(&d, &[false, true, false, true], Layout::Bytes, 1, d.len()),
+            vec![(0, 1)]
+        );
     }
 
     #[test]

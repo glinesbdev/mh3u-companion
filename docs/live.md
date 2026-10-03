@@ -92,7 +92,10 @@ Where the game keeps the list of pieces the blacksmith offers is not known (the 
 look for it, open the blacksmith's head-armor menu in the game and type `:scan head`. This searches all of Cemu's writable memory for
 runs of the piece ids the app expects on offer: big-endian u16 values, 2 to 24 bytes apart, either increasing or each once in any order (the menu may group pieces by set, not by id). It writes a report to
 `scan-<time>.txt` in the data folder with the best twelve runs: where each is (in Cemu's memory and as a guest address), which expected
-ids it lacks, and the bytes around it. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
+ids it lacks, and the bytes around it. It also searches for one flag per piece (by row of the game's recipe table, or by piece id) stored as
+bytes, words, dwords or packed bits, with up to two flags different from the app's idea, and lists those first (as `F1`, `F2`...). The
+blacksmith's menu lists pieces in the order of the recipe table (checked on a head menu: Alloy comes before Bone because the table has
+them in that order), so a list of ids in id order is not what to expect. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
 tables and score low. Compare a good run with what the menu really shows; a piece the run has and the app does not expect (or the
 other way round) is a place where the unlock rule is wrong.
 

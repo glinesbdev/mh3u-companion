@@ -128,6 +128,25 @@ pub fn parse(data: &[u8]) -> Result<HashMap<(u8, u16), Recipe>> {
     Ok(out)
 }
 
+/// The piece ids of each kind's recipe table in the order of its rows. The blacksmith's menu lists pieces in this order, not by id.
+pub fn row_order(data: &[u8]) -> HashMap<u8, Vec<u16>> {
+    let mut out = HashMap::new();
+    for &(kind, start) in TABLES {
+        let (mut o, mut ids) = (start, Vec::new());
+        while o + RECORD_LEN <= data.len() {
+            if data[o..o + RECORD_LEN].iter().all(|&b| b == 0) {
+                o += RECORD_LEN;
+                continue;
+            }
+            let Some((id, _)) = parse_record(data, o) else { break };
+            ids.push(id);
+            o += RECORD_LEN;
+        }
+        out.insert(kind, ids);
+    }
+    out
+}
+
 /// Parse the weapon upgrade tables into a map keyed by (equipment kind, weapon id).
 pub fn parse_upgrades(data: &[u8]) -> Result<HashMap<(u8, u16), Upgrade>> {
     let mut out: HashMap<(u8, u16), Upgrade> = HashMap::new();

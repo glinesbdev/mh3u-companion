@@ -10,6 +10,10 @@ use mh3u_core::{live as livemod, procmem::ProcMem, shopscan};
 use std::fmt::Write;
 
 const KEEP: usize = 12;
+/// Flags allowed to differ from the app's idea of what is on offer.
+const FLAG_MISSES: usize = 2;
+/// How many rows or ids a flag pattern covers.
+const FLAG_SPAN: usize = 48;
 
 impl App {
     pub(super) fn run_scan(&mut self, kind: u8) {
@@ -26,7 +30,10 @@ impl App {
             let base = livemod::find_live_block(&mem, std::slice::from_ref(&self.save.hunter_name))?
                 .and_then(|block| mem.read(block, 0x30).ok().and_then(|head| livemod::validate_block(&head, block)));
             let found = shopscan::scan(&mem, &wanted, min_len, KEEP)?;
-            let report = self.scan_report(&mem, kind, &wanted, base, &found);
+            let patterns = self.flag_patterns(kind);
+            let flags = shopscan::scan_flags(&mem, &patterns, FLAG_MISSES, KEEP)?;
+            let mut report = self.flag_report(&mem, base, &flags);
+            report += &self.scan_report(&mem, kind, &wanted, base, &found);
             Ok((report, found.len()))
         });
         self.status = match result {
@@ -40,6 +47,52 @@ impl App {
                 Err(e) => e,
             },
         };
+    }
+
+    /// What the app thinks is on offer as one flag per piece: by row of the game's recipe table (the order of the blacksmith's menu) and
+    /// by piece id.
+    fn flag_patterns(&self, kind: u8) -> Vec<Vec<bool>> {
+        let by_row = self
+            .game
+            .recipe_rows(kind)
+            .iter()
+            .take(FLAG_SPAN)
+            .map(|&id| self.at_blacksmith(kind, id))
+            .collect();
+        let by_id = (0..FLAG_SPAN as u16).map(|id| id != 0 && self.at_blacksmith(kind, id)).collect();
+        vec![by_row, by_id]
+    }
+
+    fn flag_report(&self, mem: &ProcMem, base: Option<u64>, hits: &[shopscan::FlagHit]) -> String {
+        let mut out = String::from(
+            "FLAGS: one flag per piece (by row of the recipe table, or by piece id), as bytes, words, bits...\n\
+             (the blacksmith menu lists pieces in recipe-table order)\n\n",
+        );
+        for (i, h) in hits.iter().enumerate() {
+            let guest = base
+                .and_then(|b| h.host.checked_sub(b))
+                .map_or("?".to_string(), |g| format!("{g:#010x}"));
+            let _ = writeln!(
+                out,
+                "F{} host {:#x} guest {guest} {:?} indexed by {} with {} flag(s) different",
+                i + 1,
+                h.host,
+                h.layout,
+                if h.pattern == 0 { "recipe row" } else { "piece id" },
+                h.misses
+            );
+            if let Ok(bytes) = mem.read(h.host.saturating_sub(16), 16 + 96) {
+                for (n, line) in bytes.chunks(16).enumerate() {
+                    let hex: Vec<String> = line.iter().map(|b| format!("{b:02x}")).collect();
+                    let _ = writeln!(out, "  {:#x}  {}", h.host.saturating_sub(16) + (n * 16) as u64, hex.join(" "));
+                }
+            }
+            out.push('\n');
+        }
+        if hits.is_empty() {
+            out.push_str("no flags found\n\n");
+        }
+        out
     }
 
     fn write_scan_report(&self, report: &str) -> Result<PathBuf, String> {

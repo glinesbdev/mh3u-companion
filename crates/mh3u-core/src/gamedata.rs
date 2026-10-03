@@ -71,6 +71,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// Piece ids of each equipment kind's recipe table, in row order (the order of the blacksmith's menu).
+    recipe_rows: HashMap<u8, Vec<u16>>,
     quests: Vec<crate::quest::Quest>,
     skills: Vec<String>,
     equipment: HashMap<u8, EquipmentTable>,
@@ -160,6 +162,7 @@ impl GameData {
             armor,
             weapons,
             drops,
+            recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
             skills: names("Skill_Type_eng")?,
             equipment,
@@ -186,6 +189,11 @@ impl GameData {
             return Vec::new();
         };
         arc.read(entry).map(|d| crate::hitzones::parse(&d)).unwrap_or_default()
+    }
+
+    /// The pieces of a kind in the order of the game's recipe table, which is the order the blacksmith's menu lists them in.
+    pub fn recipe_rows(&self, kind: u8) -> &[u16] {
+        self.recipe_rows.get(&kind).map_or(&[], Vec::as_slice)
     }
 
     /// The quests, by id.
