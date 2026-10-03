@@ -33,6 +33,9 @@ pub fn parse_maps(text: &str) -> Vec<Region> {
         .collect()
 }
 
+/// How far apart the chunks of `for_each_chunk` start.
+pub const CHUNK_LEN: usize = 16 << 20;
+
 pub struct ProcMem {
     pid: u32,
     file: File,
@@ -93,6 +96,24 @@ impl ProcMem {
         let mut buf = vec![0u8; len];
         self.file.read_exact_at(&mut buf, addr)?;
         Ok(buf)
+    }
+
+    /// Call `f(address, bytes)` for every chunk of readable, writable memory. Chunks overlap by `overlap` bytes, so something up to that
+    /// long that straddles a boundary is whole in one of them; `f` should only report things that start in the first
+    /// `CHUNK_LEN` bytes of one. Unreadable chunks are skipped.
+    pub fn for_each_chunk(&self, overlap: usize, mut f: impl FnMut(u64, &[u8])) -> io::Result<()> {
+        let mut buf = vec![0u8; CHUNK_LEN + overlap];
+        for region in self.regions()?.into_iter().filter(|r| r.readable && r.writable) {
+            let mut addr = region.start;
+            while addr < region.end {
+                let want = ((region.end - addr) as usize).min(CHUNK_LEN + overlap);
+                if self.file.read_exact_at(&mut buf[..want], addr).is_ok() {
+                    f(addr, &buf[..want]);
+                }
+                addr += CHUNK_LEN as u64;
+            }
+        }
+        Ok(())
     }
 
     /// Find every address where `pattern` occurs in readable, writable memory. Unreadable chunks are skipped.

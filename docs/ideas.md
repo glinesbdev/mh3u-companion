@@ -62,7 +62,8 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Live mode
 
-- Record each blacksmith visit's list (the unlock rule could then be checked against what the game shows).
+- Find where the game keeps the blacksmith's list (`:scan` looks for runs of piece ids in memory; its results are not in yet), then show the game's own
+  list instead of the app's rule. If the list is rebuilt from the hunted counters each time, record each visit's list to check the rule.
 - Tell when a quest ends, so that pickups can be grouped by quest instead of by pauses of 20 seconds (no quest state is known in the live
   block), and log the quest's name and the zenny it paid.
 - Search for sets off the UI thread, if a very large pool ever makes the Builds tab slow (it takes a few milliseconds today).

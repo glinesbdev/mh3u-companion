@@ -99,6 +99,9 @@ impl App {
             Ok(c) => c,
             Err(e) => return self.status = e,
         };
+        if let commands::Command::Scan { kind } = command {
+            return self.run_scan(kind);
+        }
         let connected = self.live_connected();
         let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {
             return self.status = "editing needs the game running through --live".into();
@@ -139,6 +142,7 @@ impl App {
                     push(edit::set_box_item(&data, found.id, count).map_err(|e| e.to_string())?, &mut data);
                     notes.push(format!("{} in the box set to {}", found.describe(), count.min(edit::MAX_STACK)));
                 }
+                commands::Command::Scan { .. } => {}
                 commands::Command::Stock { include_owned } => {
                     let (need, _) = self.shopping_need_with(include_owned);
                     for (id, wanted) in need {

@@ -44,6 +44,7 @@ mod money;
 mod monsters;
 mod price_watch;
 mod quests;
+mod scan;
 mod skills;
 mod sorting;
 mod wishlist;

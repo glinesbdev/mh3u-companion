@@ -5,6 +5,7 @@
 //! give iron ore     fill a stack to 99      give honey 5              add 5 (a stack holds 99)
 //! set honey 5       set exactly 5 (0 removes the item)
 //! stock             make sure the item pouch and box hold everything the wishlist needs
+//! scan head         look for the blacksmith's list in the game's memory (read-only; also body, arms, waist, legs)
 //! stock all         the same, also for wishlisted pieces you already own (to craft another copy)
 //! ```
 
@@ -33,6 +34,10 @@ pub enum Command {
     Stock {
         include_owned: bool,
     },
+    /// Look for the blacksmith's list of this kind of armor in the game's memory (read-only).
+    Scan {
+        kind: u8,
+    },
 }
 
 fn number(word: &str) -> Option<u32> {
@@ -42,7 +47,7 @@ fn number(word: &str) -> Option<u32> {
 pub fn parse(text: &str) -> Result<Command, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     let Some((&verb, args)) = words.split_first() else {
-        return Err("type a command: zenny, give, set or stock".into());
+        return Err("type a command: zenny, give, set, stock or scan".into());
     };
     match verb.to_lowercase().as_str() {
         "zenny" | "z" => {
@@ -82,7 +87,18 @@ pub fn parse(text: &str) -> Result<Command, String> {
             [all] if all.eq_ignore_ascii_case("all") => Ok(Command::Stock { include_owned: true }),
             _ => Err("stock covers the wishlist; 'stock all' also covers pieces you already own".into()),
         },
-        other => Err(format!("unknown command '{other}': zenny, give, set or stock")),
+        "scan" => {
+            let kind = match args.first().map(|w| w.to_lowercase()).as_deref() {
+                None | Some("head") => 5,
+                Some("body") => 1,
+                Some("arms") => 2,
+                Some("waist") => 3,
+                Some("legs") => 4,
+                _ => return Err("scan head, body, arms, waist or legs".into()),
+            };
+            Ok(Command::Scan { kind })
+        }
+        other => Err(format!("unknown command '{other}': zenny, give, set, stock or scan")),
     }
 }
 
@@ -204,6 +220,13 @@ mod tests {
         assert!(parse("set honey").is_err());
         assert!(parse("give").is_err());
         assert!(parse("give honey 99999999").is_err());
+    }
+
+    #[test]
+    fn scan_takes_a_kind_of_armor_and_defaults_to_the_head() {
+        assert_eq!(parse("scan"), Ok(Command::Scan { kind: 5 }));
+        assert_eq!(parse("scan Legs"), Ok(Command::Scan { kind: 4 }));
+        assert!(parse("scan feet").is_err());
     }
 
     #[test]

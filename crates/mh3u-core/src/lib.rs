@@ -32,4 +32,5 @@ pub mod quest;
 pub mod recipes;
 pub mod rpx;
 pub mod save;
+pub mod shopscan;
 pub mod weapons;

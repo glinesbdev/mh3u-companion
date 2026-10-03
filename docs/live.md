@@ -78,12 +78,23 @@ type a command:
 | `give honey 5` | add 5 (a stack holds 99) |
 | `set honey 5` | set exactly 5; `set honey 0` removes it |
 | `stock` | add whatever the Wishlist tab's shopping list is still missing |
+| `scan head` | read-only: look in the game's memory for the blacksmith's list of head pieces (also `body`, `arms`, `waist`, `legs`); see below |
 | `stock all` | the same, but also for wishlisted pieces you already own (for crafting another copy, e.g. to learn a starter weapon's price) |
 
 Edited values are what the game sees from then on (a shop or the item box shows them), and they come back to the screen like
 any other live change. **If you save in the game, the edits are saved with them.** So when edit mode starts, the save slots
 (`user1`-`user3`, `system`) are copied to `~/.local/share/mh3u-companion/backups/<unix time>/`, and the status line says
 where. It is a good idea to use a spare hunter.
+
+### Finding the blacksmith's list (`scan`)
+
+Where the game keeps the list of pieces the blacksmith offers is not known (the app works it out from the monsters you have hunted). To
+look for it, open the blacksmith's head-armor menu in the game and type `:scan head`. This searches all of Cemu's writable memory for
+runs of the piece ids the app expects on offer: big-endian u16 values, increasing, 2 to 24 bytes apart. It writes a report to
+`scan-<time>.txt` in the data folder with the best twelve runs: where each is (in Cemu's memory and as a guest address), which expected
+ids it lacks, and the bytes around it. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
+tables and score low. Compare a good run with what the menu really shows; a piece the run has and the app does not expect (or the
+other way round) is a place where the unlock rule is wrong.
 
 Edits only touch the item box (new items go in the first empty slot) and the wallet, and are made by overwriting the same
 bytes the game uses, found as described above.
