@@ -104,7 +104,7 @@ It looks for the game dump under `~/games/wiiu/` (a folder whose name contains `
 mh3u-tui --game-dir "/path/to/MONSTER HUNTER 3 ULTIMATE [Game] [0005000010118300]" --save /path/to/user1
 ```
 
-or set `MH3U_GAME_DIR` and `MH3U_SAVE`. The game has three save slots (`user1`, `user2`, `user3`); `--slot 2` picks the second
+or set `MH3U_GAME_DIR` and `MH3U_SAVE` (`--help` lists the options). The game has three save slots (`user1`, `user2`, `user3`); `--slot 2` picks the second
 one in the default Cemu folder. Press `?` in the app for the keys.
 
 The game data is read from **your own dump** at runtime. No game data is stored in this repository.
@@ -115,11 +115,12 @@ wrong data.
 
 ## Layout
 
-- `crates/mh3u-core`: parsers (save, `.arc` archives, `.gmd` text, `.rpx` executable, recipes, armor stats) and `GameData`.
-- `crates/mh3u-tui`: the terminal app.
+- `crates/mh3u-core`: parsers (save, `.arc` archives, `.gmd` text, `.rpx` executable, recipes, armor and weapon stats, drops) and `GameData`.
+- `crates/mh3u-tui`: the terminal app (`app/` holds the state and keys by feature, `ui/` the drawing).
 - `crates/mh3u-tools`: developer commands used to reverse-engineer the formats: `savediff`, `items`, `recipe`, `arcls`, `arcx`,
-  `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
+  `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `unlock-monsters`, `drops`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
 - `scripts/screenshots.sh`: regenerates `docs/screenshots/*.svg` by running the app in tmux in a sandbox (needs a save and the release build; `mh3u-tools ansi2svg` draws the pictures).
+- `docs/architecture.md`: how the code is organised and how to add a tab.
 - `docs/ideas.md`: ideas for the app, with what each one needs.
 - `docs/formats.md`: what is known about each file format, and how confident that knowledge is.
 - `docs/live.md`: how live mode finds and reads the game's data.

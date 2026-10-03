@@ -44,6 +44,14 @@ pub fn rpx_path(game_dir: &Path) -> Result<std::path::PathBuf> {
         .with_context(|| format!("no .rpx in {}", game_dir.join("code").display()))
 }
 
+/// The names and descriptions of one kind of equipment, indexed by piece id.
+struct EquipmentTable {
+    label: &'static str,
+    names: Vec<String>,
+    /// Empty when the dump lacks the descriptions.
+    details: Vec<String>,
+}
+
 pub struct GameData {
     items: Vec<String>,
     /// Text tables the game ships for descriptions; empty when a dump lacks them.
@@ -56,8 +64,7 @@ pub struct GameData {
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
     skills: Vec<String>,
-    /// (kind, label, names, descriptions)
-    equipment: Vec<(u8, &'static str, Vec<String>, Vec<String>)>,
+    equipment: HashMap<u8, EquipmentTable>,
 }
 
 /// Join the game's hard-wrapped text lines into one line. A line ending in a hyphen joins to the next with no space.
@@ -97,7 +104,14 @@ impl GameData {
         };
         let equipment = EQUIPMENT_KINDS
             .iter()
-            .map(|&(kind, label, file)| Ok((kind, label, names(file)?, optional(&file.replace("_eng", "_Exp_eng")))))
+            .map(|&(kind, label, file)| {
+                let table = EquipmentTable {
+                    label,
+                    names: names(file)?,
+                    details: optional(&file.replace("_eng", "_Exp_eng")),
+                };
+                Ok((kind, table))
+            })
             .collect::<Result<_>>()?;
         let rpx_path = rpx_path(game_dir)?;
         let rpx_bytes = std::fs::read(&rpx_path).with_context(|| format!("reading {}", rpx_path.display()))?;
@@ -131,8 +145,7 @@ impl GameData {
     }
 
     pub fn equipment_name(&self, kind: u8, id: u16) -> Option<&str> {
-        let (_, _, names, _) = self.equipment.iter().find(|(k, ..)| *k == kind)?;
-        names.get(id as usize).map(String::as_str)
+        self.equipment.get(&kind)?.names.get(id as usize).map(String::as_str)
     }
 
     /// The name of a piece that exists: not empty and not one of the game's `DUMMY` placeholders.
@@ -142,18 +155,18 @@ impl GameData {
 
     /// The ids of the pieces of one kind that exist, ascending.
     pub fn piece_ids(&self, kind: u8) -> impl Iterator<Item = u16> + '_ {
-        let count = self
-            .equipment
-            .iter()
-            .find(|(k, ..)| *k == kind)
-            .map_or(0, |(_, _, names, _)| names.len());
+        let count = self.equipment.get(&kind).map_or(0, |t| t.names.len());
         (1..count.min(usize::from(u16::MAX)) as u16).filter(move |&id| self.piece_name(kind, id).is_some())
     }
 
     /// The game's description of a piece of equipment, on one line. `None` when there is none or it is a placeholder.
     pub fn equipment_description(&self, kind: u8, id: u16) -> Option<&str> {
-        let (_, _, _, details) = self.equipment.iter().find(|(k, ..)| *k == kind)?;
-        details.get(id as usize).map(String::as_str).filter(|t| !t.is_empty())
+        self.equipment
+            .get(&kind)?
+            .details
+            .get(id as usize)
+            .map(String::as_str)
+            .filter(|t| !t.is_empty())
     }
 
     /// The game's description of an item, on one line.
@@ -272,7 +285,7 @@ impl GameData {
         let mut hits: Vec<_> = self
             .equipment
             .iter()
-            .flat_map(|(kind, _, names, _)| names.iter().enumerate().map(move |(i, n)| (*kind, i as u16, n.as_str())))
+            .flat_map(|(&kind, t)| t.names.iter().enumerate().map(move |(i, n)| (kind, i as u16, n.as_str())))
             .filter(|(_, _, n)| n.to_lowercase().contains(&needle))
             .collect();
         hits.sort_by_key(|&(k, i, _)| (k, i));
@@ -280,7 +293,7 @@ impl GameData {
     }
 
     pub fn equipment_kind_label(&self, kind: u8) -> Option<&'static str> {
-        self.equipment.iter().find(|(k, ..)| *k == kind).map(|(_, label, _, _)| *label)
+        self.equipment.get(&kind).map(|t| t.label)
     }
 }
 
