@@ -10,10 +10,10 @@ what you own and what you need to craft or upgrade gear.
 - **Equipment**: your equipment box. The weapon and armor you are wearing are marked `worn`.
 - **Crafting**: every armor piece and weapon that has a recipe, with have/need counts for each material (pouch and box together).
   - Armor shows rarity, gem slots, base defense, resistances and skills.
-  - Weapons show a "Create from scratch" recipe and an "Upgrade from" recipe, and whether you own the parent weapon.
+  - Weapons show rarity, gem slots, attack and affinity (read from the game files), a "Create from scratch" recipe and an "Upgrade from" recipe, and whether you own the parent weapon.
   - `/` is a fuzzy search over name, type, armor skill, materials, and the labels `male` / `female` / `blademaster` / `gunner`
     (a piece for both genders or both classes matches both). A number from 1 to 10 (or `r3`) filters by rarity, so `attack 3`
-    finds armor with an Attack skill and rarity 3. Rarity is known for armor only, so a rarity search never shows weapons.
+    finds armor with an Attack skill and rarity 3 (weapons have a rarity too, so they match as well).
     Several words must all match: `psychic head`, `female gunner 5`. Typos are tolerated (`rthlos mail` finds Rathalos Mail).
     Matches that aren't by name show why (`skill: Poison`, `needs: Iron Ore`). With a search active the list is ordered best
     match first: matches on a name, type or skill come first (grouped by slot), then the weaker ones (loose fuzzy matches, or
@@ -39,7 +39,7 @@ what you own and what you need to craft or upgrade gear.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
 
-Not shown yet: zenny costs for crafting (except those seen in live mode), weapon stats (attack, sharpness), armor max defense. See `docs/formats.md`.
+Not shown yet: sharpness and element for weapons, armor max defense, zenny costs for armor (except those seen in live mode). See `docs/formats.md`.
 
 ## Live mode
 

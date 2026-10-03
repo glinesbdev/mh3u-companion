@@ -58,9 +58,26 @@ pieces on every field when compared with Kiranico, and 24 of 25 checks against i
 Bytes 1-5 (model ids, max defense data) are not decoded. The gender/class flags were checked against Kiranico on 964
 pieces (no exceptions) and against five in-game values; all 1,605 non-dummy records in the five tables decode.
 
+## Weapon stats
+
+The weapon tables used for prices (`docs/prices.md`, `weapons.rs`) also hold, relative to the price field `p` (a big-endian u32):
+
+| type | stride | rarity - 1 | attack (u16) | affinity (i8, %) | gem slots |
+|---|---|---|---|---|---|
+| melee (9 types) | 28 | `p-2` | `p+6` | `p+9` | `p+16` |
+| heavy/light bowgun, bow | 100 | `p-10` | `p-8` | `p+6` | `p+5` |
+
+The stored attack is a base number; the displayed attack is that times a per-type factor: great sword 4.8, sword & shield 1.4,
+hammer 5.2, lance 2.3, long sword 3.3, switch axe 4.6, gunlance 2.3, dual blades 1.4, hunting horn 4.6, light bowgun 1.3,
+bow 1.2, heavy bowgun 1.48 (rounded down). Compared with Kiranico's weapon list, 97 to 100% of weapons agree on attack (the rest
+are ids past the tables' ends, which hold zeros, and a few disagreements in that list); slots and affinity agree on 97 to 99%.
+Not yet checked against the game's own screens. Sharpness and element are not in these records and were not found in the
+executable's data or rodata sections as plain bytes, 16-bit values, cumulative values or scaled values (a table in an archive
+or in code is still possible).
+
 ## Not found / not decoded
 
 - **Zenny cost of armor.** Not found; prices follow the set and class. Weapon costs are decoded (`weapons.rs`): each weapon
   stats record starts with the price, upgrade cost = price, create cost = 1.5 x price. See `docs/prices.md`.
-- Weapon attack, sharpness, element; armor max defense; talisman data.
+- Weapon sharpness and element; armor max defense; talisman data.
 - Which pieces the blacksmith has unlocked.

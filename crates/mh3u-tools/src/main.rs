@@ -173,11 +173,13 @@ fn main() -> Result<()> {
         // prices-hint <game_dir> <ledger>: look for where the ledger's costs are stored in the game's data
         Some("prices-hint") if args.len() == 3 => prices_hint(Path::new(&args[1]), Path::new(&args[2])),
         // armor-todo <game_dir> <ledger>: craftable armor pieces whose price is not in the ledger yet
+        // weapon-names <game_dir>: every weapon as `kind id name`, for joining with other tables
+        Some("weapon-names") if args.len() == 2 => weapon_names(Path::new(&args[1])),
         Some("armor-todo") if args.len() == 3 => armor_todo(Path::new(&args[1]), Path::new(&args[2])),
         // cemu-host <game_dir> <outdir>: start Cemu on the game and record every save block found in its memory
         Some("cemu-host") if args.len() == 3 => cemu_host(Path::new(&args[1]), Path::new(&args[2])),
         _ => bail!(
-            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | cemu-host <game_dir> <outdir>"
+            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | cemu-host <game_dir> <outdir>"
         ),
     }
 }
@@ -376,6 +378,18 @@ fn prices_add(game_dir: &Path, ledger_path: &Path, route: &str, cost: &str, name
 /// several different pieces agree on is a strong sign of where the costs are stored.
 /// (kind, route, value width, divisor, spacing, base offset)
 /// Armor pieces with a create recipe and no ledger price, cheapest-looking first (rarity, then how many materials).
+fn weapon_names(game_dir: &Path) -> Result<()> {
+    let game = GameData::load(game_dir)?;
+    for kind in 7..=19u8 {
+        for id in 1..400u16 {
+            if let Some(name) = game.equipment_name(kind, id).filter(|n| !n.is_empty()) {
+                println!("{kind}\t{id}\t{name}");
+            }
+        }
+    }
+    Ok(())
+}
+
 fn armor_todo(game_dir: &Path, ledger_path: &Path) -> Result<()> {
     let game = GameData::load(game_dir)?;
     let ledger = Ledger::parse(&std::fs::read_to_string(ledger_path).unwrap_or_default());

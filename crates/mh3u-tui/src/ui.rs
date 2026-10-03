@@ -387,6 +387,23 @@ fn armor_lines(app: &App, a: &mh3u_core::armor::ArmorStats) -> Vec<Line<'static>
     lines
 }
 
+/// A weapon's stats: rarity, gem slots, attack and affinity.
+fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
+    let mut lines = vec![Line::from(vec![
+        theme::rarity_badge(w.rarity),
+        Span::raw(" "),
+        Span::styled(theme::gems(w.slots), accent()),
+        Span::styled(format!("  Attack {}", w.attack), bold()),
+    ])];
+    if w.affinity != 0 {
+        lines.push(Line::from(vec![
+            Span::styled("Affinity ", muted()),
+            Span::styled(format!("{:+}%", w.affinity), theme::signed_style(i32::from(w.affinity))),
+        ]));
+    }
+    lines
+}
+
 fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
 
@@ -400,8 +417,8 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
             } else {
                 Span::raw(" ")
             };
-            let rarity = match app.game.armor_stats(p.kind, p.id) {
-                Some(a) => theme::rarity_badge(a.rarity),
+            let rarity = match app.game.equipment_rarity(p.kind, p.id) {
+                Some(r) => theme::rarity_badge(r),
                 None => Span::raw("   "),
             };
             let label = app.game.equipment_kind_label(p.kind).unwrap_or("?");
@@ -456,6 +473,8 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
         lines.push(Line::styled(app.game.equipment_kind_label(piece.kind).unwrap_or("?"), muted()));
         if let Some(a) = app.game.armor_stats(piece.kind, piece.id) {
             lines.extend(armor_lines(app, a));
+        } else if let Some(w) = app.game.weapon_stats(piece.kind, piece.id) {
+            lines.extend(weapon_lines(w));
         }
         lines.push(Line::raw(""));
         if let Some(recipe) = app.create_recipe(piece.kind, piece.id) {

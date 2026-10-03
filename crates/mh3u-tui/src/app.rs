@@ -146,7 +146,6 @@ struct Searchable {
     /// (display name, lowercase name)
     skills: Vec<(String, String)>,
     materials: Vec<(String, String)>,
-    /// Armor only (weapon rarity isn't decoded), so a rarity search never matches weapons.
     rarity: Option<u8>,
     /// Lowercase labels the piece can be found by: `male`, `female`, `blademaster`, `gunner`. A piece for both
     /// genders (or classes) carries both labels.
@@ -649,7 +648,7 @@ impl App {
                     }
                 }
                 Some(Searchable {
-                    rarity: stats.map(|a| a.rarity),
+                    rarity: self.game.equipment_rarity(kind, id),
                     tags,
                     kind,
                     id,

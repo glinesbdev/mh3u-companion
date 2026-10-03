@@ -49,7 +49,7 @@ pub struct GameData {
     recipes: HashMap<(u8, u16), Recipe>,
     upgrades: HashMap<(u8, u16), Upgrade>,
     armor: HashMap<(u8, u16), ArmorStats>,
-    weapon_prices: HashMap<(u8, u16), u32>,
+    weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     skills: Vec<String>,
     equipment: Vec<(u8, &'static str, Vec<String>)>,
 }
@@ -78,13 +78,13 @@ impl GameData {
         let data_section = rpx::section_at(&rpx_bytes, recipes::DATA_SECTION_ADDR)?;
         let (recipes, upgrades) = (recipes::parse(&data_section)?, recipes::parse_upgrades(&data_section)?);
         let armor = armor::parse(&data_section)?;
-        let weapon_prices = crate::weapons::parse(&data_section)?;
+        let weapons = crate::weapons::parse(&data_section)?;
         Ok(GameData {
             items: strings("Item00_eng")?,
             recipes,
             upgrades,
             armor,
-            weapon_prices,
+            weapons,
             skills: strings("Skill_Type_eng")?,
             equipment,
         })
@@ -114,7 +114,19 @@ impl GameData {
 
     /// What the forge charges for a weapon, from the game's own table. `None` for armor and unknown weapons.
     pub fn weapon_cost(&self, kind: u8, id: u16, via: crate::weapons::Via) -> Option<u32> {
-        self.weapon_prices.get(&(kind, id)).map(|&p| crate::weapons::cost(p, via))
+        self.weapons.get(&(kind, id)).map(|w| crate::weapons::cost(w.price, via))
+    }
+
+    /// Rarity, attack, affinity and gem slots of a weapon. `None` for armor and for weapons the tables don't cover.
+    pub fn weapon_stats(&self, kind: u8, id: u16) -> Option<&crate::weapons::Weapon> {
+        self.weapons.get(&(kind, id))
+    }
+
+    /// Rarity of an armor piece or weapon.
+    pub fn equipment_rarity(&self, kind: u8, id: u16) -> Option<u8> {
+        self.armor_stats(kind, id)
+            .map(|a| a.rarity)
+            .or_else(|| self.weapon_stats(kind, id).map(|w| w.rarity))
     }
 
     pub fn skill_name(&self, id: u8) -> Option<&str> {
