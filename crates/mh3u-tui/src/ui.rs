@@ -130,7 +130,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 keys.push(("s", "sort"));
             }
             Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree")]),
-            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree")]),
+            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("i", "skill info")]),
         }
         keys.extend([("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
@@ -311,6 +311,7 @@ fn empty_pane(f: &mut Frame, area: Rect, title: String, active: bool, lines: Vec
 
 fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 40);
+    let [box_area, details_area] = Layout::vertical([Constraint::Percentage(55), Constraint::Percentage(45)]).areas(right);
     let rows = |stacks: &[mh3u_core::save::ItemStack], indent: &str| -> Vec<ListItem<'static>> {
         stacks
             .iter()
@@ -366,10 +367,81 @@ fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
             .block(theme::pane(box_title, true))
             .highlight_style(theme::selection())
             .highlight_symbol(theme::SELECTION_MARK),
-        right,
+        box_area,
         &mut app.box_state,
     );
-    scrollbar(f, right, len, app.box_state.selected());
+    scrollbar(f, box_area, len, app.box_state.selected());
+
+    let lines = match app.box_state.selected().and_then(|i| app.box_view.get(i)) {
+        Some(stack) => item_details(app, stack.id),
+        None => Vec::new(),
+    };
+    f.render_widget(
+        Paragraph::new(lines)
+            .wrap(Wrap { trim: false })
+            .block(theme::pane(" Details ", false)),
+        details_area,
+    );
+}
+
+/// An item: what the game says it is, how many you hold, what the wishlist needs of it and which pieces are made with it.
+fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
+    let mut lines = vec![Line::styled(app.game.item_name(id).unwrap_or("?").to_string(), bold())];
+    lines.push(Line::from(vec![
+        Span::styled("In the pouch ", muted()),
+        Span::raw(
+            app.save
+                .pouch
+                .iter()
+                .filter(|s| s.id == id)
+                .map(|s| u32::from(s.count))
+                .sum::<u32>()
+                .to_string(),
+        ),
+        Span::styled("  ·  in the box ", muted()),
+        Span::raw(
+            app.save
+                .item_box
+                .iter()
+                .filter(|s| s.id == id)
+                .map(|s| u32::from(s.count))
+                .sum::<u32>()
+                .to_string(),
+        ),
+    ]));
+    if let Some(text) = app.game.item_description(id) {
+        lines.push(Line::raw(text.to_string()));
+    }
+    let (need, _) = app.shopping_need();
+    if let Some(&(_, n)) = need.iter().find(|&&(item, _)| item == id) {
+        let have = app.save.item_count(id);
+        lines.push(Line::raw(""));
+        lines.push(Line::from(vec![
+            Span::styled("Wishlist needs ", muted()),
+            Span::styled(format!("{have}/{n}"), theme::progress_style(have, n)),
+        ]));
+    }
+    let users: Vec<String> = app
+        .game
+        .recipes_using(id)
+        .into_iter()
+        .filter_map(|(kind, piece)| app.game.equipment_name(kind, piece).filter(|n| !n.is_empty() && *n != "DUMMY"))
+        .map(str::to_string)
+        .collect();
+    if !users.is_empty() {
+        lines.push(Line::raw(""));
+        const SHOWN: usize = 8;
+        let more = users.len().saturating_sub(SHOWN);
+        let mut text = users.iter().take(SHOWN).cloned().collect::<Vec<_>>().join(", ");
+        if more > 0 {
+            text.push_str(&format!(" … and {more} more"));
+        }
+        lines.push(Line::from(vec![
+            Span::styled(format!("Used in {} piece(s): ", users.len()), bold()),
+            Span::raw(text),
+        ]));
+    }
+    lines
 }
 
 fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
@@ -513,6 +585,11 @@ fn armor_lines(app: &App, a: &mh3u_core::armor::ArmorStats) -> Vec<Line<'static>
             Span::raw(format!("  {:<18}", app.game.skill_name(id).unwrap_or("?"))),
             Span::styled(format!("{pts:+}"), theme::signed_style(i32::from(pts))),
         ]));
+        if app.skill_info
+            && let Some(text) = app.game.skill_description(id)
+        {
+            lines.push(Line::styled(format!("    {text}"), muted()));
+        }
     }
     lines
 }
@@ -563,6 +640,9 @@ fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<boo
         Line::styled(name.to_string(), bold()),
         Line::styled(app.game.equipment_kind_label(kind).unwrap_or("?").to_string(), muted()),
     ];
+    if let Some(text) = app.game.equipment_description(kind, id) {
+        lines.push(Line::styled(text.to_string(), muted()));
+    }
     if let Some(a) = app.game.armor_stats(kind, id) {
         lines.extend(armor_lines(app, a));
     } else if let Some(w) = app.game.weapon_stats(kind, id) {

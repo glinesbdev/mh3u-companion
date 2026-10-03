@@ -411,6 +411,8 @@ pub struct App {
     pub piece_sort: PieceSort,
     pub box_sort: BoxSort,
     pub equip_sort: EquipSort,
+    /// Show what each skill does under it in the details panels.
+    pub skill_info: bool,
     /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
     pub equip_view: Vec<usize>,
     /// The upgrade tree popup, when open.
@@ -484,6 +486,7 @@ impl App {
             piece_sort: PieceSort::GameOrder,
             box_sort: BoxSort::BoxOrder,
             equip_sort: EquipSort::BoxOrder,
+            skill_info: false,
             equip_view: Vec::new(),
             tree: None,
             box_view: Vec::new(),
@@ -1494,6 +1497,7 @@ impl App {
             }
             KeyCode::Char('?') => self.show_help = true,
             KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
+            KeyCode::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
             KeyCode::Char(':') if self.edit_mode => {
                 self.commanding = true;
                 self.command.clear();

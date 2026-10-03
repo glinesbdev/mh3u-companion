@@ -46,12 +46,29 @@ pub fn rpx_path(game_dir: &Path) -> Result<std::path::PathBuf> {
 
 pub struct GameData {
     items: Vec<String>,
+    /// Text tables the game ships for descriptions; empty when a dump lacks them.
+    item_details: Vec<String>,
+    skill_details: Vec<String>,
+    monsters: Vec<String>,
     recipes: HashMap<(u8, u16), Recipe>,
     upgrades: HashMap<(u8, u16), Upgrade>,
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     skills: Vec<String>,
-    equipment: Vec<(u8, &'static str, Vec<String>)>,
+    /// (kind, label, names, descriptions)
+    equipment: Vec<(u8, &'static str, Vec<String>, Vec<String>)>,
+}
+
+/// Join the game's hard-wrapped text lines into one line. A line ending in a hyphen joins to the next with no space.
+fn unwrap_text(text: &str) -> String {
+    let mut out = String::new();
+    for line in text.lines().map(str::trim_end) {
+        if !out.is_empty() && !out.ends_with('-') {
+            out.push(' ');
+        }
+        out.push_str(line.trim_start());
+    }
+    out
 }
 
 impl GameData {
@@ -69,9 +86,15 @@ impl GameData {
                 .with_context(|| format!("{want} not found in archive"))?;
             gmd::parse(&arc.read(entry)?).with_context(|| want)
         };
+        // Descriptions are a nicety: a dump without them still works.
+        let optional = |file: &str| {
+            strings(file)
+                .map(|v| v.iter().map(|t| unwrap_text(t)).collect())
+                .unwrap_or_default()
+        };
         let equipment = EQUIPMENT_KINDS
             .iter()
-            .map(|&(kind, label, file)| Ok((kind, label, strings(file)?)))
+            .map(|&(kind, label, file)| Ok((kind, label, strings(file)?, optional(&file.replace("_eng", "_Exp_eng")))))
             .collect::<Result<_>>()?;
         let rpx_path = rpx_path(game_dir)?;
         let rpx_bytes = std::fs::read(&rpx_path).with_context(|| format!("reading {}", rpx_path.display()))?;
@@ -81,6 +104,9 @@ impl GameData {
         let weapons = crate::weapons::parse(&data_section)?;
         Ok(GameData {
             items: strings("Item00_eng")?,
+            item_details: optional("ItemDetail_eng"),
+            skill_details: optional("Skill_Type_Exp_eng"),
+            monsters: strings("Monster_eng").unwrap_or_default(),
             recipes,
             upgrades,
             armor,
@@ -100,8 +126,60 @@ impl GameData {
     }
 
     pub fn equipment_name(&self, kind: u8, id: u16) -> Option<&str> {
-        let (_, _, names) = self.equipment.iter().find(|(k, ..)| *k == kind)?;
+        let (_, _, names, _) = self.equipment.iter().find(|(k, ..)| *k == kind)?;
         names.get(id as usize).map(String::as_str)
+    }
+
+    /// The game's description of a piece of equipment, on one line. `None` when there is none or it is a placeholder.
+    pub fn equipment_description(&self, kind: u8, id: u16) -> Option<&str> {
+        let (_, _, _, details) = self.equipment.iter().find(|(k, ..)| *k == kind)?;
+        details.get(id as usize).map(String::as_str).filter(|t| !t.is_empty())
+    }
+
+    /// The game's description of an item, on one line.
+    pub fn item_description(&self, id: u16) -> Option<&str> {
+        self.item_details
+            .get(id as usize)
+            .map(String::as_str)
+            .filter(|t| !t.is_empty() && *t != "(None)")
+    }
+
+    /// What a skill tree does (the text shown under the skill in the game's menus).
+    pub fn skill_description(&self, id: u8) -> Option<&str> {
+        self.skill_details
+            .get(id as usize)
+            .map(String::as_str)
+            .filter(|t| !t.is_empty() && *t != "DUMMY")
+    }
+
+    pub fn monster_name(&self, id: u16) -> Option<&str> {
+        self.monsters
+            .get(id as usize)
+            .map(String::as_str)
+            .filter(|n| !n.is_empty() && *n != "NO_DATA")
+    }
+
+    /// Every create or upgrade recipe that uses `item`, as (kind, piece id), in table order.
+    pub fn recipes_using(&self, item: u16) -> Vec<(u8, u16)> {
+        let mut found: Vec<(u8, u16)> = self
+            .recipes
+            .iter()
+            .filter(|(_, r)| r.materials.iter().any(|m| m.id == item))
+            .map(|(&key, _)| key)
+            .collect();
+        let upgrade_uses: Vec<(u8, u16)> = self
+            .upgrades
+            .iter()
+            .filter(|(_, u)| u.materials.iter().any(|m| m.id == item))
+            .map(|(&key, _)| key)
+            .collect();
+        for key in upgrade_uses {
+            if !found.contains(&key) {
+                found.push(key);
+            }
+        }
+        found.sort_unstable();
+        found
     }
 
     pub fn recipe(&self, kind: u8, id: u16) -> Option<&Recipe> {
@@ -161,7 +239,7 @@ impl GameData {
         let mut hits: Vec<_> = self
             .equipment
             .iter()
-            .flat_map(|(kind, _, names)| names.iter().enumerate().map(move |(i, n)| (*kind, i as u16, n.as_str())))
+            .flat_map(|(kind, _, names, _)| names.iter().enumerate().map(move |(i, n)| (*kind, i as u16, n.as_str())))
             .filter(|(_, _, n)| n.to_lowercase().contains(&needle))
             .collect();
         hits.sort_by_key(|&(k, i, _)| (k, i));
@@ -169,6 +247,24 @@ impl GameData {
     }
 
     pub fn equipment_kind_label(&self, kind: u8) -> Option<&'static str> {
-        self.equipment.iter().find(|(k, ..)| *k == kind).map(|(_, label, _)| *label)
+        self.equipment.iter().find(|(k, ..)| *k == kind).map(|(_, label, _, _)| *label)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unwrap_text;
+
+    #[test]
+    fn hard_wrapped_text_becomes_one_line() {
+        assert_eq!(
+            unwrap_text("An introductory text for first-\ntime combiners. Improves your\ncombination success rate."),
+            "An introductory text for first-time combiners. Improves your combination success rate."
+        );
+        assert_eq!(
+            unwrap_text("Head armor made from Jaggi \nparts. Inexpensive."),
+            "Head armor made from Jaggi parts. Inexpensive."
+        );
+        assert_eq!(unwrap_text(""), "");
     }
 }
