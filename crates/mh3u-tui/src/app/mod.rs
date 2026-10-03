@@ -154,6 +154,8 @@ pub struct App {
     unlocked: Unlocked,
     /// Where the files live; `None` when the system has no home folder, and nothing is kept between sessions.
     files: Option<Files>,
+    /// The save slot (1 to 3) of the hunter being shown, when the save file is one of the slots. Live mode follows the game's hunter.
+    slot: Option<u8>,
     /// Set when the TUI started Cemu and is reading its memory (`--live`).
     pub live: Option<Live>,
     /// Typing a search (the text belongs to the tab: `inv.item_search` or `craft.search`).
@@ -177,12 +179,8 @@ impl App {
         let bytes = std::fs::read(&save_path).with_context(|| format!("reading {}", save_path.display()))?;
         let save = Save::parse(&bytes)?;
         let read = |path: Option<&PathBuf>| path.and_then(|p| std::fs::read_to_string(p).ok());
-        let entries = read(files.as_ref().map(|f| &f.wishlist))
-            .map(|t| parse_wishlist(&t))
-            .unwrap_or_default();
-        let wishlist: Vec<(u8, u16)> = entries.iter().map(|&(k, i, _)| (k, i)).collect();
-        let auto_parents = entries.iter().filter(|e| e.2).map(|&(k, i, _)| (k, i)).collect();
-        let builds = BuildManager::load(read(files.as_ref().map(|f| &f.builds)), read(files.as_ref().map(|f| &f.templates)));
+        let slot = crate::files::slot_of(&save_path);
+        let (wish, builds) = read_profile(files.as_ref());
         let prices = read(files.as_ref().map(|f| &f.prices))
             .map(|t| Ledger::parse(&t))
             .unwrap_or_default();
@@ -200,7 +198,7 @@ impl App {
             tab: Tab::Items,
             inv: Inventory::default(),
             craft: Crafting::default(),
-            wish: WishList::new(wishlist, auto_parents),
+            wish,
             monsters: MonsterTab::default(),
             hunts: HuntTab::default(),
             families: FamiliesTab::new(families),
@@ -209,6 +207,7 @@ impl App {
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
             unlocked,
+            slot,
             files,
             live: None,
             searching: false,
@@ -293,6 +292,17 @@ impl App {
         };
         state.select(Some(stepped(state.selected(), step, len)));
     }
+}
+
+/// The lists that belong to one hunter, read from their files (empty where there is no file): the wishlist and the Builds tab's
+/// skills, options and templates.
+fn read_profile(files: Option<&Files>) -> (WishList, BuildManager) {
+    let read = |path: Option<&PathBuf>| path.and_then(|p| std::fs::read_to_string(p).ok());
+    let entries = read(files.map(|f| &f.wishlist)).map(|t| parse_wishlist(&t)).unwrap_or_default();
+    let items = entries.iter().map(|&(k, i, _)| (k, i)).collect();
+    let auto_parents = entries.iter().filter(|e| e.2).map(|&(k, i, _)| (k, i)).collect();
+    let builds = BuildManager::load(read(files.map(|f| &f.builds)), read(files.map(|f| &f.templates)));
+    (WishList::new(items, auto_parents), builds)
 }
 
 fn stepped(current: Option<usize>, step: isize, len: usize) -> usize {

@@ -47,8 +47,11 @@ To find it, a background thread searches Cemu's writable memory for a hunter nam
 (the three bytes before the name differ per hunter, so they are not part of the search; about a second per search, repeated every few seconds until found), then reads the 35,364-byte block four times a second and
 sends it to the app whenever it changes. While live data is flowing, changes to the save file are ignored.
 
-Only the hunter currently loaded in the game is live; the save slot you opened with `--slot` / `--save` is used for the
-names to search for and as the fallback.
+Only the hunter currently loaded in the game is live. The `userN` files beside the save you opened with `--slot` / `--save` give the
+names to search for. When the live hunter is not the one on screen, the app works out which slot it is by name and switches to that
+slot's data: the wishlist, the Builds skills and templates (`wishlist-2.txt` and so on) and the save file used as the fallback when
+the hunter is unloaded. The price tracker starts afresh so that one hunter's inventory is never compared with another's. So `--slot`
+only decides what is shown until the game loads a hunter. If the hunter's name is in no slot file, nothing switches.
 
 ## Debug editing (`--debug-edit`)
 
@@ -95,4 +98,4 @@ Start with `MH3U_LIVE_LOG=<file>` to get a log of every search: each hunter name
 - Only the save data is live. Everything else (names, recipes, stats) comes from the game files, as before.
 - The header check was derived from one capture (US v32 on this machine's Cemu build). If a future Cemu lays the object out
   differently, the TUI stays on `◌ waiting for the game` and keeps using the save file.
-- Hunters are matched by name, so two save slots with the same name would be ambiguous.
+- Hunters are matched by name, so two save slots with the same name would be ambiguous (the slot on screen wins, then the lowest).

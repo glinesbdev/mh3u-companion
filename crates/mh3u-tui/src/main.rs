@@ -18,7 +18,7 @@ use anyhow::{Context, Result, bail};
 use app::App;
 use app::Live;
 use clap::Parser;
-use files::Files;
+use files::{Files, slot_of};
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
 use std::path::PathBuf;
 
@@ -33,7 +33,7 @@ struct Cli {
     /// A save file (userN); overrides --slot
     #[arg(long, env = "MH3U_SAVE", value_name = "FILE")]
     save: Option<PathBuf>,
-    /// Which of Cemu's three save slots to read
+    /// Which of Cemu's three save slots to read (with --live the app follows the hunter the game loads, so this is only the start)
     #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u8).range(1..=3))]
     slot: u8,
     /// Start Cemu on the game and follow it live
@@ -59,12 +59,6 @@ fn guess_game_dir() -> Option<PathBuf> {
             .and_then(|n| n.to_str())
             .is_some_and(|n| n.contains(TITLE_ID) && n.contains("[Game]"))
     })
-}
-
-/// Which hunter's list a save file belongs to: the slot number from a `userN` file name.
-fn slot_of(save: &std::path::Path) -> Option<u8> {
-    let n = save.file_name()?.to_str()?.strip_prefix("user")?.parse().ok()?;
-    (1..=3).contains(&n).then_some(n)
 }
 
 /// Start Cemu on the game and read its memory. Only a process we started may be read (see `docs/live.md`).
@@ -155,18 +149,4 @@ fn main() -> Result<()> {
     let result = app.run(&mut terminal);
     ratatui::restore();
     result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::path::Path;
-
-    #[test]
-    fn the_slot_comes_from_the_save_file_name() {
-        assert_eq!(slot_of(Path::new("/x/80000001/user2")), Some(2));
-        assert_eq!(slot_of(Path::new("user3")), Some(3));
-        assert_eq!(slot_of(Path::new("user4")), None);
-        assert_eq!(slot_of(Path::new("system")), None);
-    }
 }

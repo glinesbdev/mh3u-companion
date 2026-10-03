@@ -416,3 +416,55 @@ fn m_on_a_quest_shows_its_monster_and_asks_which_when_there_are_several() {
     assert!(app.status.contains("no large monster"), "{}", app.status);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn live_mode_follows_the_hunter_the_game_loads_to_that_slots_lists() {
+    let snapshots = concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/");
+    let (Ok(first), Ok(second)) = (
+        std::fs::read(format!("{snapshots}03-latest/user1")),
+        std::fs::read(format!("{snapshots}08-after-quest2/user2")),
+    ) else {
+        eprintln!("skipped: the snapshots are not available");
+        return;
+    };
+    let Some(game_dir) = crate::guess_game_dir() else { return };
+    let dir = temp_dir("follow");
+    let saves = dir.join("saves");
+    std::fs::create_dir_all(&saves).unwrap();
+    std::fs::write(saves.join("user1"), &first).unwrap();
+    std::fs::write(saves.join("user2"), &second).unwrap();
+    // slot 2 has its own wishlist and skills
+    let files = |slot| Files::in_dirs(&dir.join("config"), &dir.join("data"), slot);
+    std::fs::create_dir_all(dir.join("config")).unwrap();
+    std::fs::write(files(2).wishlist, "5 2\n").unwrap();
+    std::fs::write(files(2).builds, "skill 37 10\npool all\n").unwrap();
+    std::fs::write(files(1).wishlist, "4 11\n4 12\n").unwrap();
+
+    let mut app = App::new(GameData::load(&game_dir).unwrap(), saves.join("user1"), Some(files(1))).unwrap();
+    let (name1, name2) = (app.save.hunter_name.clone(), Save::parse(&second).unwrap().hunter_name);
+    assert_ne!(name1, name2);
+    assert_eq!(app.wish.items, [(4, 11), (4, 12)], "slot 1's wishlist");
+    assert!(app.builds.settings.targets.is_empty());
+
+    // the game loads the second hunter
+    let live = Save::parse(&second).unwrap();
+    let message = app.follow_hunter(&live).expect("a switch");
+    assert!(message.contains(&name2) && message.contains("slot 2"), "{message}");
+    assert_eq!(app.wish.items, [(5, 2)], "slot 2's wishlist");
+    assert_eq!(app.builds.settings.targets.len(), 1);
+    assert_eq!(app.builds.settings.pool, builds::Pool::All);
+    assert_eq!(app.save_path, saves.join("user2"), "the fallback save file follows");
+    assert_eq!(app.slot, Some(2));
+
+    // a change now goes into slot 2's files, and the same hunter again changes nothing
+    app.toggle_wish(5, 3);
+    assert!(std::fs::read_to_string(files(2).wishlist).unwrap().contains("5 3"));
+    assert_eq!(std::fs::read_to_string(files(1).wishlist).unwrap(), "4 11\n4 12\n");
+    app.save = Save::parse(&second).unwrap();
+    assert!(app.follow_hunter(&live).is_none());
+    // and back to the first hunter
+    let back = Save::parse(&first).unwrap();
+    assert!(app.follow_hunter(&back).is_some());
+    assert_eq!(app.wish.items, [(4, 11), (4, 12)]);
+    let _ = std::fs::remove_dir_all(&dir);
+}

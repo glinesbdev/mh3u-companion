@@ -39,7 +39,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - **Weapon comparison:** two or three weapons side by side (attack, affinity, slots, rarity, and sharpness and element once found).
 - **Skill browser:** pick a skill and see every armor piece that has it, strongest first, with a mark for the ones you own or the
   blacksmith is offering. (The Builds tab's skill picker finds a skill by name; this would be a view of its own.)
-- **Hunter picker:** an in-app way to switch hunters (save slots) instead of starting with `--slot`.
+- **Hunter picker:** an in-app way to switch hunters (save slots) without live mode, instead of starting with `--slot`. (Live mode already follows the game's hunter.)
 
 ## Data not shown yet
 

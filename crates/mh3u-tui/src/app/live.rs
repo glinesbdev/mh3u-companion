@@ -16,6 +16,49 @@ pub struct EditConsole {
 
 impl App {
     /// Make `save` the current data. Returns a message if the zenny changed.
+    /// Which save slot holds a hunter of this name: the slot files are the `userN` files beside the one in use. When two slots share a
+    /// name the current slot wins, then the lowest.
+    fn slot_of_hunter(&self, name: &str) -> Option<u8> {
+        let dir = self.save_path.parent()?;
+        let named = |slot: u8| {
+            let bytes = std::fs::read(dir.join(format!("user{slot}"))).ok()?;
+            Some(Save::parse(&bytes).ok()?.hunter_name == name)
+        };
+        self.slot
+            .filter(|&s| named(s) == Some(true))
+            .or_else(|| (1..=3).find(|&s| named(s) == Some(true)))
+    }
+
+    /// Show another hunter's data: their wishlist, skills, templates and save file. Called when the game loads a hunter other than
+    /// the one on screen.
+    pub(super) fn switch_profile(&mut self, slot: u8) {
+        let Some(dir) = self.save_path.parent().map(std::path::Path::to_path_buf) else {
+            return;
+        };
+        self.files = self.files.as_ref().map(|f| f.with_slot(slot));
+        self.slot = Some(slot);
+        self.save_path = dir.join(format!("user{slot}"));
+        self.modified = modified(&self.save_path);
+        let (wish, builds) = read_profile(self.files.as_ref());
+        self.wish = wish;
+        self.builds = builds;
+        self.hunts = HuntTab::default();
+        // the next live data is another hunter's: comparing it with the last would look like a crafting
+        self.costs.tracker.reset();
+    }
+
+    /// Live data from the game: if it is another hunter than the one shown, switch to that hunter's slot first.
+    pub(super) fn follow_hunter(&mut self, save: &Save) -> Option<String> {
+        if save.hunter_name == self.save.hunter_name {
+            return None;
+        }
+        if let Some(slot) = self.slot_of_hunter(&save.hunter_name).filter(|&s| Some(s) != self.slot) {
+            self.switch_profile(slot);
+            return Some(format!("the game loaded {} (slot {slot}): showing their lists", save.hunter_name));
+        }
+        None
+    }
+
     pub(super) fn apply_save(&mut self, save: Save) -> Option<String> {
         let (old, new) = (self.save.zenny, save.zenny);
         self.zenny_change = next_zenny_change(self.zenny_change, old, new, Instant::now());
@@ -178,10 +221,10 @@ impl App {
             self.console.live_bytes = Some(bytes);
             match parsed {
                 Ok(save) => {
+                    let switched = self.follow_hunter(&save);
                     self.costs.tracker.observe(&save, Instant::now());
-                    if let Some(message) = self.apply_save(save) {
-                        status = Some(message);
-                    }
+                    let zenny = self.apply_save(save);
+                    status = switched.or(zenny).or(status);
                 }
                 Err(e) => status = Some(format!("live data not understood: {e:#}")),
             }

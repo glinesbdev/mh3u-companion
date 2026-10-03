@@ -94,7 +94,7 @@ Not shown yet: sharpness and element for weapons, armor max defense. See `docs/f
 
 `mh3u-tui --live` starts Cemu itself and shows the game's data as it changes, before you save: move an item and the screen
 follows. Close any running Cemu first, then run the TUI and load your hunter in the game window. The header shows
-`● live` once connected. Any change in zenny (shops, NPCs, quest rewards or fees) shows next to the total in the header
+`● live` once connected, and the app switches to the hunter the game loaded: their wishlist, skills and templates (the files of that save slot) replace the ones on screen, so `--slot` is not needed with `--live`, and loading another hunter in the game switches again. Any change in zenny (shops, NPCs, quest rewards or fees) shows next to the total in the header
 as `▲ +1,200` or `▼ -300` for 15 seconds, adding up if several happen close together, and in the status line. See `docs/live.md` for how it works and why the TUI must be the one to start Cemu.
 
 Forging costs for weapons (create and upgrade) and armor are read straight from the game files and always shown, unless you have seen a different price in play, which then wins. In live mode, crafting a piece also teaches the app what it cost (and, for the few pieces the game data has no recipe for, what it needs): the zenny drop is matched against the piece's recipe and kept in

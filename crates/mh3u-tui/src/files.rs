@@ -13,6 +13,8 @@ const APP: &str = "mh3u-companion";
 /// hunters) and the tracker log are shared.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Files {
+    config: PathBuf,
+    data: PathBuf,
     pub wishlist: PathBuf,
     pub builds: PathBuf,
     pub templates: PathBuf,
@@ -30,6 +32,11 @@ impl Files {
         Some(Files::in_dirs(&dirs::config_dir()?.join(APP), &dirs::data_dir()?.join(APP), slot))
     }
 
+    /// The same files for another save slot's hunter.
+    pub fn with_slot(&self, slot: u8) -> Files {
+        Files::in_dirs(&self.config, &self.data, slot)
+    }
+
     pub fn in_dirs(config: &Path, data: &Path, slot: u8) -> Files {
         let per_slot = |stem: &str| {
             config.join(if slot == 1 {
@@ -39,6 +46,8 @@ impl Files {
             })
         };
         Files {
+            config: config.to_path_buf(),
+            data: data.to_path_buf(),
             wishlist: per_slot("wishlist"),
             builds: per_slot("builds"),
             templates: per_slot("templates"),
@@ -48,6 +57,12 @@ impl Files {
             backups: data.join("backups"),
         }
     }
+}
+
+/// Which save slot a save file is: the number in a `userN` file name.
+pub fn slot_of(save: &Path) -> Option<u8> {
+    let n = save.file_name()?.to_str()?.strip_prefix("user")?.parse().ok()?;
+    (1..=3).contains(&n).then_some(n)
 }
 
 /// Write `text` to `path`, creating the folder first. The error is worded for the status line, e.g. `could not save wishlist: ...`.
@@ -77,6 +92,16 @@ mod tests {
         assert_eq!(two.templates, Path::new("/c/app/templates-2.txt"));
         assert_eq!(one.prices, two.prices, "the ledger is shared");
         assert_eq!(one.unlocked, Path::new("/d/app/unlocked.tsv"));
+    }
+
+    #[test]
+    fn a_save_files_slot_is_the_number_in_its_name() {
+        assert_eq!(slot_of(Path::new("/x/80000001/user2")), Some(2));
+        assert_eq!(slot_of(Path::new("user3")), Some(3));
+        assert_eq!(slot_of(Path::new("user4")), None);
+        assert_eq!(slot_of(Path::new("system")), None);
+        let two = Files::in_dirs(Path::new("/c/app"), Path::new("/d/app"), 2);
+        assert_eq!(two.with_slot(3), Files::in_dirs(Path::new("/c/app"), Path::new("/d/app"), 3));
     }
 
     #[test]
