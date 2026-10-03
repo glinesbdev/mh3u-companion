@@ -6,5 +6,6 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+clap.workspace = true
 memchr = "2.8.3"
 mh3u-core.workspace = true

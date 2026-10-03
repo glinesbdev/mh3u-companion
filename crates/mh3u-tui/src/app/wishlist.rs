@@ -166,12 +166,8 @@ impl App {
 
     pub(super) fn save_wishlist(&mut self) {
         let Some(path) = &self.wishlist_path else { return };
-        let result = path
-            .parent()
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(path, format_wishlist(&self.wishlist, &self.auto_parents)));
-        if let Err(e) = result {
-            self.status = format!("could not save wishlist: {e}");
+        if let Err(message) = crate::files::save(path, &format_wishlist(&self.wishlist, &self.auto_parents), "wishlist") {
+            self.status = message;
         }
     }
 

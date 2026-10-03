@@ -63,14 +63,10 @@ impl App {
             self.catalog = self.build_catalog();
             self.refresh_pieces();
         }
-        if let Some(path) = &self.prices_path {
-            let saved = path
-                .parent()
-                .map_or(Ok(()), std::fs::create_dir_all)
-                .and_then(|()| std::fs::write(path, self.prices.format()));
-            if let Err(e) = saved {
-                self.status = format!("could not save prices: {e}");
-            }
+        if let Some(path) = &self.prices_path
+            && let Err(message) = crate::files::save(path, &self.prices.format(), "prices")
+        {
+            self.status = message;
         }
     }
 

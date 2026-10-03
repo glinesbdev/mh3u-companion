@@ -159,7 +159,7 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
         .game
         .recipes_using(id)
         .into_iter()
-        .filter_map(|(kind, piece)| app.game.equipment_name(kind, piece).filter(|n| !n.is_empty() && *n != "DUMMY"))
+        .filter_map(|(kind, piece)| app.game.piece_name(kind, piece))
         .map(str::to_string)
         .collect();
     if !users.is_empty() {

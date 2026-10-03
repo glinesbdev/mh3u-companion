@@ -51,9 +51,8 @@ impl App {
         let hunter = self.save.hunter_name.clone();
         let mut changed = false;
         for kind in (1..=5u8).chain(7..=19) {
-            for id in 1..2000u16 {
-                let real = self.game.equipment_name(kind, id).is_some_and(|n| !n.is_empty() && n != "DUMMY");
-                if real && matches!(self.rule(kind, id), Some(Unlock::Hunted(_))) {
+            for id in self.game.piece_ids(kind) {
+                if matches!(self.rule(kind, id), Some(Unlock::Hunted(_))) {
                     changed |= self.unlocked.add(&hunter, (kind, id));
                 }
             }
@@ -63,14 +62,11 @@ impl App {
                 changed |= self.unlocked.add(&hunter, (e.kind, e.id));
             }
         }
-        if changed && let Some(path) = &self.unlocked_path {
-            let result = path
-                .parent()
-                .map_or(Ok(()), std::fs::create_dir_all)
-                .and_then(|()| std::fs::write(path, self.unlocked.format()));
-            if let Err(e) = result {
-                self.status = format!("could not save unlocked pieces: {e}");
-            }
+        if changed
+            && let Some(path) = &self.unlocked_path
+            && let Err(message) = crate::files::save(path, &self.unlocked.format(), "unlocked pieces")
+        {
+            self.status = message;
         }
     }
 }

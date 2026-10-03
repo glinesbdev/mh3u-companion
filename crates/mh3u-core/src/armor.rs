@@ -94,6 +94,22 @@ pub struct ArmorStats {
     pub price: Option<u32>,
 }
 
+impl ArmorStats {
+    /// What a talisman adds to a set: its skills and nothing else.
+    pub fn talisman(skills: Vec<(u8, i8)>) -> ArmorStats {
+        ArmorStats {
+            defense: 0,
+            rarity: 1,
+            slots: 0,
+            gender: None,
+            class: None,
+            resist: [0; 5],
+            skills,
+            price: None,
+        }
+    }
+}
+
 fn parse_record(r: &[u8]) -> ArmorStats {
     ArmorStats {
         defense: r[0],

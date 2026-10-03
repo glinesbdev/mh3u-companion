@@ -563,8 +563,6 @@ fn modified(path: &PathBuf) -> Option<SystemTime> {
 mod tests {
     use super::*;
 
-    use std::collections::HashMap;
-
     #[test]
     fn moving_stays_inside_the_list_and_home_end_reach_the_edges() {
         assert_eq!(stepped(Some(5), 1, 10), 6);

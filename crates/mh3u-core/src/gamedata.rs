@@ -135,6 +135,21 @@ impl GameData {
         names.get(id as usize).map(String::as_str)
     }
 
+    /// The name of a piece that exists: not empty and not one of the game's `DUMMY` placeholders.
+    pub fn piece_name(&self, kind: u8, id: u16) -> Option<&str> {
+        self.equipment_name(kind, id).filter(|n| !n.is_empty() && !n.starts_with("DUMMY"))
+    }
+
+    /// The ids of the pieces of one kind that exist, ascending.
+    pub fn piece_ids(&self, kind: u8) -> impl Iterator<Item = u16> + '_ {
+        let count = self
+            .equipment
+            .iter()
+            .find(|(k, ..)| *k == kind)
+            .map_or(0, |(_, _, names, _)| names.len());
+        (1..count.min(usize::from(u16::MAX)) as u16).filter(move |&id| self.piece_name(kind, id).is_some())
+    }
+
     /// The game's description of a piece of equipment, on one line. `None` when there is none or it is a placeholder.
     pub fn equipment_description(&self, kind: u8, id: u16) -> Option<&str> {
         let (_, _, _, details) = self.equipment.iter().find(|(k, ..)| *k == kind)?;

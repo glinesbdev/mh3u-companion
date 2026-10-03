@@ -59,17 +59,17 @@ pub(super) fn worn_active_points() -> i32 {
 }
 
 impl App {
-    /// Every armor piece and talisman the build search may use: what the equipment box holds and, if wanted, what the blacksmith
-    /// is offering.
+    /// Every armor piece and talisman the build search may use: what the equipment box holds and, as the pool setting says, what the
+    /// blacksmith is offering or every piece in the game.
     pub(super) fn build_pool(&self) -> Vec<Candidate> {
+        let usable = |stats: &mh3u_core::armor::ArmorStats| builds::usable(stats, self.build.gender, self.build.class);
         let mut pool: Vec<Candidate> = Vec::new();
-        let real = |kind: u8, id: u16| self.game.equipment_name(kind, id).is_some_and(|n| !n.is_empty() && n != "DUMMY");
+        let mut seen: HashSet<(u8, u16)> = HashSet::new();
         for e in &self.save.equipment_box {
             if (1..=5).contains(&e.kind)
-                && real(e.kind, e.id)
-                && !pool.iter().any(|c| c.kind == e.kind && c.id == e.id)
-                && let Some(stats) = self.game.armor_stats(e.kind, e.id)
-                && builds::usable(stats, self.build.gender, self.build.class)
+                && self.game.piece_name(e.kind, e.id).is_some()
+                && let Some(stats) = self.game.armor_stats(e.kind, e.id).filter(|s| usable(s))
+                && seen.insert((e.kind, e.id))
             {
                 pool.push(Candidate {
                     kind: e.kind,
@@ -83,26 +83,15 @@ impl App {
                     kind: 6,
                     id: e.id,
                     owned: true,
-                    stats: mh3u_core::armor::ArmorStats {
-                        defense: 0,
-                        rarity: 1,
-                        slots: 0,
-                        gender: None,
-                        class: None,
-                        resist: [0; 5],
-                        skills: e.talisman_skills(),
-                        price: None,
-                    },
+                    stats: mh3u_core::armor::ArmorStats::talisman(e.talisman_skills()),
                 });
             }
         }
         if self.build.pool != builds::Pool::Owned {
             for kind in 1..=5u8 {
-                for id in 1..1000u16 {
-                    if real(kind, id)
-                        && !pool.iter().any(|c| c.kind == kind && c.id == id)
-                        && let Some(stats) = self.game.armor_stats(kind, id)
-                        && builds::usable(stats, self.build.gender, self.build.class)
+                for id in self.game.piece_ids(kind) {
+                    if let Some(stats) = self.game.armor_stats(kind, id).filter(|s| usable(s))
+                        && !seen.contains(&(kind, id))
                         && (self.build.pool == builds::Pool::All || self.at_blacksmith(kind, id))
                     {
                         pool.push(Candidate {
@@ -134,12 +123,8 @@ impl App {
 
     pub(super) fn save_builds(&mut self) {
         let Some(path) = &self.builds_path else { return };
-        let result = path
-            .parent()
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(path, self.build.format()));
-        if let Err(e) = result {
-            self.status = format!("could not save builds: {e}");
+        if let Err(message) = crate::files::save(path, &self.build.format(), "builds") {
+            self.status = message;
         }
     }
 
@@ -339,12 +324,8 @@ impl App {
 
     pub(super) fn save_templates(&mut self) {
         let Some(path) = &self.templates_path else { return };
-        let result = path
-            .parent()
-            .map_or(Ok(()), std::fs::create_dir_all)
-            .and_then(|()| std::fs::write(path, templates::format(&self.templates)));
-        if let Err(e) = result {
-            self.status = format!("could not save templates: {e}");
+        if let Err(message) = crate::files::save(path, &templates::format(&self.templates), "templates") {
+            self.status = message;
         }
     }
 
@@ -356,16 +337,7 @@ impl App {
     /// The stats a template piece adds up with: the game's for armor, the record's skills for a talisman.
     pub fn piece_stats(&self, piece: &templates::Piece) -> Option<mh3u_core::armor::ArmorStats> {
         if piece.kind == 6 {
-            return Some(mh3u_core::armor::ArmorStats {
-                defense: 0,
-                rarity: 1,
-                slots: 0,
-                gender: None,
-                class: None,
-                resist: [0; 5],
-                skills: piece.skills.clone(),
-                price: None,
-            });
+            return Some(mh3u_core::armor::ArmorStats::talisman(piece.skills.clone()));
         }
         self.game.armor_stats(piece.kind, piece.id).cloned()
     }
@@ -480,9 +452,8 @@ impl App {
                 consider(name, detail, "owned", templates::Piece { kind: 6, id: e.id, skills });
             }
         } else {
-            for id in 1..1000u16 {
-                let real = self.game.equipment_name(kind, id).filter(|n| !n.is_empty() && *n != "DUMMY");
-                let (Some(name), Some(stats)) = (real, self.game.armor_stats(kind, id)) else {
+            for id in self.game.piece_ids(kind) {
+                let (Some(name), Some(stats)) = (self.game.piece_name(kind, id), self.game.armor_stats(kind, id)) else {
                     continue;
                 };
                 let status = if self.owns_slot(kind, id) {

@@ -1,6 +1,7 @@
 mod app;
 mod builds;
 mod commands;
+mod files;
 mod search;
 mod templates;
 mod theme;
@@ -9,16 +10,37 @@ mod ui;
 mod unlocked;
 mod worn;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use app::App;
 use app::Live;
+use clap::Parser;
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
 use std::path::PathBuf;
 
 const TITLE_ID: &str = "0005000010118300";
-const USAGE: &str = "usage: mh3u-tui [--game-dir <dump folder with code/ and content/>] [--save <path to a userN file> | --slot <1-3>]\n\
-                     [--live [--cemu <path to the Cemu program>] [--debug-edit]]\n\
-                     (or set MH3U_GAME_DIR / MH3U_SAVE)";
+/// A companion for Monster Hunter 3 Ultimate on Cemu: read a save and see what you hold, can make and need.
+#[derive(Parser)]
+#[command(version)]
+struct Cli {
+    /// The game dump folder (the one with code/ and content/); found under ~/games/wiiu when not given
+    #[arg(long, env = "MH3U_GAME_DIR", value_name = "DIR")]
+    game_dir: Option<PathBuf>,
+    /// A save file (userN); overrides --slot
+    #[arg(long, env = "MH3U_SAVE", value_name = "FILE")]
+    save: Option<PathBuf>,
+    /// Which of Cemu's three save slots to read
+    #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u8).range(1..=3))]
+    slot: u8,
+    /// Start Cemu on the game and follow it live
+    #[arg(long)]
+    live: bool,
+    /// The Cemu program to start with --live
+    #[arg(long, default_value = "Cemu", requires = "live", value_name = "PATH")]
+    cemu: String,
+    /// Allow commands that change the running game (backs up the saves first)
+    #[arg(long, requires = "live")]
+    debug_edit: bool,
+}
 
 fn home() -> Result<PathBuf> {
     std::env::var_os("HOME").map(PathBuf::from).context("HOME is not set")
@@ -121,33 +143,17 @@ fn prices_path() -> Option<PathBuf> {
 }
 
 fn main() -> Result<()> {
-    let (mut live_mode, mut debug_edit, mut cemu) = (false, false, "Cemu".to_string());
-    let mut slot = 1u8;
-    let (mut game_dir, mut save) = (
-        std::env::var_os("MH3U_GAME_DIR").map(PathBuf::from),
-        std::env::var_os("MH3U_SAVE").map(PathBuf::from),
-    );
-    let mut args = std::env::args().skip(1);
-    while let Some(a) = args.next() {
-        match a.as_str() {
-            "--game-dir" => game_dir = args.next().map(PathBuf::from),
-            "--save" => save = args.next().map(PathBuf::from),
-            "--live" => live_mode = true,
-            "--debug-edit" => debug_edit = true,
-            "--cemu" => cemu = args.next().with_context(|| format!("--cemu needs a path\n{USAGE}"))?,
-            "--slot" => {
-                slot = args
-                    .next()
-                    .and_then(|n| n.parse().ok())
-                    .filter(|n| (1..=3).contains(n))
-                    .with_context(|| format!("--slot needs 1, 2 or 3\n{USAGE}"))?
-            }
-            _ => bail!("{USAGE}"),
-        }
-    }
+    let Cli {
+        game_dir,
+        save,
+        slot,
+        live,
+        cemu,
+        debug_edit,
+    } = Cli::parse();
     let game_dir = game_dir
         .or_else(guess_game_dir)
-        .with_context(|| format!("game dump not found\n{USAGE}"))?;
+        .context("game dump not found: give --game-dir or set MH3U_GAME_DIR")?;
     let save = match save {
         Some(s) => s,
         None => home()?.join(format!(
@@ -157,9 +163,6 @@ fn main() -> Result<()> {
     };
 
     let game = GameData::load(&game_dir).with_context(|| format!("loading game data from {}", game_dir.display()))?;
-    if debug_edit && !live_mode {
-        bail!("--debug-edit works on the live game, so it needs --live\n{USAGE}");
-    }
     let mut app = App::new(
         game,
         save.clone(),
@@ -167,7 +170,7 @@ fn main() -> Result<()> {
         builds_path(slot_of(&save).unwrap_or(slot)),
         prices_path(),
     )?;
-    if live_mode {
+    if live {
         let note = if debug_edit { Some(back_up_saves(&save)?) } else { None };
         app.set_live(start_live(&game_dir, &save, &cemu, debug_edit)?);
         if let Some(note) = note {

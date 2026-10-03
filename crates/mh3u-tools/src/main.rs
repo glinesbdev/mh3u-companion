@@ -1,5 +1,6 @@
 mod ansi2svg;
 use anyhow::{Context, Result, bail};
+use clap::{Parser, Subcommand};
 use mh3u_core::{
     arc::Arc,
     diff,
@@ -11,7 +12,7 @@ use mh3u_core::{
     save::Save,
 };
 use std::{
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
     time::{Duration, Instant},
 };
@@ -20,273 +21,341 @@ fn hex(b: &[u8]) -> String {
     b.iter().map(|x| format!("{x:02x}")).collect::<Vec<_>>().join(" ")
 }
 
+/// Developer tools for exploring Monster Hunter 3 Ultimate's data and saves. Not needed to use the companion app.
+#[derive(Parser)]
+#[command(version)]
+struct Cli {
+    #[command(subcommand)]
+    command: Tool,
+}
+
+#[derive(Subcommand)]
+enum Tool {
+    /// Show which bytes differ between two files, with a little context.
+    Savediff { a: PathBuf, b: PathBuf },
+    /// Draw a colored terminal capture (`tmux capture-pane -p -e`) as an SVG, replacing text first.
+    Ansi2svg {
+        capture: PathBuf,
+        out: PathBuf,
+        /// Text to replace, as FROM=TO.
+        replacements: Vec<String>,
+    },
+    /// Armor pieces whose first listed material is in the pouch or box.
+    UnlockGuess { save: PathBuf, game_dir: PathBuf },
+    /// Pieces whose first material drops from a monster the save counts as hunted.
+    UnlockMonsters { save: PathBuf, game_dir: PathBuf },
+    /// Print the pouch, item box and equipment box with names.
+    Items { save: PathBuf, game_dir: PathBuf },
+    /// List the entries of an archive.
+    Arcls { arc: PathBuf },
+    /// Extract every entry of an archive as OUTDIR/NAME.TYPEHASH.
+    Arcx { arc: PathBuf, outdir: PathBuf },
+    /// Print every string of a text table, or only the given indexes.
+    Gmd { file: PathBuf, ids: Vec<usize> },
+    /// Find byte patterns (hex) in every decompressed archive entry under a folder.
+    Arcsearch {
+        dir: PathBuf,
+        #[arg(required = true)]
+        patterns: Vec<String>,
+    },
+    /// Show the recipe of every equipment piece matching the name.
+    Recipe { game_dir: PathBuf, name: String },
+    /// Find entries where at least MIN of the values appear (as big-endian 2- or 4-byte numbers) within WINDOW bytes.
+    Arcprox {
+        dir: String,
+        window: usize,
+        min: usize,
+        /// Comma-separated numbers.
+        values: String,
+    },
+    /// Note a price read off the game's screens in the ledger.
+    PricesAdd {
+        game_dir: PathBuf,
+        ledger: PathBuf,
+        /// `create` or `upgrade`.
+        route: String,
+        cost: String,
+        /// The exact name of the piece.
+        piece: Vec<String>,
+    },
+    /// Look for where the ledger's costs are stored in the game's data.
+    PricesHint { game_dir: PathBuf, ledger: PathBuf },
+    /// Armor pieces whose price is not in the ledger yet.
+    ArmorTodo { game_dir: PathBuf, ledger: PathBuf },
+    /// Every monster drop list as `monster<TAB>row<TAB>rank<TAB>kind<TAB>item:quantity:percent,...`.
+    Drops { game_dir: PathBuf },
+    /// Every weapon as `kind id name`, for joining with other tables.
+    WeaponNames { game_dir: PathBuf },
+    /// Start Cemu on the game and record every save block found in its memory.
+    CemuHost { game_dir: PathBuf, outdir: PathBuf },
+}
+
 fn main() -> Result<()> {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    match args.first().map(String::as_str) {
-        Some("savediff") if args.len() == 3 => {
-            let a = std::fs::read(&args[1]).with_context(|| args[1].clone())?;
-            let b = std::fs::read(&args[2]).with_context(|| args[2].clone())?;
-            println!("sizes: {} -> {}", a.len(), b.len());
-            for c in diff::changes(&a, &b, 8) {
-                println!(
-                    "{:06x} ({} bytes)\n  - {}\n  + {}",
-                    c.offset,
-                    c.before.len(),
-                    hex(&c.before),
-                    hex(&c.after)
-                );
-            }
-            Ok(())
-        }
-        // ansi2svg <capture> <out.svg> [FROM=TO ...]: draw a colored terminal capture as an SVG, replacing text first
-        Some("ansi2svg") if args.len() >= 3 => {
-            let capture = std::fs::read_to_string(&args[1]).with_context(|| args[1].clone())?;
-            let replacements: Vec<(String, String)> = args[3..]
+    match Cli::parse().command {
+        Tool::Savediff { a, b } => savediff(&a, &b),
+        Tool::Ansi2svg {
+            capture,
+            out,
+            replacements,
+        } => {
+            let text = std::fs::read_to_string(&capture).with_context(|| capture.display().to_string())?;
+            let replacements: Vec<(String, String)> = replacements
                 .iter()
                 .filter_map(|a| a.split_once('=').map(|(f, t)| (f.to_string(), t.to_string())))
                 .collect();
-            std::fs::write(&args[2], ansi2svg::render(&capture, &replacements))?;
+            std::fs::write(out, ansi2svg::render(&text, &replacements))?;
             Ok(())
         }
-        // unlock-guess <user1> <game_dir>: armor pieces whose first listed material is in the pouch or box
-        Some("unlock-guess") if args.len() == 3 => {
-            let save = Save::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;
-            let data = GameData::load(Path::new(&args[2]))?;
-            println!("hunter: {}", save.hunter_name);
-            for kind in [5u8, 1, 2, 3, 4] {
-                for id in 1..2000u16 {
-                    let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.equipment_name(kind, id)) else {
-                        continue;
-                    };
-                    if name.is_empty() || recipe.flag == 1 {
-                        continue;
-                    }
-                    let first = recipe.materials[0].id;
-                    if save.item_count(first) > 0 {
-                        println!(
-                            "kind {kind} id {id:>3} {name:<24} first material {} x{}",
-                            data.item_name(first).unwrap_or("?"),
-                            save.item_count(first)
-                        );
-                    }
-                }
-            }
-            Ok(())
-        }
-        // unlock-monsters <user> <game_dir>: pieces whose first material drops from a monster the save counts as hunted
-        Some("unlock-monsters") if args.len() == 3 => {
-            let bytes = std::fs::read(&args[1]).with_context(|| args[1].clone())?;
-            let data = GameData::load(Path::new(&args[2]))?;
-            // u16 per monster from 0x57a0; entry n is monster n + 6 (worked out from saves, see docs/formats.md)
-            let hunted = |m: u16| -> u16 {
-                let o = 0x57a0 + 2 * (m as usize).saturating_sub(6);
-                u16::from_be_bytes([bytes[o], bytes[o + 1]])
+        Tool::UnlockGuess { save, game_dir } => unlock_guess(&save, &game_dir),
+        Tool::UnlockMonsters { save, game_dir } => unlock_monsters(&save, &game_dir),
+        Tool::Items { save, game_dir } => items(&save, &game_dir),
+        Tool::Arcls { arc } => arcls(&arc),
+        Tool::Arcx { arc, outdir } => arcx(&arc, &outdir),
+        Tool::Gmd { file, ids } => gmd_strings(&file, &ids),
+        Tool::Arcsearch { dir, patterns } => arcsearch(&dir, &patterns),
+        Tool::Recipe { game_dir, name } => recipe(&game_dir, &name),
+        Tool::Arcprox { dir, window, min, values } => arcprox(&dir, window, min, &values),
+        Tool::PricesAdd {
+            game_dir,
+            ledger,
+            route,
+            cost,
+            piece,
+        } => prices_add(&game_dir, &ledger, &route, &cost, &piece.join(" ")),
+        Tool::PricesHint { game_dir, ledger } => prices_hint(&game_dir, &ledger),
+        Tool::ArmorTodo { game_dir, ledger } => armor_todo(&game_dir, &ledger),
+        Tool::Drops { game_dir } => drops(&game_dir),
+        Tool::WeaponNames { game_dir } => weapon_names(&game_dir),
+        Tool::CemuHost { game_dir, outdir } => cemu_host(&game_dir, &outdir),
+    }
+}
+
+fn read(path: &Path) -> Result<Vec<u8>> {
+    std::fs::read(path).with_context(|| path.display().to_string())
+}
+
+fn savediff(a: &Path, b: &Path) -> Result<()> {
+    let (a, b) = (read(a)?, read(b)?);
+    println!("sizes: {} -> {}", a.len(), b.len());
+    for c in diff::changes(&a, &b, 8) {
+        println!(
+            "{:06x} ({} bytes)\n  - {}\n  + {}",
+            c.offset,
+            c.before.len(),
+            hex(&c.before),
+            hex(&c.after)
+        );
+    }
+    Ok(())
+}
+
+fn unlock_guess(save: &Path, game_dir: &Path) -> Result<()> {
+    let save = Save::parse(&read(save)?)?;
+    let data = GameData::load(game_dir)?;
+    println!("hunter: {}", save.hunter_name);
+    for kind in [5u8, 1, 2, 3, 4] {
+        for id in data.piece_ids(kind) {
+            let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.piece_name(kind, id)) else {
+                continue;
             };
-            for (m, name) in (6u16..80).map(|m| (m, data.monster_name(m))) {
-                if let (n @ 1.., Some(name)) = (hunted(m), name) {
-                    println!("hunted: {name} x{n}");
-                }
+            if recipe.flag == 1 {
+                continue;
             }
-            for kind in (1..=5u8).chain(7..=19) {
-                for id in 1..2000u16 {
-                    let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.equipment_name(kind, id)) else {
-                        continue;
-                    };
-                    if name.is_empty() || name == "DUMMY" || recipe.flag == 1 {
-                        continue;
-                    }
-                    let first = recipe.materials[0].id;
-                    let mut sources: Vec<u16> = data.drops().sources(first).iter().map(|s| s.0).collect();
-                    sources.sort_unstable();
-                    sources.dedup();
-                    let any = sources.iter().any(|&m| hunted(m) > 0);
-                    let monsters: Vec<&str> = sources.iter().filter_map(|&m| data.monster_name(m)).collect();
-                    println!(
-                        "{} kind {kind:>2} {name:<24} first {:<18} from {:?}",
-                        if any { "OFFER" } else { "  -  " },
-                        data.item_name(first).unwrap_or("?"),
-                        monsters
-                    );
-                }
-            }
-            Ok(())
-        }
-        // items <user1> <game_dir>: print pouch, item box and equipment box with names
-        Some("items") if args.len() == 3 => {
-            let save = Save::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;
-            let data = GameData::load(Path::new(&args[2]))?;
-            println!("hunter: {}", save.hunter_name);
-            for (label, stacks) in [("pouch", &save.pouch), ("box", &save.item_box)] {
-                println!("{label}:");
-                for s in stacks {
-                    println!("  {:<24} x{:<3} (id {})", data.item_name(s.id).unwrap_or("?"), s.count, s.id);
-                }
-            }
-            println!("equipment box:");
-            for e in &save.equipment_box {
+            let first = recipe.materials[0].id;
+            if save.item_count(first) > 0 {
                 println!(
-                    "  {:<16} {:<24} (kind {}, id {})",
-                    data.equipment_kind_label(e.kind).unwrap_or("?"),
-                    data.equipment_name(e.kind, e.id).unwrap_or("?"),
-                    e.kind,
-                    e.id
+                    "kind {kind} id {id:>3} {name:<24} first material {} x{}",
+                    data.item_name(first).unwrap_or("?"),
+                    save.item_count(first)
                 );
             }
-            Ok(())
         }
-        Some("arcls") if args.len() == 2 => {
-            let data = std::fs::read(&args[1]).with_context(|| args[1].clone())?;
-            for e in Arc::parse(&data)?.entries {
-                println!("{:08x} {:>9} {:>9}  {}", e.type_hash, e.compressed_size, e.size, e.name);
-            }
-            Ok(())
-        }
-        // arcx <archive> <outdir>: extract every entry as <outdir>/<name>.<typehash>
-        Some("arcx") if args.len() == 3 => {
-            let data = std::fs::read(&args[1]).with_context(|| args[1].clone())?;
-            let arc = Arc::parse(&data)?;
-            for e in &arc.entries {
-                let path = std::path::Path::new(&args[2]).join(format!("{}.{:08x}", e.name.replace('\\', "/"), e.type_hash));
-                std::fs::create_dir_all(path.parent().unwrap())?;
-                std::fs::write(&path, arc.read(e)?)?;
-            }
-            println!("extracted {} entries", arc.entries.len());
-            Ok(())
-        }
-        // gmd <file> [id...]: print every string, or only the given indexes
-        Some("gmd") if args.len() >= 2 => {
-            let strings = gmd::parse(&std::fs::read(&args[1]).with_context(|| args[1].clone())?)?;
-            if args.len() == 2 {
-                for (i, s) in strings.iter().enumerate() {
-                    println!("{i:5} {s}");
-                }
-            } else {
-                for a in &args[2..] {
-                    let i: usize = a.parse()?;
-                    println!("{i:5} {}", strings.get(i).map_or("<out of range>", String::as_str));
-                }
-            }
-            Ok(())
-        }
-        // arcsearch <dir> <hex> [hex...]: find byte patterns in every decompressed archive entry
-        Some("arcsearch") if args.len() >= 3 => {
-            let pats: Vec<Vec<u8>> = args[2..]
-                .iter()
-                .map(|h| {
-                    (0..h.len())
-                        .step_by(2)
-                        .map(|i| u8::from_str_radix(&h[i..i + 2], 16))
-                        .collect::<Result<_, _>>()
-                })
-                .collect::<Result<_, _>>()?;
-            let mut stack = vec![std::path::PathBuf::from(&args[1])];
-            while let Some(dir) = stack.pop() {
-                for ent in std::fs::read_dir(&dir)? {
-                    let path = ent?.path();
-                    if path.is_dir() {
-                        stack.push(path);
-                    } else if path.extension().is_some_and(|x| x == "arc") {
-                        let data = std::fs::read(&path)?;
-                        let Ok(arc) = Arc::parse(&data) else { continue };
-                        for e in &arc.entries {
-                            let Ok(body) = arc.read(e) else { continue };
-                            for (pi, pat) in pats.iter().enumerate() {
-                                for (off, _) in body.windows(pat.len()).enumerate().filter(|(_, w)| *w == &pat[..]) {
-                                    println!("pat{pi} {} :: {} ({:08x}) @ {off:#x}", path.display(), e.name, e.type_hash);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            Ok(())
-        }
-        // recipe <game_dir> <name>: show the recipe of every equipment piece matching the name
-        Some("recipe") if args.len() == 3 => {
-            let data = GameData::load(Path::new(&args[1]))?;
-            let mats = |stacks: &[mh3u_core::save::ItemStack]| -> String {
-                stacks
-                    .iter()
-                    .map(|m| format!("{} x{}", data.item_name(m.id).unwrap_or("?"), m.count))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            };
-            for (kind, id, name) in data.find_equipment(&args[2]) {
-                let label = data.equipment_kind_label(kind).unwrap_or("?");
-                let create = data.recipe(kind, id);
-                let upgrade = data.upgrade(kind, id);
-                if create.is_none() && upgrade.is_none() {
-                    println!("{label:<15} {name:<26} (no recipe)");
-                }
-                if let Some(r) = create {
-                    println!(
-                        "{label:<15} {name:<26} create:  {}  [flag {} tier {}]",
-                        mats(&r.materials),
-                        r.flag,
-                        r.tier
-                    );
-                }
-                if let Some(u) = upgrade {
-                    let parents: Vec<&str> = u.parents.iter().map(|&p| data.equipment_name(kind, p).unwrap_or("?")).collect();
-                    println!(
-                        "{label:<15} {name:<26} upgrade from [{}]: {}",
-                        parents.join(" / "),
-                        mats(&u.materials)
-                    );
-                }
-            }
-            Ok(())
-        }
-        // arcprox <dir> <window> <min> <v1,v2,...>: find entries where at least <min> of the values appear (as big-endian 2- or
-        // 4-byte numbers) within <window> bytes of each other
-        Some("arcprox") if args.len() == 5 => arcprox(&args[1], args[2].parse()?, args[3].parse()?, &args[4]),
-        // prices-add <game_dir> <ledger> <create|upgrade> <cost> <exact piece name>: note a price read off the game's screens
-        Some("prices-add") if args.len() >= 6 => {
-            prices_add(Path::new(&args[1]), Path::new(&args[2]), &args[3], &args[4], &args[5..].join(" "))
-        }
-        // prices-hint <game_dir> <ledger>: look for where the ledger's costs are stored in the game's data
-        Some("prices-hint") if args.len() == 3 => prices_hint(Path::new(&args[1]), Path::new(&args[2])),
-        // armor-todo <game_dir> <ledger>: craftable armor pieces whose price is not in the ledger yet
-        // drops <game_dir>: every monster drop list as `monster<TAB>rank<TAB>kind<TAB>item:quantity:percent,...`
-        Some("drops") if args.len() == 2 => {
-            let game = GameData::load(Path::new(&args[1]))?;
-            for monster in game.drops().monsters() {
-                for rank in mh3u_core::drops::Rank::ALL {
-                    let mut methods: Vec<_> = (1..=40u8)
-                        .map(mh3u_core::drops::Method::Break)
-                        .chain(mh3u_core::drops::Method::CARVES)
-                        .chain([mh3u_core::drops::Method::Capture])
-                        .collect();
-                    methods.sort();
-                    for method in methods {
-                        if let Some(list) = game.drops().list(monster, rank, method) {
-                            let items: Vec<String> = list
-                                .iter()
-                                .map(|d| format!("{}:{}:{}", game.item_name(d.item).unwrap_or("?"), d.quantity, d.percent))
-                                .collect();
-                            println!(
-                                "{}\t{}\t{}\t{}\t{}",
-                                game.monster_name(monster).unwrap_or("?"),
-                                monster,
-                                rank.label(),
-                                method.label(),
-                                items.join(",")
-                            );
-                        }
-                    }
-                }
-            }
-            Ok(())
-        }
-        // weapon-names <game_dir>: every weapon as `kind id name`, for joining with other tables
-        Some("weapon-names") if args.len() == 2 => weapon_names(Path::new(&args[1])),
-        Some("armor-todo") if args.len() == 3 => armor_todo(Path::new(&args[1]), Path::new(&args[2])),
-        // cemu-host <game_dir> <outdir>: start Cemu on the game and record every save block found in its memory
-        Some("cemu-host") if args.len() == 3 => cemu_host(Path::new(&args[1]), Path::new(&args[2])),
-        _ => bail!(
-            "usage: mh3u-tools savediff <a> <b> | items <user1> <game_dir> | arcls <arc> | arcx <arc> <outdir> | gmd <file> [id...] | arcsearch <dir> <hex>... | recipe <game_dir> <name> | arcprox <dir> <window> <min> <v1,v2,...> | prices-add <game_dir> <ledger> <create|upgrade> <cost> <piece name> | prices-hint <game_dir> <ledger> | armor-todo <game_dir> <ledger> | weapon-names <game_dir> | drops <game_dir> | ansi2svg <capture> <out.svg> [FROM=TO...] | cemu-host <game_dir> <outdir>"
-        ),
     }
+    Ok(())
+}
+
+fn unlock_monsters(save: &Path, game_dir: &Path) -> Result<()> {
+    let bytes = read(save)?;
+    let save = Save::parse(&bytes)?;
+    let data = GameData::load(game_dir)?;
+    for (m, name) in (6u16..80).map(|m| (m, data.monster_name(m))) {
+        if let (n @ 1.., Some(name)) = (save.times_hunted(m), name) {
+            println!("hunted: {name} x{n}");
+        }
+    }
+    for kind in (1..=5u8).chain(7..=19) {
+        for id in data.piece_ids(kind) {
+            let (Some(recipe), Some(name)) = (data.recipe(kind, id), data.piece_name(kind, id)) else {
+                continue;
+            };
+            if recipe.flag == 1 {
+                continue;
+            }
+            let first = recipe.materials[0].id;
+            let mut sources: Vec<u16> = data.drops().sources(first).iter().map(|s| s.0).collect();
+            sources.sort_unstable();
+            sources.dedup();
+            let any = sources.iter().any(|&m| save.times_hunted(m) > 0);
+            let monsters: Vec<&str> = sources.iter().filter_map(|&m| data.monster_name(m)).collect();
+            println!(
+                "{} kind {kind:>2} {name:<24} first {:<18} from {monsters:?}",
+                if any { "OFFER" } else { "  -  " },
+                data.item_name(first).unwrap_or("?"),
+            );
+        }
+    }
+    Ok(())
+}
+
+fn items(save: &Path, game_dir: &Path) -> Result<()> {
+    let save = Save::parse(&read(save)?)?;
+    let data = GameData::load(game_dir)?;
+    println!("hunter: {}", save.hunter_name);
+    for (label, stacks) in [("pouch", &save.pouch), ("box", &save.item_box)] {
+        println!("{label}:");
+        for s in stacks {
+            println!("  {:<24} x{:<3} (id {})", data.item_name(s.id).unwrap_or("?"), s.count, s.id);
+        }
+    }
+    println!("equipment box:");
+    for e in &save.equipment_box {
+        println!(
+            "  {:<16} {:<24} (kind {}, id {})",
+            data.equipment_kind_label(e.kind).unwrap_or("?"),
+            data.equipment_name(e.kind, e.id).unwrap_or("?"),
+            e.kind,
+            e.id
+        );
+    }
+    Ok(())
+}
+
+fn arcls(arc: &Path) -> Result<()> {
+    for e in Arc::parse(&read(arc)?)?.entries {
+        println!("{:08x} {:>9} {:>9}  {}", e.type_hash, e.compressed_size, e.size, e.name);
+    }
+    Ok(())
+}
+
+fn arcx(arc: &Path, outdir: &Path) -> Result<()> {
+    let data = read(arc)?;
+    let arc = Arc::parse(&data)?;
+    for e in &arc.entries {
+        let path = outdir.join(format!("{}.{:08x}", e.name.replace('\\', "/"), e.type_hash));
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        std::fs::write(&path, arc.read(e)?)?;
+    }
+    println!("extracted {} entries", arc.entries.len());
+    Ok(())
+}
+
+fn gmd_strings(file: &Path, ids: &[usize]) -> Result<()> {
+    let strings = gmd::parse(&read(file)?)?;
+    if ids.is_empty() {
+        for (i, s) in strings.iter().enumerate() {
+            println!("{i:5} {s}");
+        }
+    } else {
+        for &i in ids {
+            println!("{i:5} {}", strings.get(i).map_or("<out of range>", String::as_str));
+        }
+    }
+    Ok(())
+}
+
+fn arcsearch(dir: &Path, patterns: &[String]) -> Result<()> {
+    let pats: Vec<Vec<u8>> = patterns.iter().map(|h| hex_bytes(h)).collect::<Result<_>>()?;
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        for ent in std::fs::read_dir(&dir)? {
+            let path = ent?.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else if path.extension().is_some_and(|x| x == "arc") {
+                let data = std::fs::read(&path)?;
+                let Ok(arc) = Arc::parse(&data) else { continue };
+                for e in &arc.entries {
+                    let Ok(body) = arc.read(e) else { continue };
+                    for (pi, pat) in pats.iter().enumerate() {
+                        for (off, _) in body.windows(pat.len()).enumerate().filter(|(_, w)| *w == &pat[..]) {
+                            println!("pat{pi} {} :: {} ({:08x}) @ {off:#x}", path.display(), e.name, e.type_hash);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn recipe(game_dir: &Path, name: &str) -> Result<()> {
+    let data = GameData::load(game_dir)?;
+    let mats = |stacks: &[mh3u_core::save::ItemStack]| -> String {
+        stacks
+            .iter()
+            .map(|m| format!("{} x{}", data.item_name(m.id).unwrap_or("?"), m.count))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    for (kind, id, piece) in data.find_equipment(name) {
+        let label = data.equipment_kind_label(kind).unwrap_or("?");
+        let create = data.recipe(kind, id);
+        let upgrade = data.upgrade(kind, id);
+        if create.is_none() && upgrade.is_none() {
+            println!("{label:<15} {piece:<26} (no recipe)");
+        }
+        if let Some(r) = create {
+            println!(
+                "{label:<15} {piece:<26} create:  {}  [flag {} tier {}]",
+                mats(&r.materials),
+                r.flag,
+                r.tier
+            );
+        }
+        if let Some(u) = upgrade {
+            let parents: Vec<&str> = u.parents.iter().map(|&p| data.equipment_name(kind, p).unwrap_or("?")).collect();
+            println!(
+                "{label:<15} {piece:<26} upgrade from [{}]: {}",
+                parents.join(" / "),
+                mats(&u.materials)
+            );
+        }
+    }
+    Ok(())
+}
+
+fn drops(game_dir: &Path) -> Result<()> {
+    use mh3u_core::drops::{Method, Rank};
+    let game = GameData::load(game_dir)?;
+    let mut methods: Vec<Method> = (1..=40u8)
+        .map(Method::Break)
+        .chain(Method::CARVES)
+        .chain([Method::Capture])
+        .collect();
+    methods.sort();
+    for monster in game.drops().monsters() {
+        for rank in Rank::ALL {
+            for &method in &methods {
+                let Some(list) = game.drops().list(monster, rank, method) else {
+                    continue;
+                };
+                let items: Vec<String> = list
+                    .iter()
+                    .map(|d| format!("{}:{}:{}", game.item_name(d.item).unwrap_or("?"), d.quantity, d.percent))
+                    .collect();
+                println!(
+                    "{}\t{monster}\t{}\t{}\t{}",
+                    game.monster_name(monster).unwrap_or("?"),
+                    rank.label(),
+                    method.label(),
+                    items.join(",")
+                );
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Start the emulator as our child (so we may read its memory) and serve commands from `out/cmd.txt` until it exits or
