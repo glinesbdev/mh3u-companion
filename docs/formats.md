@@ -117,10 +117,19 @@ drop (ores, bugs, fish) are not covered either.
 The game never removes a piece from the blacksmith's list, so the app remembers each piece it has seen on offer in `unlocked.tsv`
 next to the price ledger. `blacksmith.rs` has the rule and tests on the saves before and after the Arzuros quest.
 
+## Monster hit zones
+
+Each monster's archive `arc/enemy/emNNN.arc` (NNN = the monster's id in the name table) holds `enemy\emNNN\em_status00`, a "SME" block.
+After a header of about 0x100 bytes come tables of 10-byte rows, one per hit zone: eight percentages (cut, impact, shot, fire, water,
+ice, thunder, dragon), a dizzy byte and a fixed `0x64`; unused rows are filled with `0x64`. The first table starts at 0xD0, 0x110 or
+elsewhere, so `hitzones.rs` finds it by the row shape (starts non-zero, ends `0x64`, at most 180) and reads up to the filler. It is the
+normal state; later tables (other states) are not read. Compared with Kiranico on 49 monsters, 319 of the 432 zones it lists are in the
+first table. Nothing in the file names a zone, and nothing found says which zone each part-break list belongs to.
+
 ## Not found / not decoded
 
 - **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
-- Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is; quest rewards.
+- Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is, and the names of the hit zones.
 - How the game stores which pieces the blacksmith has unlocked, and what the high-rank (S, X...) sets need. The app uses the hunt rule.
 
 ## Per-piece flag tables (partly understood)

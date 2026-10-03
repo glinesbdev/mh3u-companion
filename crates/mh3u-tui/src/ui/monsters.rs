@@ -58,6 +58,7 @@ pub(super) fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line
         Span::styled("★", warn()),
         Span::styled(" marks what your wishlist still needs.", muted()),
     ]));
+    lines.extend(weak_spots(app, monster));
     let mut current = None;
     for (method, rank, list) in app.game.drops().lists_for(monster) {
         if current != Some(method) {
@@ -88,6 +89,57 @@ pub(super) fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line
     lines.push(Line::raw(""));
     lines.push(Line::styled(
         "Part breaks are numbered in the game's order; which body part each one is, is not known.",
+        muted(),
+    ));
+    lines
+}
+
+const ELEMENTS: [&str; 5] = ["Fire", "Water", "Ice", "Thunder", "Dragon"];
+
+/// A damage percentage, bold green where the zone is soft: from 70 for weapons, from 25 for elements (which start much lower).
+fn soft(value: u8, from: u8) -> Span<'static> {
+    let style = if value >= from {
+        good().add_modifier(Modifier::BOLD)
+    } else {
+        muted()
+    };
+    Span::styled(format!("{value:>5}"), style)
+}
+
+/// The hit zones in the game's order with their damage percentages, and the element that does the most anywhere. The game's data
+/// does not name the zones.
+fn weak_spots(app: &App, monster: u16) -> Vec<Line<'static>> {
+    let zones = app.game.hit_zones(monster);
+    if zones.is_empty() {
+        return Vec::new();
+    }
+    let mut lines = vec![Line::raw(""), Line::styled("Weak spots", bold())];
+    let mut header = vec![Span::styled(format!("  {:<7}", "Zone"), muted())];
+    header.extend(["Cut", "Imp", "Shot", "Fire", "Wat", "Ice", "Thun", "Drag"].map(|h| Span::styled(format!("{h:>5}"), muted())));
+    lines.push(Line::from(header));
+    for (i, z) in zones.iter().enumerate() {
+        let mut spans = vec![Span::raw(format!("  {:<7}", i + 1))];
+        spans.extend(z.physical().map(|v| soft(v, 70)));
+        spans.extend(z.elements().map(|v| soft(v, 25)));
+        lines.push(Line::from(spans));
+    }
+    let best = (0..ELEMENTS.len())
+        .map(|e| {
+            (
+                e,
+                zones.iter().enumerate().map(|(i, z)| (z.elements()[e], i)).max().unwrap_or((0, 0)),
+            )
+        })
+        .max_by_key(|&(_, (value, _))| value);
+    if let Some((e, (value, zone))) = best {
+        lines.push(Line::from(vec![
+            Span::styled("  Best element: ", muted()),
+            Span::styled(ELEMENTS[e], theme::element_style(ELEMENTS[e])),
+            Span::styled(format!(" {value}% at zone {}", zone + 1), muted()),
+        ]));
+    }
+    lines.push(Line::styled(
+        "  Zones are numbered in the game's order; its data names none.",
         muted(),
     ));
     lines

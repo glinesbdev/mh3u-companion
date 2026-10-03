@@ -38,7 +38,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - **Armor maximum defense** (six growth bytes decide it; no formula yet).
 - Which body part each **part-break** list is.
 - Skill **effect names and higher tiers**.
-- Monster weaknesses, hit points and parts (probably in each monster's archive; nothing decoded).
+- Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
 - Palico (Felyne) equipment and the guild card, quest progress and play time in the save.
 - **Item values:** sell and buy price, rarity and carry limit of each item (a published list has them; the game's table is not found).
 - **Hunter's Notes** (the monster descriptions in the text archive): show them on the Monsters tab. **Needs:** the mapping from a note to

@@ -23,6 +23,7 @@ pub mod drops;
 pub mod edit;
 pub mod gamedata;
 pub mod gmd;
+pub mod hitzones;
 pub mod live;
 pub mod livesave;
 pub mod prices;

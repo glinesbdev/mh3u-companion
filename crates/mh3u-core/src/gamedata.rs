@@ -74,6 +74,9 @@ pub struct GameData {
     quests: Vec<crate::quest::Quest>,
     skills: Vec<String>,
     equipment: HashMap<u8, EquipmentTable>,
+    game_dir: std::path::PathBuf,
+    /// Hit zones read so far; each monster's archive is opened the first time it is asked for.
+    zones: std::sync::Mutex<HashMap<u16, std::sync::Arc<Vec<crate::hitzones::Zone>>>>,
 }
 
 /// Where the English quest files are, relative to the dump's game folder.
@@ -160,7 +163,29 @@ impl GameData {
             quests: load_quests(game_dir),
             skills: names("Skill_Type_eng")?,
             equipment,
+            game_dir: game_dir.to_path_buf(),
+            zones: Default::default(),
         })
+    }
+
+    /// The hit zones of a monster's normal state, read from its archive on first use; empty when the dump has none for it.
+    pub fn hit_zones(&self, monster: u16) -> std::sync::Arc<Vec<crate::hitzones::Zone>> {
+        let mut cache = self.zones.lock().unwrap_or_else(|e| e.into_inner());
+        cache
+            .entry(monster)
+            .or_insert_with(|| std::sync::Arc::new(self.read_zones(monster)))
+            .clone()
+    }
+
+    fn read_zones(&self, monster: u16) -> Vec<crate::hitzones::Zone> {
+        let path = self.game_dir.join(format!("content/nativeCafe/arc/enemy/em{monster:03}.arc"));
+        let Ok(bytes) = std::fs::read(path) else { return Vec::new() };
+        let Ok(arc) = Arc::parse(&bytes) else { return Vec::new() };
+        let want = format!("enemy\\em{monster:03}\\em_status00");
+        let Some(entry) = arc.entries.iter().find(|e| e.name == want) else {
+            return Vec::new();
+        };
+        arc.read(entry).map(|d| crate::hitzones::parse(&d)).unwrap_or_default()
     }
 
     /// The quests, by id.
@@ -362,5 +387,27 @@ mod tests {
             "Head armor made from Jaggi parts. Inexpensive."
         );
         assert_eq!(unwrap_text(""), "");
+    }
+
+    /// Real hit zones, as read from the dump (skipped without one): Rathian's first zone and Arzuros's five.
+    #[test]
+    fn monsters_have_hit_zones_in_the_dump() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        let rathian = game.hit_zones(1);
+        assert_eq!(rathian.len(), 7);
+        assert_eq!(rathian[0].physical(), [90, 80, 70]);
+        assert_eq!(rathian[0].elements(), [0, 15, 15, 20, 35]);
+        assert_eq!(game.hit_zones(42).len(), 5);
+        assert!(game.hit_zones(0).is_empty());
     }
 }
