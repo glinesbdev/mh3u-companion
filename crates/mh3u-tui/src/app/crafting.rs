@@ -208,6 +208,40 @@ impl App {
         (create, upgrade)
     }
 
+    /// The cheapest way to get a weapon from what is in the equipment box, by forging fees. `None` for armor and for a weapon with no
+    /// way to get it.
+    pub fn cheapest_path(&self, kind: u8, id: u16) -> Option<crate::upgrade_path::Path> {
+        use crate::upgrade_path::{Cost, Weapons, cheapest};
+        if !(7..=19).contains(&kind) || kind == 12 {
+            return None;
+        }
+        let owned = |w: u16| self.save.owns_equipment(kind, w);
+        let parents = |w: u16| self.upgrade_parents(kind, w);
+        let create = |w: u16| {
+            let recipe = self.create_recipe(kind, w)?;
+            Some(Cost {
+                zenny: self.cost(kind, w, Route::Create).map(|c| c.0),
+                materials: recipe.materials.clone(),
+            })
+        };
+        let upgrade = |w: u16| {
+            let recipe = self.upgrade_recipe(kind, w)?;
+            Some(Cost {
+                zenny: self.cost(kind, w, Route::Upgrade).map(|c| c.0),
+                materials: recipe.materials.clone(),
+            })
+        };
+        cheapest(
+            id,
+            &Weapons {
+                owned: &owned,
+                parents: &parents,
+                create: &create,
+                upgrade: &upgrade,
+            },
+        )
+    }
+
     /// The create recipe of a piece from the game data, or learned from play.
     pub fn create_recipe(&self, kind: u8, id: u16) -> Option<&Recipe> {
         self.game.recipe(kind, id).or_else(|| self.craft.learned_create.get(&(kind, id)))

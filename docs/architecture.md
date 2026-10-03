@@ -44,7 +44,7 @@ ui/
   one file per tab, plus pieces.rs (what is said about a piece), help.rs, tree.rs
 ```
 
-Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `templates`
+Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
 `unlocked` and `files` (what is kept on disk, and where).
 

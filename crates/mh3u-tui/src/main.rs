@@ -9,6 +9,7 @@ mod theme;
 mod tree;
 mod ui;
 mod unlocked;
+mod upgrade_path;
 mod worn;
 
 use anyhow::{Context, Result, bail};

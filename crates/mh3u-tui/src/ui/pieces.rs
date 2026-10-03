@@ -199,6 +199,7 @@ pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable:
         }
         lines.push(Line::raw(""));
     }
+    lines.extend(cheapest_way_lines(app, kind, id));
     let children = app.upgrade_children(kind, id);
     if !children.is_empty() {
         lines.push(Line::from(vec![
@@ -232,5 +233,70 @@ pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable:
         lines.push(Line::raw(""));
         lines.push(Line::styled("Costs are learned by watching you craft in live mode.", muted()));
     }
+    lines
+}
+
+/// The cheapest way to get a weapon you do not own: each step with its fee, then the materials for all of them. Nothing for armor, a
+/// weapon you own, or when the route is just making it (the "Create from scratch" section says that).
+fn cheapest_way_lines(app: &App, kind: u8, id: u16) -> Vec<Line<'static>> {
+    use crate::upgrade_path::How;
+    if app.save.owns_equipment(kind, id) {
+        return Vec::new();
+    }
+    let Some(path) = app.cheapest_path(kind, id) else {
+        return Vec::new();
+    };
+    if path.steps.len() < 2 {
+        return Vec::new();
+    }
+    let zenny = app.save.zenny;
+    let total = path.zenny();
+    let mut heading = vec![
+        Span::styled("Cheapest way", bold()),
+        Span::styled(
+            format!(" · {} z", group_digits(u64::from(total))),
+            if total <= zenny { good() } else { bad() },
+        ),
+    ];
+    if path.unknown_prices() > 0 {
+        heading.push(Span::styled(format!(" + {} price(s) not seen yet", path.unknown_prices()), muted()));
+    }
+    // the dearer alternative, if the weapon can also be made from scratch
+    if let Some((scratch, _)) = app.create_recipe(kind, id).and_then(|_| app.cost(kind, id, Route::Create)) {
+        heading.push(Span::styled(
+            format!("  (from scratch {} z)", group_digits(u64::from(scratch))),
+            muted(),
+        ));
+    }
+    let mut lines = vec![Line::from(heading)];
+    for step in &path.steps {
+        let name = app.game.equipment_name(kind, step.weapon).unwrap_or("?");
+        let (mark, how) = match step.how {
+            How::Owned => ("● ", "owned"),
+            How::Create => ("▸ ", "make"),
+            How::Upgrade => ("▸ ", "upgrade"),
+        };
+        let mut spans = vec![
+            Span::styled(mark, if step.how == How::Owned { good() } else { accent() }),
+            Span::raw(format!("{:<24}", fit(name, 24))),
+            Span::styled(format!("{how:<8}"), muted()),
+        ];
+        if step.how != How::Owned {
+            spans.push(Span::raw(match step.cost.zenny {
+                Some(z) => format!("{} z", group_digits(u64::from(z))),
+                None => "price not seen".to_string(),
+            }));
+        }
+        lines.push(Line::from(spans));
+    }
+    lines.push(Line::styled("  materials for every step:", muted()));
+    for m in path.materials() {
+        lines.push(theme::material_line(
+            app.game.item_name(m.id).unwrap_or("?"),
+            app.save.item_count(m.id),
+            u32::from(m.count),
+        ));
+    }
+    lines.push(Line::raw(""));
     lines
 }

@@ -51,7 +51,7 @@ pub(super) const HELP: &[(&str, &str)] = &[
     ),
     (
         "Any weapon",
-        "t  upgrade tree: the line down to it and everything it upgrades into (↑/↓ scroll, t or Esc close)",
+        "t  upgrade tree: the line down to it and everything it upgrades into (↑/↓ scroll, t or Esc close). A weapon you do not own also shows its cheapest way (forging fees) from what you hold.",
     ),
     ("", ""),
     (
