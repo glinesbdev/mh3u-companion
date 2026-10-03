@@ -77,7 +77,6 @@ or in code is still possible).
 
 ## Not found / not decoded
 
-- **Zenny cost of armor.** Not found; prices follow the set and class. Weapon costs are decoded (`weapons.rs`): each weapon
-  stats record starts with the price, upgrade cost = price, create cost = 1.5 x price. See `docs/prices.md`.
-- Weapon sharpness and element; armor max defense; talisman data.
+- **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
+- Weapon sharpness and element; talisman data.
 - Which pieces the blacksmith has unlocked.

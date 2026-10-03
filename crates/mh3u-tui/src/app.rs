@@ -677,8 +677,7 @@ impl App {
                 owned: self.save.owns_equipment(kind, id),
                 reason,
             };
-            let unpriced =
-                piece.owned && self.prices.get(kind, id, Route::Create).is_none() && self.prices.get(kind, id, Route::Upgrade).is_none();
+            let unpriced = piece.owned && self.cost(kind, id, Route::Create).is_none() && self.cost(kind, id, Route::Upgrade).is_none();
             if (!self.craftable_only || piece.craftable) && (!self.hide_owned || !piece.owned) && (!self.unpriced_only || unpriced) {
                 scored.push((score, piece));
             }
@@ -945,13 +944,21 @@ impl App {
         self.status = "live: waiting for a hunter to be loaded in the game".into();
     }
 
-    /// The forging cost of a piece by a route, if one has been seen (or noted) and what it came from.
+    /// The forging cost of a piece by a route and what it came from. A price seen in play wins over the game files,
+    /// which in turn win over notes and learned costs.
     pub fn cost(&self, kind: u8, id: u16, route: Route) -> Option<(u32, Source)> {
-        let via = match route {
-            Route::Create => mh3u_core::weapons::Via::Create,
-            Route::Upgrade => mh3u_core::weapons::Via::Upgrade,
+        let seen = self.prices.get(kind, id, route).filter(|e| e.source == Source::Seen);
+        if let Some(e) = seen {
+            return Some((e.cost, e.source));
+        }
+        let from_game = match route {
+            Route::Create => self
+                .game
+                .armor_cost(kind, id)
+                .or_else(|| self.game.weapon_cost(kind, id, mh3u_core::weapons::Via::Create)),
+            Route::Upgrade => self.game.weapon_cost(kind, id, mh3u_core::weapons::Via::Upgrade),
         };
-        if let Some(cost) = self.game.weapon_cost(kind, id, via) {
+        if let Some(cost) = from_game {
             return Some((cost, Source::Game));
         }
         self.prices.get(kind, id, route).map(|e| (e.cost, e.source))

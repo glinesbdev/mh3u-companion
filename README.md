@@ -39,7 +39,7 @@ what you own and what you need to craft or upgrade gear.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
 
-Not shown yet: sharpness and element for weapons, armor max defense, zenny costs for armor (except those seen in live mode). See `docs/formats.md`.
+Not shown yet: sharpness and element for weapons, armor max defense. See `docs/formats.md`.
 
 ## Live mode
 
@@ -48,7 +48,7 @@ follows. Close any running Cemu first, then run the TUI and load your hunter in 
 `● live` once connected. Any change in zenny (shops, NPCs, quest rewards or fees) shows next to the total in the header
 as `▲ +1,200` or `▼ -300` for 15 seconds, adding up if several happen close together, and in the status line. See `docs/live.md` for how it works and why the TUI must be the one to start Cemu.
 
-Weapon forging costs (create and upgrade) are read straight from the game files and always shown. Armor costs are not stored in a table I could find, so for armor, in live mode, crafting a piece teaches the app what it costs (and, for the few pieces the game data has no recipe for, what it needs): the zenny drop is matched against the piece's recipe and kept in
+Forging costs for weapons (create and upgrade) and armor are read straight from the game files and always shown, unless you have seen a different price in play, which then wins. In live mode, crafting a piece also teaches the app what it cost (and, for the few pieces the game data has no recipe for, what it needs): the zenny drop is matched against the piece's recipe and kept in
 `~/.local/share/mh3u-companion/prices.tsv`, then shown beside the recipe and totalled on the Wishlist tab. See `docs/prices.md`.
 
 `mh3u-tui --live --debug-edit` adds a debug command line (`:`) that changes the running game's zenny and item box (`zenny 50000`,

@@ -269,26 +269,34 @@ fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
+    let [left, right] = theme::split(area, 45);
     let rows: Vec<ListItem> = app
         .save
         .equipment_box
         .iter()
         .map(|e| {
             let worn = if app.save.is_worn(e) {
-                Span::styled("● worn", good())
+                Span::styled("●", good())
             } else {
                 Span::raw("")
             };
+            let rarity = match app.game.equipment_rarity(e.kind, e.id) {
+                Some(r) => theme::rarity_badge(r),
+                None => Span::raw("   "),
+            };
             ListItem::new(Line::from(vec![
-                Span::styled(format!("{:<16} ", app.game.equipment_kind_label(e.kind).unwrap_or("?")), muted()),
-                Span::raw(format!("{:<28}", app.game.equipment_name(e.kind, e.id).unwrap_or("?"))),
+                Span::styled(format!("{:<14} ", app.game.equipment_kind_label(e.kind).unwrap_or("?")), muted()),
+                Span::raw(format!("{:<22}", app.game.equipment_name(e.kind, e.id).unwrap_or("?"))),
+                rarity,
+                Span::raw(" "),
                 worn,
             ]))
         })
         .collect();
     let title = format!(" Equipment Box ({}/1000) ", rows.len());
     if rows.is_empty() {
-        empty_pane(f, area, title, true, vec![Line::styled("The equipment box is empty.", muted())]);
+        empty_pane(f, left, title, true, vec![Line::styled("The equipment box is empty.", muted())]);
+        f.render_widget(Paragraph::new(Vec::<Line>::new()).block(theme::pane(" Details ", false)), right);
         return;
     }
     let len = rows.len();
@@ -297,10 +305,29 @@ fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             .block(theme::pane(title, true))
             .highlight_style(theme::selection())
             .highlight_symbol(theme::SELECTION_MARK),
-        area,
+        left,
         &mut app.equip_state,
     );
-    scrollbar(f, area, len, app.equip_state.selected());
+    scrollbar(f, left, len, app.equip_state.selected());
+
+    let selected = app.equip_state.selected().and_then(|i| app.save.equipment_box.get(i));
+    let lines = match selected {
+        Some(e) => {
+            let name = app.game.equipment_name(e.kind, e.id).unwrap_or("?").to_string();
+            let mut lines = piece_details(app, e.kind, e.id, &name, None);
+            if app.save.is_worn(e) {
+                lines.insert(2, Line::styled("● worn", good()));
+            }
+            lines
+        }
+        None => Vec::new(),
+    };
+    f.render_widget(
+        Paragraph::new(lines)
+            .wrap(Wrap { trim: false })
+            .block(theme::pane(" Details (pouch + box) ", false)),
+        right,
+    );
 }
 
 /// A section heading with the forging cost beside it: `Create from scratch · 300 z (seen)`.
@@ -404,6 +431,70 @@ fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
     lines
 }
 
+/// The details of one piece of equipment: stats, then what it takes to create or upgrade it with the materials you have.
+/// `craftable` is `Some` on the Crafting tab, where the piece may not be owned; `None` on the Equipment tab.
+fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable: Option<bool>) -> Vec<Line<'static>> {
+    let zenny = app.save.zenny;
+    let mut lines: Vec<Line> = vec![
+        Line::styled(name.to_string(), bold()),
+        Line::styled(app.game.equipment_kind_label(kind).unwrap_or("?").to_string(), muted()),
+    ];
+    if let Some(a) = app.game.armor_stats(kind, id) {
+        lines.extend(armor_lines(app, a));
+    } else if let Some(w) = app.game.weapon_stats(kind, id) {
+        lines.extend(weapon_lines(w));
+    }
+    lines.push(Line::raw(""));
+    if let Some(recipe) = app.create_recipe(kind, id) {
+        lines.push(cost_heading("Create from scratch", app.cost(kind, id, Route::Create), zenny));
+        for m in &recipe.materials {
+            lines.push(theme::material_line(
+                app.game.item_name(m.id).unwrap_or("?"),
+                app.save.item_count(m.id),
+                u32::from(m.count),
+            ));
+        }
+        lines.push(Line::raw(""));
+    }
+    if let Some(up) = app.upgrade_recipe(kind, id) {
+        lines.push(cost_heading("Upgrade from", app.cost(kind, id, Route::Upgrade), zenny));
+        for &parent in &up.parents {
+            let parent_name = app.game.equipment_name(kind, parent).unwrap_or("?");
+            let (mark, style) = if app.save.owns_equipment(kind, parent) {
+                ("● owned", good())
+            } else {
+                ("○ not owned", bad())
+            };
+            lines.push(Line::from(vec![
+                Span::raw(format!("  {parent_name:<24}")),
+                Span::styled(mark, style),
+            ]));
+        }
+        for m in &up.materials {
+            lines.push(theme::material_line(
+                app.game.item_name(m.id).unwrap_or("?"),
+                app.save.item_count(m.id),
+                u32::from(m.count),
+            ));
+        }
+        lines.push(Line::raw(""));
+    }
+    if let Some(craftable) = craftable {
+        lines.push(if craftable {
+            Line::styled("✔ You can make this now.", good())
+        } else {
+            Line::styled("✘ Not available yet.", bad())
+        });
+    }
+    let any_cost_missing = (app.create_recipe(kind, id).is_some() && app.cost(kind, id, Route::Create).is_none())
+        || (app.upgrade_recipe(kind, id).is_some() && app.cost(kind, id, Route::Upgrade).is_none());
+    if any_cost_missing {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled("Costs are learned by watching you craft in live mode.", muted()));
+    }
+    lines
+}
+
 fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
 
@@ -466,61 +557,16 @@ fn draw_crafting(f: &mut Frame, app: &mut App, area: Rect) {
         scrollbar(f, left, len, app.craft_state.selected());
     }
 
-    let mut lines: Vec<Line> = Vec::new();
-    let zenny = app.save.zenny;
-    if let Some(piece) = app.craft_state.selected().and_then(|i| app.pieces.get(i)) {
-        lines.push(Line::styled(piece.name.clone(), bold()));
-        lines.push(Line::styled(app.game.equipment_kind_label(piece.kind).unwrap_or("?"), muted()));
-        if let Some(a) = app.game.armor_stats(piece.kind, piece.id) {
-            lines.extend(armor_lines(app, a));
-        } else if let Some(w) = app.game.weapon_stats(piece.kind, piece.id) {
-            lines.extend(weapon_lines(w));
-        }
-        lines.push(Line::raw(""));
-        if let Some(recipe) = app.create_recipe(piece.kind, piece.id) {
-            lines.push(cost_heading(
-                "Create from scratch",
-                app.cost(piece.kind, piece.id, Route::Create),
-                zenny,
-            ));
-            for m in &recipe.materials {
-                lines.push(theme::material_line(
-                    app.game.item_name(m.id).unwrap_or("?"),
-                    app.save.item_count(m.id),
-                    u32::from(m.count),
-                ));
-            }
-            lines.push(Line::raw(""));
-        }
-        if let Some(up) = app.upgrade_recipe(piece.kind, piece.id) {
-            lines.push(cost_heading("Upgrade from", app.cost(piece.kind, piece.id, Route::Upgrade), zenny));
-            for &parent in &up.parents {
-                let name = app.game.equipment_name(piece.kind, parent).unwrap_or("?");
-                let (mark, style) = if app.save.owns_equipment(piece.kind, parent) {
-                    ("● owned", good())
-                } else {
-                    ("○ not owned", bad())
-                };
-                lines.push(Line::from(vec![Span::raw(format!("  {name:<24}")), Span::styled(mark, style)]));
-            }
-            for m in &up.materials {
-                lines.push(theme::material_line(
-                    app.game.item_name(m.id).unwrap_or("?"),
-                    app.save.item_count(m.id),
-                    u32::from(m.count),
-                ));
-            }
-            lines.push(Line::raw(""));
-        }
-        lines.push(if piece.craftable {
-            Line::styled("✔ You can make this now.", good())
-        } else {
-            Line::styled("✘ Not available yet.", bad())
-        });
-        lines.push(Line::raw(""));
-        lines.push(Line::styled("Costs are learned by watching you craft in live mode.", muted()));
-    }
-    f.render_widget(Paragraph::new(lines).block(theme::pane(" Recipe (pouch + box) ", false)), right);
+    let lines = match app.craft_state.selected().and_then(|i| app.pieces.get(i)) {
+        Some(piece) => piece_details(app, piece.kind, piece.id, &piece.name, Some(piece.craftable)),
+        None => Vec::new(),
+    };
+    f.render_widget(
+        Paragraph::new(lines)
+            .wrap(Wrap { trim: false })
+            .block(theme::pane(" Recipe (pouch + box) ", false)),
+        right,
+    );
 }
 
 fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
@@ -540,8 +586,8 @@ fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
                 Span::raw("")
             };
             ListItem::new(Line::from(vec![
-                Span::raw(format!("{name:<26}")),
-                Span::styled(format!("{label:<15}"), muted()),
+                Span::raw(format!("{name:<22}")),
+                Span::styled(format!("{label:<14}"), muted()),
                 state,
             ]))
         })

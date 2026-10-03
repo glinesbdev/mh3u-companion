@@ -13,7 +13,13 @@
 //! | 14..24| five (skill id, signed points) pairs; id 0 = empty |
 //!
 //! Bytes 1..6 (model ids, maximum defense data) are not decoded. Skill ids index the game's
-//! skill-tree name table. Zenny prices are not stored here.
+//! skill-tree name table.
+//!
+//! Prices live in a second set of tables, also indexed by piece id, of 32-byte rows: a big-endian u16 at byte 14 holds
+//! **half the zenny price** (a Jaggi piece costs 1,150 and stores 575). The same rows hold the upgrade-level data that
+//! decides maximum defense (not decoded). The price tables follow each other starting at [`PRICE_TABLES`]. This was found
+//! by matching 966 armor prices from a published list (942 agree) and all 39 prices seen in play (38 agree; the other is a
+//! hand-written note), see `docs/prices.md`.
 
 use anyhow::{Result, bail};
 use std::collections::HashMap;
@@ -28,6 +34,13 @@ const TABLES: &[(u8, usize, usize)] = &[
     (4, 0x1e158, 377), // legs
     (5, 0x204b0, 380), // head
 ];
+
+/// (equipment kind, byte offset of the 32-byte price rows in the data section). Same kinds and counts as [`TABLES`].
+const PRICE_TABLES: &[(u8, usize)] = &[(1, 0x22958), (2, 0x25918), (3, 0x28678), (4, 0x2b4d8), (5, 0x2e3f8)];
+const PRICE_ROW_LEN: usize = 32;
+const PRICE_AT: usize = 14;
+/// The most an armor piece plausibly costs; anything above means the table isn't where we think it is.
+const MAX_PRICE: u32 = 200_000;
 
 /// Which hunters can wear a piece.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -77,6 +90,8 @@ pub struct ArmorStats {
     pub resist: [i8; 5],
     /// (skill id, points); points may be negative.
     pub skills: Vec<(u8, i8)>,
+    /// What the forge charges to create the piece, in zenny. `None` when the table holds no price for it.
+    pub price: Option<u32>,
 }
 
 fn parse_record(r: &[u8]) -> ArmorStats {
@@ -104,6 +119,7 @@ fn parse_record(r: &[u8]) -> ArmorStats {
             .filter(|p| p[0] != 0)
             .map(|p| (p[0], p[1] as i8))
             .collect(),
+        price: None,
     }
 }
 
@@ -119,6 +135,29 @@ pub fn parse(data: &[u8]) -> Result<HashMap<(u8, u16), ArmorStats>> {
                 bail!("implausible armor record for kind {kind} id {id}; unsupported executable?");
             }
             out.insert((kind, id as u16), parse_record(rec));
+        }
+    }
+    for (&(kind, start), &(_, _, count)) in PRICE_TABLES.iter().zip(TABLES) {
+        let Some(rows) = data.get(start..start + count * PRICE_ROW_LEN) else {
+            bail!("armor price table for kind {kind} runs past the data section; unsupported executable?");
+        };
+        let (mut seen, mut odd) = (0usize, 0usize);
+        for (id, row) in rows.as_chunks::<PRICE_ROW_LEN>().0.iter().enumerate() {
+            let price = u32::from(u16::from_be_bytes([row[PRICE_AT], row[PRICE_AT + 1]])) * 2;
+            if price == 0 {
+                continue;
+            }
+            seen += 1;
+            // real prices are all multiples of 50
+            if price > MAX_PRICE || price % 50 != 0 {
+                odd += 1;
+            }
+            if let Some(stats) = out.get_mut(&(kind, id as u16)) {
+                stats.price = Some(price);
+            }
+        }
+        if seen < 20 || odd * 10 > seen {
+            bail!("armor price table for kind {kind} looks wrong ({odd} of {seen} prices implausible); unsupported executable?");
         }
     }
     Ok(out)
@@ -174,5 +213,70 @@ mod tests {
         assert_eq!(s.resist, [-4, -2, -1, 2, 1]);
         assert_eq!(s.skills, vec![(88, 10)]);
         assert_eq!((s.gender, s.class), (Some(Gender::Both), Some(ArmorClass::Both)));
+    }
+
+    /// A data section with plausible price rows at the real positions: piece `id` of every kind stores `id * 25 + 25`
+    /// (so it costs `id * 50 + 50`).
+    fn fake_section_with_prices() -> Vec<u8> {
+        let end = PRICE_TABLES
+            .iter()
+            .zip(TABLES)
+            .map(|(&(_, p), &(_, _, count))| p + count * PRICE_ROW_LEN)
+            .max()
+            .unwrap();
+        let mut data = vec![0u8; end];
+        for (&(_, start), &(_, _, count)) in PRICE_TABLES.iter().zip(TABLES) {
+            for id in 0..count {
+                let at = start + id * PRICE_ROW_LEN + PRICE_AT;
+                data[at..at + 2].copy_from_slice(&((id as u16) * 25 + 25).to_be_bytes());
+            }
+        }
+        data
+    }
+
+    #[test]
+    fn prices_are_twice_the_stored_half() {
+        let data = fake_section_with_prices();
+        let armor = parse(&data).unwrap();
+        assert_eq!(armor[&(4, 11)].price, Some(600), "id 11 stores 300");
+        assert_eq!(armor[&(5, 0)].price, Some(50));
+        assert_eq!(armor[&(1, 381)].price, Some(381 * 50 + 50));
+    }
+
+    #[test]
+    fn a_price_table_in_the_wrong_place_is_rejected() {
+        let mut data = fake_section_with_prices();
+        // odd numbers where the head prices should be
+        let start = PRICE_TABLES[4].1;
+        for (n, byte) in data[start..start + 380 * PRICE_ROW_LEN].iter_mut().enumerate() {
+            *byte = (n * 37 + 11) as u8;
+        }
+        assert!(parse(&data).is_err());
+        assert!(parse(&data[..0x22000]).is_err(), "a section that is too short is rejected");
+    }
+}
+
+#[cfg(test)]
+mod real_data {
+    use super::*;
+
+    /// Prices seen in play (and their set mates), against the extracted data section when it is around.
+    #[test]
+    fn matches_prices_seen_in_play() {
+        let Ok(data) = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../target/live/rpx_data.bin")) else {
+            return;
+        };
+        let armor = parse(&data).unwrap();
+        // (kind, id, price seen in the forge list)
+        for (kind, id, price) in [
+            (1, 2, 200),   // Chainmail Vest
+            (1, 4, 450),   // Hunter's Mail
+            (1, 8, 750),   // Alloy Mail
+            (4, 11, 1150), // Jaggi Greaves
+            (4, 12, 1150), // Jaggi Leggings
+            (5, 9, 750),   // Alloy Cap
+        ] {
+            assert_eq!(armor[&(kind, id)].price, Some(price), "kind {kind} id {id}");
+        }
     }
 }

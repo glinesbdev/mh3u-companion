@@ -112,6 +112,11 @@ impl GameData {
         self.armor.get(&(kind, id))
     }
 
+    /// What the forge charges to create an armor piece, from the game's own table.
+    pub fn armor_cost(&self, kind: u8, id: u16) -> Option<u32> {
+        self.armor.get(&(kind, id)).and_then(|a| a.price)
+    }
+
     /// What the forge charges for a weapon, from the game's own table. `None` for armor and unknown weapons.
     pub fn weapon_cost(&self, kind: u8, id: u16, via: crate::weapons::Via) -> Option<u32> {
         self.weapons.get(&(kind, id)).map(|w| crate::weapons::cost(w.price, via))

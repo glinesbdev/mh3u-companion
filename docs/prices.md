@@ -1,7 +1,8 @@
 # Forging costs
 
-The game files have not given up where the zenny price of crafting a piece is stored (see `docs/formats.md`). What can be
-seen is the effect: when a piece is crafted, the wallet drops by its price. Live mode watches for that and keeps what it learns.
+The forging price of every weapon and armor piece is in the game files (last section below), and the app reads it from there.
+This ledger is what the app has seen: when a piece is crafted, the wallet drops by its price, and live mode watches for that and
+keeps what it learns. A price seen in play wins over the game files, and the ledger still holds recipes the game data lacks.
 
 ## The ledger
 
@@ -89,25 +90,28 @@ addresses.) All 28 weapon prices in the ledger (create and upgrade, every type) 
 as "game data" and prefers them over ledger values; the ledger stays as a check. Earlier notes here said the weapon table's
 price field was not the forging price: that was wrong, the comparisons used the wrong route and misaligned records.
 
-**Armor: not found.** Armor prices follow the set (and armor class), and are not stored per piece in any table that was searched.
-With the 1.5x create / 1.0x upgrade relationship, the base values for early sets would be 133, 200, 300, 367 and 500, so a table of
-those (rather than the shown costs) may be worth searching for. Tried so far, and why each failed:
+**Armor: found** (`armor.rs`). Armor has its own set of five tables (body, arms, waist, legs, head), each a run of **32-byte rows
+indexed by piece id** and laid end to end from `0x22958` in the data section. A big-endian u16 at byte 14 of the row holds
+**half the zenny price**: a Jaggi piece costs 1,150 and stores 575. Armor has no upgrade route, so this is the create cost.
 
-- **A table indexed by piece id** (the `prices-hint` search: 1, 2 or 4-byte values, optionally divided by 10/50/100/1000, any
-  spacing up to 64 bytes): no layout explains more than chance for armor.
-- **A table indexed by the armor stats record's byte 5 within each armor class**: that pair does determine the price for all
-  entries, but no array in the executable matches it.
-- **Computed from the recipe's materials**: armor pieces of one set share a price despite different recipes.
-- **Live memory with the forge list open**: the list shows every price, yet 1,150 (as u32, u16, float or text) was found with no
-  other price near it, so the price is probably computed when drawn. Jaggi Greaves (Blademaster) and Leggings (Gunner) both cost
-  1,150, so class does not matter, and armor is not 1.5x anything.
-- **Plain numbers and 32-bit floats** of the shown costs, in data, code and archives: nothing relevant.
+Why the earlier searches missed it: `prices-hint` looked for the shown price divided by 1, 10, 50, 100 or 1000 and never by 2,
+and it assumed spacing of up to 64 bytes but only tried a few. Seeing a column of values such as 25, 100, 225, 275, 325, 375 and
+575 next to a column of growth numbers in an unrelated dump is what gave it away: they are exactly the prices of Leather Vest
+(50), Chainmail Vest (200), Hunter's Mail (450), Loc Lac Shawl (550), Bone Mail (650), Alloy Mail (750) and Jaggi Mail (1,150).
 
-- **Fitting a formula to ~960 armor prices** (head, body and arm prices from a third-party database, used only to check ideas;
-  none of it is stored here): price is a multiple of 50 that depends on the set only, rises with rarity and, loosely, with
-  defense, but equal rarity and defense give different prices (e.g. two rarity-3 sets with the same base defense cost 3,350 and
-  4,150). Sums of material values, material counts and per-rarity weights do not fit, and stats bytes 1-5 plus rarity only
-  "determine" the price because they identify the set. The prices look hand-authored per set, so a stored table, perhaps in
-  code, is still the likely source.
+How well it holds: all 38 armor prices in the ledger that were seen in the game agree (the 39th entry is a hand-written note, Yukumo
+Dogi at 1,100, where the table says 550). Against a published armor list (966 head, body and arm pieces), 942 agree. The 24
+that differ are a few sets (Qurupeco, Yukumo, Rathian X and Rath Heart Z, Silhouette Casque) where the list gives a different
+price; the game's own screens have not been checked for those, so the app shows the game's table value for them and a price
+you saw in play overrides it.
+
+The same rows hold more: bytes 3 to 8 are upgrade-level data that decides maximum defense (below), byte 2 is 1 for the gunner
+version of a piece and 0 for the blademaster version, and byte 1 is some other id. Maximum defense is not decoded yet: it is
+determined by the six growth bytes (107 distinct rows, 5 conflicts against the published list), but no closed formula was found.
+
+Other things tried first, and why they failed: a table of the shown price indexed by piece id (the divisor was wrong), the armor stats
+record's bytes 1 to 5 (they identify the model, not the price), the recipe materials (one set shares a price across different
+recipes), and a scan of live memory with the forge list open (the price is only a half-value in the table and is formatted when
+drawn, so the shown number was never in memory as a number).
 
 `prices-add <game dir> <ledger> <create|upgrade> <cost> <exact piece name>` adds a price read off the game's screen by hand.
