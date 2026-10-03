@@ -40,7 +40,8 @@ Use the same word for the same thing, in the code, the docs and on screen.
   (the blacksmith never takes a piece off). Do not use "unlocked" for a piece, the app only infers it.
 - A **slot** is a save slot (hunter) on the command line and a **gear slot** (head, body...) in a set. Say which when it could be
   either; in code `slot` is the save slot and `SLOTS` in `templates` are the gear slots.
-- **Template** is a saved set; **set** is a found or worn set of armor; **build** is the feature.
+- **Template** is a saved set; **set** is a found or worn set of armor; **build** is the feature. A **family** is the armor named
+  alike (Agnaktor...) with its variants; do not call that a "set", which would clash with the Builds tab.
 
 ## Size and shape
 

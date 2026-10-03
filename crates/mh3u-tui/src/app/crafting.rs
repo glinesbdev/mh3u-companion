@@ -312,18 +312,18 @@ impl App {
 
     /// The search text for the current tab.
     pub fn active_search(&self) -> &str {
-        if self.tab == Tab::Items {
-            &self.inv.item_search
-        } else {
-            &self.craft.search
+        match self.tab {
+            Tab::Items => &self.inv.item_search,
+            Tab::Families => &self.families.search,
+            _ => &self.craft.search,
         }
     }
 
     pub(super) fn apply_search(&mut self) {
-        if self.tab == Tab::Items {
-            self.refresh_box();
-        } else {
-            self.refresh_pieces();
+        match self.tab {
+            Tab::Items => self.refresh_box(),
+            Tab::Families => self.refresh_families(),
+            _ => self.refresh_pieces(),
         }
     }
 

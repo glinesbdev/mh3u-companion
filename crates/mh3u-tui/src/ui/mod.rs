@@ -12,6 +12,7 @@ use ratatui::{
 mod builds;
 mod crafting;
 mod equipment;
+mod families;
 mod help;
 mod hunts;
 mod items;
@@ -25,6 +26,7 @@ mod worn;
 use builds::{draw_builds, draw_name_prompt, draw_piece_picker, draw_skill_picker};
 use crafting::draw_crafting;
 use equipment::draw_equipment;
+use families::draw_families;
 use help::draw_help;
 use hunts::draw_hunts;
 use items::{draw_items, wrap_items};
@@ -98,6 +100,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         Tab::Crafting => draw_crafting(f, app, body),
         Tab::Wishlist => draw_wishlist(f, app, body),
         Tab::Hunts => draw_hunts(f, app, body),
+        Tab::Families => draw_families(f, app, body),
         Tab::Builds => draw_builds(f, app, body),
     }
 
@@ -170,6 +173,13 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Worn => keys.push(("i", "skill info")),
             Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
             Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
+            Tab::Families => {
+                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                if clear {
+                    keys.push(("x", "clear"));
+                }
+                keys.extend([("o", "owned"), ("Enter", "craft")]);
+            }
             Tab::Builds => {
                 use crate::app::BuildFocus;
                 keys.push(("f", "switch list"));

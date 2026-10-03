@@ -38,6 +38,10 @@ pub(super) const HELP: &[(&str, &str)] = &[
         "the monsters to hunt, best first, for the materials the wishlist is short of: each hunt covers as many as it can and the next picks up the rest; r  limit it to one rank;  Enter  show that monster's drops",
     ),
     (
+        "Families",
+        "armor grouped by family (Agnaktor, Zinogre...), with a table of which variants (base, S, U, X, Z) of each piece you own or the blacksmith offers;  /  search;  o  only sets you own a piece of;  Enter  show the family on the Crafting tab",
+    ),
+    (
         "Builds",
         "a  add a skill to look for (type to find it, Enter);  + / -  its points;  x  remove it;  f  switch between the skills, the sets found and your templates",
     ),

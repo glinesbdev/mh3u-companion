@@ -73,6 +73,11 @@ shot monsters
 keys Right                # Hunt plan
 shot hunts
 
+keys Right                # Families
+keys '/' 'jaggi' Enter
+shot families
+keys Escape
+
 keys Right                # Builds
 keys a
 keys 'psychic'

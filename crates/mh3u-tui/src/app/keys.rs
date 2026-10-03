@@ -72,21 +72,16 @@ impl App {
     }
 
     fn search_key(&mut self, code: KeyCode) {
-        let text = if self.tab == Tab::Items {
-            &mut self.inv.item_search
-        } else {
-            &mut self.craft.search
-        };
         match code {
             KeyCode::Esc => {
+                self.search_text_mut().clear();
                 self.searching = false;
-                text.clear();
             }
             KeyCode::Enter => self.searching = false,
             KeyCode::Backspace => {
-                text.pop();
+                self.search_text_mut().pop();
             }
-            KeyCode::Char(c) => text.push(c),
+            KeyCode::Char(c) => self.search_text_mut().push(c),
             _ => {}
         }
         self.apply_search();
@@ -114,6 +109,7 @@ impl App {
             Tab::Equipment => self.equipment_key(code),
             Tab::Monsters => self.monsters_key(code),
             Tab::Hunts => self.hunts_key(code),
+            Tab::Families => self.families_key(code),
             Tab::Worn | Tab::Builds => false,
         }
     }
@@ -223,13 +219,18 @@ impl App {
         }
     }
 
-    /// Forget the search text of the current tab (the Items tab has its own).
-    fn clear_search(&mut self) {
-        if self.tab == Tab::Items {
-            self.inv.item_search.clear();
-        } else {
-            self.craft.search.clear();
-        }
+    /// Forget the search text of the current tab.
+    pub(super) fn clear_search(&mut self) {
+        self.search_text_mut().clear();
         self.apply_search();
+    }
+
+    /// The search text the current tab types into.
+    fn search_text_mut(&mut self) -> &mut String {
+        match self.tab {
+            Tab::Items => &mut self.inv.item_search,
+            Tab::Families => &mut self.families.search,
+            _ => &mut self.craft.search,
+        }
     }
 }

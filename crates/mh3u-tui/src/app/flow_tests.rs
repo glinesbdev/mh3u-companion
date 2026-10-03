@@ -193,3 +193,24 @@ fn the_wishlist_follows_the_cheapest_route_and_its_shopping_list_matches_it() {
     assert!(app.wish.items.is_empty());
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_families_tab_groups_armor_searches_and_opens_the_crafting_search() {
+    let dir = temp_dir("families");
+    let Some(mut app) = app_in(&dir) else { return };
+    assert!(app.families.rows.len() > 50, "dozens of armor families");
+    for _ in 0..7 {
+        key(&mut app, KeyCode::Right);
+    }
+    assert_eq!(app.tab, Tab::Families);
+    press(&mut app, "/arzuros");
+    key(&mut app, KeyCode::Enter);
+    assert_eq!(app.families.rows.len(), 1);
+    let family = app.families.selected().expect("a family");
+    assert_eq!(family.name, "Arzuros");
+    assert_eq!(family.variants().len(), 3, "base, S and X");
+    key(&mut app, KeyCode::Enter);
+    assert_eq!(app.tab, Tab::Crafting);
+    assert_eq!(app.craft.search, "Arzuros");
+    let _ = std::fs::remove_dir_all(&dir);
+}

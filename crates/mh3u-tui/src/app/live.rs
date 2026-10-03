@@ -24,6 +24,7 @@ impl App {
         self.refresh_box();
         self.refresh_equipment();
         self.refresh_pieces();
+        self.refresh_families();
         self.builds.stale = true;
         self.hunts.stale = true;
         if self.tab == Tab::Hunts {

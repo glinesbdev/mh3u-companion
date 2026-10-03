@@ -30,6 +30,7 @@ use std::{
 mod blacksmith;
 mod build_manager;
 mod crafting;
+mod families;
 #[cfg(test)]
 mod flow_tests;
 mod hunts;
@@ -46,6 +47,7 @@ pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
 pub use crafting::Crafting;
 pub use crafting::Via;
+pub use families::FamiliesTab;
 pub use hunts::HuntTab;
 pub use inventory::Inventory;
 pub use inventory::TreeView;
@@ -70,11 +72,12 @@ pub enum Tab {
     Wishlist,
     Monsters,
     Hunts,
+    Families,
     Builds,
 }
 
 impl Tab {
-    pub const ALL: [Tab; 8] = [
+    pub const ALL: [Tab; 9] = [
         Tab::Items,
         Tab::Equipment,
         Tab::Worn,
@@ -82,6 +85,7 @@ impl Tab {
         Tab::Wishlist,
         Tab::Monsters,
         Tab::Hunts,
+        Tab::Families,
         Tab::Builds,
     ];
 
@@ -94,6 +98,7 @@ impl Tab {
             Tab::Wishlist => "Wishlist",
             Tab::Monsters => "Monsters",
             Tab::Hunts => "Hunt plan",
+            Tab::Families => "Families",
             Tab::Builds => "Builds",
         }
     }
@@ -130,6 +135,8 @@ pub struct App {
     pub monsters: MonsterTab,
     /// The Hunt plan tab.
     pub hunts: HuntTab,
+    /// The Families tab.
+    pub families: FamiliesTab,
     /// The Builds tab.
     pub builds: BuildManager,
     /// Forging costs seen in the game and the watcher that finds them.
@@ -175,6 +182,7 @@ impl App {
         let unlocked = read(files.as_ref().map(|f| &f.unlocked))
             .map(|t| Unlocked::parse(&t))
             .unwrap_or_default();
+        let families = App::group_families(&game);
         let mut app = App {
             game,
             save,
@@ -187,6 +195,7 @@ impl App {
             wish: WishList::new(wishlist, auto_parents),
             monsters: MonsterTab::default(),
             hunts: HuntTab::default(),
+            families: FamiliesTab::new(families),
             builds,
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
@@ -202,10 +211,12 @@ impl App {
             confirm_quit: false,
             quit: false,
         };
+        app.refresh_families();
         app.rebuild_learned();
         app.craft.catalog = app.build_catalog();
         app.learn_unlocked();
         app.refresh_box();
+        app.refresh_families();
         app.refresh_equipment();
         app.refresh_pieces();
         Ok(app)
@@ -258,6 +269,7 @@ impl App {
             Tab::Crafting => (&mut self.craft.state, self.craft.pieces.len()),
             Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
             Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
+            Tab::Families => (&mut self.families.state, self.families.rows.len()),
             Tab::Builds => match self.builds.focus {
                 BuildFocus::Sets => (&mut self.builds.result_state, self.builds.results.len()),
                 BuildFocus::Skills => (&mut self.builds.target_state, self.builds.settings.targets.len()),

@@ -1,5 +1,7 @@
 # mh3u-companion
 
+[![CI](https://github.com/glinesbdev/mh3u-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/glinesbdev/mh3u-companion/actions/workflows/ci.yml)
+
 A terminal app for Monster Hunter 3 Ultimate (Wii U, played in Cemu). It reads your save file and your own game dump to show
 what you own and what you need to craft or upgrade gear.
 
@@ -21,6 +23,8 @@ what you own and what you need to craft or upgrade gear.
 ![Worn gear and its skill totals](docs/screenshots/worn.svg)
 
 ![Monsters and their drops, with what the wishlist needs starred](docs/screenshots/monsters.svg)
+
+![Families: which variants of an armor set you have](docs/screenshots/families.svg)
 
 ![Hunt plan: which monsters to hunt for the wishlist's missing materials](docs/screenshots/hunts.svg)
 
@@ -68,6 +72,7 @@ dark theme; your terminal's own palette applies when you run it.
 - **Upgrade tree**: `t` on a weapon (in Crafting, Equipment or Wishlist) opens its tree: the line of weapons from the first one down to it, a note where other branches leave that line, and everything it can be upgraded into, each marked owned or not with rarity and attack. `↑`/`↓` scroll, `t` or `Esc` close. Armor has no upgrade line in the game data, so it has no tree.
 - **Cheapest way to a weapon**: for a weapon you do not own, the details panel shows the cheapest route by forging fees from what is in your equipment box: each step (make, or upgrade from the weapon before it) with its fee, and the materials for all of them added up. A weapon you own is where a route starts and costs nothing; a weapon with two parents takes the cheaper way in. It is shown when the route is longer than just making the weapon, with the price of making it from scratch beside it. Fees are the forging fees only (materials have no price).
 - **Hunt plan**: for the materials your wishlist is still short of, which monsters to hunt. The first hunt is the one that gives the most of them, the next picks up what it left, and so on; each shows the best chance for each material, how it drops (carve, capture, part break...) and the other monsters that also give it. `r` limits the plan to low, high or G rank and Enter jumps to the monster's full drops on the Monsters tab. Materials no monster gives (ores, bugs, fish) are listed apart. It is called a hunt plan, not farming, because the game has a farm of its own.
+- **Families**: armor grouped by the family in its name (Agnaktor, Zinogre...), since the game has no table of sets. For the highlighted family a table shows each variant (the base set and the S, U, X and Z versions made from tougher monsters' parts) against head, body, arms, waist and legs, with a mark for every piece: owned, on offer at the blacksmith, or not yet. Below it, the best variant of each slot you own. `/` searches, `o` shows only families you own something of, and Enter looks the family up on the Crafting tab.
 - **Builds**: pick the skills you want (`a`, then type part of the name) and how many points (`+`/`-`, 10 is where a skill's first effect starts) and the app lists the head, body, arms, waist and legs pieces, plus one of your talismans, that reach them, sturdiest first. `o` chooses which pieces it looks at: only the armor you own, plus what the blacksmith is offering (the default), or every piece in the game, to plan ahead for gear you cannot get yet (those show as not on offer yet); `m` turns the talisman on and off, `e` limits the pieces to those a male or female hunter can wear and `c` to blademaster or gunner armor (pieces for both always pass). The details show each piece (owned, or whether you can make it now and what it costs) and the totals as on the Worn tab, with each wanted skill marked reached or not. `w` puts the pieces you do not own on the wishlist.
 - **Build templates**: `s` on a found set saves it under a name, and `n` (in the templates list, reached with `f`) saves the armor you are wearing. A template is a full set you keep and can change: `[` and `]` pick a slot, Enter opens a list of every piece for it (owned first, then what the blacksmith offers, then the rest; type to find one, or empty the slot) and the totals update as you swap. `w` puts all the pieces you do not own on the wishlist and `W` only the highlighted slot's; `r` renames and `x` deletes. Templates remember a piece by its kind and id, a talisman by its skills.
 - **Per hunter**: the wanted skills, the options and the templates are kept per save slot beside the wishlist: `builds.txt` and `templates.txt` for slot 1, `builds-2.txt`, `templates-2.txt` and so on for the others. Not counted yet: decorations and skill levels above the first (10 points).
