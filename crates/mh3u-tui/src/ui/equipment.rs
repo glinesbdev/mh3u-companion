@@ -74,6 +74,15 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
                     ]),
                 );
             }
+            if e.kind == 6 {
+                lines.insert(
+                    2,
+                    Line::from(vec![
+                        Span::styled("Slots ", muted()),
+                        Span::styled(theme::gems(e.talisman_slots()), accent()),
+                    ]),
+                );
+            }
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }

@@ -115,12 +115,12 @@ pub struct ArmorStats {
 }
 
 impl ArmorStats {
-    /// What a talisman adds to a set: its skills and nothing else.
-    pub fn talisman(skills: Vec<(u8, i8)>) -> ArmorStats {
+    /// What a talisman adds to a set: its skills and its gem slots, and nothing else.
+    pub fn talisman(skills: Vec<(u8, i8)>, slots: u8) -> ArmorStats {
         ArmorStats {
             defense: 0,
             rarity: 1,
-            slots: 0,
+            slots,
             gender: None,
             class: None,
             resist: [0; 5],

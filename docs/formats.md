@@ -16,8 +16,13 @@ not directly verified.
 | 0x1b0 | 1000 x 4 | item box, same layout | confirmed (1000 slots inferred) |
 | 0x1150 | 1000 x 16 | equipment box | partly decoded |
 
-Equipment record: byte 0 `kind`, byte 1 upgrade/slot state (not decoded), bytes 2-3 piece id (u16), bytes 4-15 talisman skills /
-decorations. A talisman (kind 6) holds `(skill id, points)` byte pairs from byte 4; only the first pair is verified (a Pawn Talisman, id 1, bytes `25 0a`: Auto-Guard +10 confirmed in game; no slots, rest zero). Kinds: 1 body, 2 arms, 3 waist, 4 legs, 5 head, 6 talisman, 7 great sword, 8 sword & shield, 9 hammer,
+Equipment record: byte 0 `kind`, byte 1 (for a talisman: its **gem slots**, 0 to 3; for other pieces an upgrade state, not decoded), bytes
+2-3 piece id (u16), bytes 4-15 talisman skills / decorations. A talisman (kind 6) holds `(skill id, points)` byte pairs from byte 4: the
+first pair (a Pawn Talisman, id 1, bytes `06 00 00 01 25 0a`: Auto-Guard +10 confirmed in game) and a second pair at bytes 6-7 (written with
+the `talisman` debug command and read back by the game as two skills: `06 03 00 01 25 0a 63 05` was Auto-Guard +10, Psychic +5 and 3 slots;
+byte 1 was written as 3 with `equip 0 @1 3` and the game gave the talisman 3 slots). Pairs beyond the second and what the id decides are
+untested. The worn talisman is a u16 slot number at 0xcc (after the five armor pointers; 0xffff = none), and the 16 bytes at 0xb0 are a copy of
+its record. Kinds: 1 body, 2 arms, 3 waist, 4 legs, 5 head, 6 talisman, 7 great sword, 8 sword & shield, 9 hammer,
 10 lance, 11 heavy bowgun, 13 light bowgun, 14 long sword, 15 switch axe, 16 gunlance, 17 bow, 18 dual blades, 19 hunting horn.
 
 The equipment box lists everything you own, including worn gear; worn gear is just a pointer into it. Upgrading a weapon replaces its parent in the same box slot, so the parent is gone afterwards.
@@ -189,7 +194,7 @@ are an empirical fit, not something read from the game's own text. `armor::max_d
 
 ## Not found / not decoded
 
-- Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is, and the names of the hit zones.
+- Weapon sharpness and element; talismans with more than two skills, and what the talisman id decides; decorations; which body part each part-break list is, and the names of the hit zones.
 - How the game stores which pieces the blacksmith has unlocked, and what the high-rank (S, X...) sets need. The app uses the hunt rule.
 
 ## Per-piece flag tables (partly understood)

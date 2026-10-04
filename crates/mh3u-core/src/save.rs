@@ -16,12 +16,16 @@ const WORN_WEAPON_OFFSET: usize = 0xc0;
 /// Five u16 pointers (body, arms, waist, legs, head) into the equipment box slots; 0xffff = nothing worn.
 const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
-/// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
+/// The u16 pointer, right after the five armor ones, to the worn talisman's equipment box slot; 0xffff = none. The 16 bytes before the
+/// pointers (from 0xb0) are a copy of the worn talisman's record (kind 6 and zeros when none is worn). Found by comparing a save with
+/// a talisman worn (slot 17) and one without.
+const WORN_TALISMAN_OFFSET: usize = 0xcc;
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
 /// byte each, in the guild card's own record). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
 const GUILD_QUESTS_OFFSET: usize = 0x7a51;
+/// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
 const HUNTED_OFFSET: usize = 0x57a0;
 const HUNTED_FIRST_MONSTER: u16 = 6;
 const HUNTED_COUNT: usize = 90;
@@ -63,6 +67,14 @@ impl Equipment {
     }
 }
 
+impl Equipment {
+    /// A talisman's gem slots (0 to 3): the record's second byte. Found by writing 3 into it in the running game, which gave the
+    /// talisman 3 slots; a Pawn Talisman has 0. Anything but a talisman has none (its second byte is its upgrade state).
+    pub fn talisman_slots(&self) -> u8 {
+        if self.kind == 6 { self.upgrade.min(3) } else { 0 }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Save {
     pub hunter_name: String,
@@ -79,6 +91,8 @@ pub struct Save {
     pub hunted: Vec<u16>,
     /// Equipment box slots currently worn: the weapon first, then armor.
     pub worn_slots: Vec<u16>,
+    /// The equipment box slot of the worn talisman.
+    pub worn_talisman: Option<u16>,
 }
 
 fn be16(d: &[u8], o: usize) -> u16 {
@@ -120,7 +134,7 @@ impl Save {
 
     /// True if this equipment box entry is currently worn.
     pub fn is_worn(&self, e: &Equipment) -> bool {
-        self.worn_slots.contains(&e.slot)
+        self.worn_slots.contains(&e.slot) || self.worn_talisman == Some(e.slot)
     }
 
     /// True if the equipment box holds this exact piece.
@@ -180,6 +194,7 @@ impl Save {
                 .chain((0..WORN_SLOTS).map(|i| be16(d, WORN_OFFSET + i * 2)))
                 .filter(|&s| s != 0xffff)
                 .collect(),
+            worn_talisman: Some(be16(d, WORN_TALISMAN_OFFSET)).filter(|&s| s != 0xffff),
         })
     }
 }
@@ -205,6 +220,7 @@ mod tests {
             equipment_box: Vec::new(),
             hunted: Vec::new(),
             worn_slots: Vec::new(),
+            worn_talisman: None,
         }
     }
 
@@ -307,6 +323,25 @@ mod tests {
         let save = Save::parse(&fixture!("03-latest/user1")).unwrap();
         assert_eq!(save.worn_slots, vec![0, 12]);
         assert_eq!(worn(&save), vec![(5, 1), (7, 1)]);
+    }
+
+    /// Snapshot 12 has the Pawn Talisman worn (equipment slot 17); in snapshot 13 it was taken off and a talisman with two skills and
+    /// three slots written into slot 0.
+    #[test]
+    fn the_worn_talisman_is_the_slot_the_save_points_to() {
+        let worn = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
+        assert_eq!(worn.worn_talisman, Some(17));
+        let pawn = worn.equipment_box.iter().find(|e| e.slot == 17).unwrap();
+        assert_eq!((pawn.kind, pawn.talisman_skills(), pawn.talisman_slots()), (6, vec![(0x25, 10)], 0));
+        assert!(worn.is_worn(pawn));
+        let after = Save::parse(&fixture!("13-talisman/user2")).unwrap();
+        assert_eq!(after.worn_talisman, None);
+        let made = after.equipment_box.iter().find(|e| e.slot == 0).unwrap();
+        assert_eq!(
+            (made.kind, made.talisman_skills(), made.talisman_slots()),
+            (6, vec![(0x25, 10), (0x63, 5)], 3)
+        );
+        assert!(!after.is_worn(made));
     }
 
     #[test]

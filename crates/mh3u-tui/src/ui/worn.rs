@@ -114,11 +114,21 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         }
         gear.push(Line::from(spans));
     }
+    let talisman = app.worn_talisman();
+    let mut spans = vec![Span::styled(format!("{:<8}", "Charm"), muted())];
+    match talisman {
+        Some(t) => {
+            spans.push(Span::styled(
+                format!("{:<24}", fit(app.game.equipment_name(6, t.id).unwrap_or("Talisman"), 24)),
+                bold(),
+            ));
+            spans.push(Span::styled(format!("    {}", theme::gems(t.talisman_slots())), accent()));
+        }
+        None => spans.push(Span::styled("nothing", muted())),
+    }
+    gear.push(Line::from(spans));
     gear.push(Line::raw(""));
-    gear.push(Line::styled(
-        "Decorations are not read yet. A talisman is not counted either: it is not known where the save records the worn one.",
-        muted(),
-    ));
+    gear.push(Line::styled("Decorations are not read yet.", muted()));
     f.render_widget(
         Paragraph::new(gear)
             .wrap(Wrap { trim: false })
@@ -131,7 +141,12 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
         .collect();
-    let summary = mh3u_app::worn::summarize(&stats);
+    let charm = talisman.map(|t| mh3u_core::armor::ArmorStats::talisman(t.talisman_skills(), t.talisman_slots()));
+    let mut counted = stats;
+    if let Some(c) = &charm {
+        counted.push((6, c));
+    }
+    let summary = mh3u_app::worn::summarize(&counted);
     let mut lines = totals_lines(app, &summary, &[]);
     lines.push(Line::raw(""));
     lines.push(Line::styled(

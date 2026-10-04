@@ -197,6 +197,12 @@ impl App {
             .collect()
     }
 
+    /// The worn talisman, if any (the save points to its equipment box slot).
+    pub fn worn_talisman(&self) -> Option<&mh3u_core::save::Equipment> {
+        let slot = self.save.worn_talisman?;
+        self.save.equipment_box.iter().find(|e| e.slot == slot && e.kind == 6)
+    }
+
     /// The worn weapon, if any.
     pub fn worn_weapon(&self) -> Option<&mh3u_core::save::Equipment> {
         self.save

@@ -147,7 +147,7 @@ impl App {
                     kind: 6,
                     id: e.id,
                     owned: true,
-                    stats: mh3u_core::armor::ArmorStats::talisman(e.talisman_skills()),
+                    stats: mh3u_core::armor::ArmorStats::talisman(e.talisman_skills(), e.talisman_slots()),
                 });
             }
         }
@@ -418,7 +418,7 @@ impl App {
     /// The stats a template piece adds up with: the game's for armor, the record's skills for a talisman.
     pub fn piece_stats(&self, piece: &templates::Piece) -> Option<mh3u_core::armor::ArmorStats> {
         if piece.kind == 6 {
-            return Some(mh3u_core::armor::ArmorStats::talisman(piece.skills.clone()));
+            return Some(mh3u_core::armor::ArmorStats::talisman(piece.skills.clone(), 0));
         }
         self.game.armor_stats(piece.kind, piece.id).cloned()
     }

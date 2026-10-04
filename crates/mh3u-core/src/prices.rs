@@ -504,6 +504,7 @@ mod tests {
             hunted: Vec::new(),
             equipment_box: pieces.iter().enumerate().map(|(n, &(k, i))| piece(n as u16, k, i)).collect(),
             worn_slots: Vec::new(),
+            worn_talisman: None,
         }
     }
 
