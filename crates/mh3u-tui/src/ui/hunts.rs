@@ -42,7 +42,7 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
 
     let unsourced = unsourced_line(app);
     let [list_area, note_area] = if unsourced.is_some() {
-        Layout::vertical([Constraint::Min(5), Constraint::Length(7)]).areas(left)
+        Layout::vertical([Constraint::Min(5), Constraint::Length(9)]).areas(left)
     } else {
         [left, Rect::default()]
     };
@@ -96,7 +96,18 @@ fn unsourced_line(app: &App) -> Option<Vec<Line<'static>>> {
     if plan.unsourced.is_empty() {
         return None;
     }
-    let names: Vec<&str> = plan.unsourced.iter().map(|&i| app.game.item_name(i).unwrap_or("?")).collect();
+    // an item that can be gathered says where
+    let names: Vec<String> = plan
+        .unsourced
+        .iter()
+        .map(|&i| {
+            let name = app.game.item_name(i).unwrap_or("?");
+            match mh3u_core::gather_spots::summary(app.game.gather_spots(i)) {
+                Some(place) => format!("{name} ({place})"),
+                None => name.to_string(),
+            }
+        })
+        .collect();
     Some(vec![
         Line::raw(names.join(", ")),
         Line::styled(

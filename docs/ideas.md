@@ -22,8 +22,8 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   hall quest. Not decoded: whether a map is day or night (the game's makers chose it as flavor,
   and no byte tells them apart), the two Elder Dragon places (maps 14 and 15) and what the save's points total at 0x5a46 counts (it also
   rises with village quests, so it is not the hall's hunter rank points alone).
-- **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
-  the executable's data) and the shop tables decoded.
+- **Gathering chances.** The Items tab says where an item can be gathered (from Kiranico, no chances). **Needs:** the game's gather lists (a table
+  of pointers sits just before the capture and break lists in the executable's data) decoded.
 
 ## Data not shown yet
 

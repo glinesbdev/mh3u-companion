@@ -78,6 +78,8 @@ pub struct GameData {
     drops: crate::drops::Drops,
     /// Names of hit zones, by (monster, row of its first table).
     zone_names: HashMap<(u16, usize), crate::zone_names::Entry>,
+    /// Where items can be gathered, by item id.
+    gather_spots: HashMap<u16, Vec<crate::gather_spots::Spot>>,
     /// Carry limits and shop prices of items, by item id.
     item_extras: HashMap<u16, crate::item_extras::ItemExtras>,
     /// Songs of the hunting horns, by the horn's notes.
@@ -186,6 +188,7 @@ impl GameData {
             weapon_extras: HashMap::new(),
             horn_songs: crate::horn_songs::parse()?,
             item_extras: HashMap::new(),
+            gather_spots: HashMap::new(),
             zone_names: crate::zone_names::parse()?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
@@ -204,6 +207,11 @@ impl GameData {
             .into_iter()
             .filter(|(id, (name, _))| game.item_name(*id) == Some(name.as_str()))
             .map(|(id, (_, extras))| (id, extras))
+            .collect();
+        game.gather_spots = crate::gather_spots::parse()?
+            .into_iter()
+            .filter(|(id, (name, _))| game.item_name(*id) == Some(name.as_str()))
+            .map(|(id, (_, spots))| (id, spots))
             .collect();
         Ok(game)
     }
@@ -301,6 +309,11 @@ impl GameData {
     /// A melee weapon's sharpness bars and elements, when the table has the weapon under this name.
     pub fn weapon_extras(&self, kind: u8, id: u16) -> Option<&crate::weapon_extras::Extras> {
         self.weapon_extras.get(&(kind, id))
+    }
+
+    /// Where an item can be gathered (mined, picked, caught, fished); empty for items that cannot.
+    pub fn gather_spots(&self, id: u16) -> &[crate::gather_spots::Spot] {
+        self.gather_spots.get(&id).map_or(&[], Vec::as_slice)
     }
 
     /// The most of an item the hunter can carry in a stack, where the table has it.
@@ -604,6 +617,11 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // gathering spots joined by name
+        assert_eq!(game.gather_spots.len(), 155);
+        let ore = game.item_names().find(|(_, n)| *n == "Iron Ore").unwrap().0;
+        assert!(game.gather_spots(ore).iter().any(|s| s.kind == "Mining"));
+        assert!(game.gather_spots(0).is_empty());
         // zone names are given only where the monster and the numbers are the game's
         assert_eq!(game.zone_name(1, 0), Some("Head"));
         assert_eq!(game.zone_name(1, 99), None);

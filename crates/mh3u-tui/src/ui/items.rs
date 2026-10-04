@@ -155,6 +155,7 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
             Span::styled(format!("{have}/{n}"), theme::progress_style(have, n)),
         ]));
     }
+    lines.extend(gather_lines(app, id));
     let sources = app.game.drops().sources(id);
     if !sources.is_empty() {
         lines.push(Line::raw(""));
@@ -273,6 +274,72 @@ fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
         Line::from(vec![Span::styled("Spare ", muted()), Span::styled(count, style)]),
         Line::styled(why, muted()),
     ]
+}
+
+/// Most map lines shown before "and N more".
+const GATHER_LINES: usize = 8;
+
+/// A kind of spot on a map, with the areas by rank.
+type Place<'a> = (&'a str, &'a str, Vec<(&'a str, String)>);
+
+/// Where the item can be gathered: one line per kind of spot and map, with the areas by rank (one list when every rank is the same).
+fn gather_lines(app: &App, id: u16) -> Vec<Line<'static>> {
+    let spots = app.game.gather_spots(id);
+    if spots.is_empty() {
+        return Vec::new();
+    }
+    let mut places: Vec<Place> = Vec::new();
+    for s in spots {
+        let areas = s.areas.join(", ");
+        match places.iter_mut().find(|(kind, map, _)| *kind == s.kind && *map == s.map) {
+            Some((_, _, ranks)) => ranks.push((&s.rank, areas)),
+            None => places.push((&s.kind, &s.map, vec![(&s.rank, areas)])),
+        }
+    }
+    let mut lines = vec![Line::raw(""), Line::styled("Where to gather", bold())];
+    for (kind, map, ranks) in places.iter().take(GATHER_LINES) {
+        // low, high, G in that order, and ranks with the same areas together ("low/high 1, 4")
+        let order = |rank: &str| match rank {
+            "Low" => 0,
+            "High" => 1,
+            _ => 2,
+        };
+        let mut ranks = ranks.clone();
+        ranks.sort_by_key(|(rank, _)| order(rank));
+        let mut groups: Vec<(Vec<&str>, &str)> = Vec::new();
+        for (rank, areas) in &ranks {
+            match groups.iter_mut().find(|(_, a)| a == areas) {
+                Some((names, _)) => names.push(rank),
+                None => groups.push((vec![rank], areas)),
+            }
+        }
+        let where_ = if groups.len() == 1 {
+            format!("area {}", groups[0].1)
+        } else {
+            groups
+                .iter()
+                .map(|(names, areas)| {
+                    let label = names
+                        .iter()
+                        .map(|r| if *r == "G" { "G".to_string() } else { r.to_lowercase() })
+                        .collect::<Vec<_>>()
+                        .join("/");
+                    format!("{label} {areas}")
+                })
+                .collect::<Vec<_>>()
+                .join(" · ")
+        };
+        lines.push(Line::from(vec![
+            Span::raw(format!("  {map:<16}")),
+            Span::styled(format!("{kind:<13}"), muted()),
+            Span::raw(where_),
+        ]));
+    }
+    if places.len() > GATHER_LINES {
+        lines.push(Line::styled(format!("  and {} more", places.len() - GATHER_LINES), muted()));
+    }
+    lines.push(Line::styled("  From a public database; the chances are not known.", muted()));
+    lines
 }
 
 #[cfg(test)]

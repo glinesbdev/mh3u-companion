@@ -245,6 +245,12 @@ item pages and joined to the game's items by name (1,293 of 1,331; the other 38 
 the sell price: Kiranico's agrees with the game's table for 1,199 of 1,228 items (the rest are special items and a few jewels). About 365 items have a shop price. Which shop sells an item, and
 when, is not known.
 
+## Gathering spots (`gather_spots.rs`)
+
+Not read from the game: `data/gather_spots.tsv` is taken from Kiranico's item pages (155 items that can be gathered, 1,283 lines), joined to the game's items by name. A
+line is an item, a map, a kind of spot (Gathering, Mining, Bug-Catching, Fishing), a rank and the map's areas where it is found, with some "Secret" areas.
+The database gives no chances. The game's own tables (a table of pointers just before the capture and break lists) are not decoded.
+
 ## Not found / not decoded
 
 - Weapon sharpness (the selector bytes are known, the table is not) and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.

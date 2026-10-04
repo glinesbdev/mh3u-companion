@@ -25,6 +25,7 @@ pub mod diff;
 pub mod drops;
 pub mod edit;
 pub mod gamedata;
+pub mod gather_spots;
 pub mod gmd;
 pub mod hitzones;
 pub mod horn_songs;

@@ -1,0 +1,1285 @@
+# game item id	item	map	kind (Gathering, Mining, Bug-Catching, Fishing)	rank (Low, High, G)	areas (numbers, or names such as Arena)
+# From Kiranico's Monster Hunter 3 Ultimate database, joined to the game's items by name. See docs/formats.md.
+10	Mega Potion	Land Arena	Gathering	G	1
+10	Mega Potion	Land Arena	Gathering	High	1
+10	Mega Potion	Land Arena	Gathering	Low	1
+10	Mega Potion	Water Arena	Gathering	G	1
+10	Mega Potion	Water Arena	Gathering	High	1
+10	Mega Potion	Water Arena	Gathering	Low	1
+36	Lifepowder	Land Arena	Gathering	G	1
+36	Lifepowder	Land Arena	Gathering	High	1
+36	Lifepowder	Land Arena	Gathering	Low	1
+36	Lifepowder	Water Arena	Gathering	G	1
+36	Lifepowder	Water Arena	Gathering	High	1
+36	Lifepowder	Water Arena	Gathering	Low	1
+37	Mystery Charm	Deserted Island	Gathering	High	Secret
+37	Mystery Charm	Flooded Forest	Gathering	High	Secret
+37	Mystery Charm	Flooded Forest	Mining	G	1,8
+37	Mystery Charm	Flooded Forest	Mining	High	Secret,1,8
+37	Mystery Charm	Flooded Forest	Mining	Low	1,6,8
+37	Mystery Charm	Misty Peaks	Mining	High	4,6
+37	Mystery Charm	Sandy Plains	Mining	High	Secret,6,11
+37	Mystery Charm	Tundra	Mining	G	5,7
+37	Mystery Charm	Tundra	Mining	High	4,5,7,9
+37	Mystery Charm	Tundra	Mining	Low	4,5,7
+37	Mystery Charm	Volcano	Mining	High	5,10
+37	Mystery Charm	Volcano	Mining	Low	3,5,9
+38	Shining Charm	Deserted Island	Gathering	G	Secret
+38	Shining Charm	Deserted Island	Gathering	High	Secret
+38	Shining Charm	Deserted Island	Mining	G	Secret
+38	Shining Charm	Deserted Island	Mining	High	Secret
+38	Shining Charm	Flooded Forest	Gathering	G	Secret
+38	Shining Charm	Flooded Forest	Gathering	High	Secret
+38	Shining Charm	Flooded Forest	Mining	G	Secret,5,6
+38	Shining Charm	Flooded Forest	Mining	High	Secret,3,6
+38	Shining Charm	Misty Peaks	Gathering	G	Secret
+38	Shining Charm	Misty Peaks	Gathering	High	Secret
+38	Shining Charm	Misty Peaks	Mining	G	4,6
+38	Shining Charm	Misty Peaks	Mining	High	Secret,4,8
+38	Shining Charm	Sandy Plains	Gathering	High	Secret
+38	Shining Charm	Sandy Plains	Mining	G	Secret
+38	Shining Charm	Sandy Plains	Mining	High	Secret
+38	Shining Charm	Tundra	Mining	G	4,5,7,9
+38	Shining Charm	Tundra	Mining	High	4,5,7,9
+38	Shining Charm	Volcano	Mining	G	Secret,5,9,10
+38	Shining Charm	Volcano	Mining	High	Secret,5,9,10
+39	Timeworn Charm	Flooded Forest	Gathering	G	Secret
+39	Timeworn Charm	Flooded Forest	Mining	G	Secret,5,6
+39	Timeworn Charm	Sandy Plains	Gathering	G	Secret
+39	Timeworn Charm	Sandy Plains	Mining	G	4,6
+39	Timeworn Charm	Volcano	Gathering	G	Secret
+39	Timeworn Charm	Volcano	Gathering	High	Secret
+39	Timeworn Charm	Volcano	Mining	G	5,10
+39	Timeworn Charm	Volcano	Mining	High	Secret,5,8,9,10
+40	Enduring Charm	Flooded Forest	Gathering	G	Secret
+40	Enduring Charm	Misty Peaks	Gathering	G	Secret
+40	Enduring Charm	Misty Peaks	Mining	G	Secret,4,6
+40	Enduring Charm	Sandy Plains	Gathering	G	Secret
+40	Enduring Charm	Tundra	Gathering	G	Secret
+40	Enduring Charm	Tundra	Mining	G	Secret,4,5,6,7,9
+40	Enduring Charm	Volcano	Mining	G	Secret,5,8,9,10
+58	Throwing Knife	Misty Peaks	Gathering	G	4
+58	Throwing Knife	Misty Peaks	Gathering	High	4
+64	Paintball	Misty Peaks	Gathering	G	4
+64	Paintball	Misty Peaks	Gathering	High	4
+67	Dung	Deserted Island	Gathering	G	8
+67	Dung	Deserted Island	Gathering	High	8
+67	Dung	Deserted Island	Gathering	Low	8
+67	Dung	Misty Peaks	Gathering	G	2,8
+67	Dung	Misty Peaks	Gathering	High	2,8
+67	Dung	Moga Woods	Gathering	High	8
+67	Dung	Moga Woods	Gathering	Low	8
+76	Spider Web	Deserted Island	Bug-Catching	Low	5
+76	Spider Web	Deserted Island	Gathering	G	1,2,9
+76	Spider Web	Deserted Island	Gathering	High	1,2,9
+76	Spider Web	Deserted Island	Gathering	Low	1,2,9
+76	Spider Web	Flooded Forest	Gathering	G	1
+76	Spider Web	Flooded Forest	Gathering	High	1
+76	Spider Web	Flooded Forest	Gathering	Low	1
+76	Spider Web	Misty Peaks	Gathering	G	3
+76	Spider Web	Misty Peaks	Gathering	High	3
+76	Spider Web	Moga Woods	Bug-Catching	Low	3
+76	Spider Web	Moga Woods	Gathering	High	1,2
+76	Spider Web	Moga Woods	Gathering	Low	1,2
+90	Huskberry	Deserted Island	Gathering	G	9
+90	Huskberry	Deserted Island	Gathering	High	9
+90	Huskberry	Deserted Island	Gathering	Low	9
+90	Huskberry	Flooded Forest	Gathering	G	1,2
+90	Huskberry	Flooded Forest	Gathering	High	1,2
+90	Huskberry	Flooded Forest	Gathering	Low	1,2
+90	Huskberry	Misty Peaks	Gathering	G	1,4,6
+90	Huskberry	Misty Peaks	Gathering	High	1,4,6
+90	Huskberry	Tundra	Gathering	G	6
+90	Huskberry	Tundra	Gathering	High	6
+90	Huskberry	Tundra	Gathering	Low	6
+90	Huskberry	Volcano	Gathering	G	1
+91	Bone Husk S	Tundra	Gathering	G	4,5,7
+91	Bone Husk S	Tundra	Gathering	High	Secret,4,5,7,9
+91	Bone Husk S	Tundra	Gathering	Low	5,7
+92	Bone Husk L	Tundra	Gathering	G	Secret,4,5,9
+92	Bone Husk L	Tundra	Gathering	High	Secret,4,5,9
+92	Bone Husk L	Tundra	Gathering	Low	5
+135	UW Ballista Ammo	Ruins	Gathering	G	3
+135	UW Ballista Ammo	Ruins	Gathering	Low	3
+146	Worm	Deserted Island	Bug-Catching	G	1,2,3
+146	Worm	Deserted Island	Bug-Catching	High	1,2,3
+146	Worm	Deserted Island	Bug-Catching	Low	1,2,3,5
+146	Worm	Deserted Island	Gathering	G	10
+146	Worm	Deserted Island	Gathering	High	10
+146	Worm	Deserted Island	Gathering	Low	10
+146	Worm	Flooded Forest	Gathering	G	2,9
+146	Worm	Flooded Forest	Gathering	High	2,9
+146	Worm	Flooded Forest	Gathering	Low	2,9
+146	Worm	Misty Peaks	Gathering	G	6
+146	Worm	Misty Peaks	Gathering	High	6
+146	Worm	Moga Woods	Bug-Catching	High	1,2,3,4,5
+146	Worm	Moga Woods	Bug-Catching	Low	1,2,3
+146	Worm	Moga Woods	Gathering	High	10
+146	Worm	Moga Woods	Gathering	Low	10
+146	Worm	Sandy Plains	Bug-Catching	G	1,4
+146	Worm	Sandy Plains	Bug-Catching	High	4
+146	Worm	Sandy Plains	Bug-Catching	Low	4
+146	Worm	Sandy Plains	Gathering	G	7
+146	Worm	Sandy Plains	Gathering	High	7
+146	Worm	Sandy Plains	Gathering	Low	7
+146	Worm	Volcano	Bug-Catching	G	2
+146	Worm	Volcano	Bug-Catching	High	1,2
+146	Worm	Volcano	Bug-Catching	Low	1,2
+148	Mega Fishing Fly	Deserted Island	Bug-Catching	G	1,2,3,4,5
+148	Mega Fishing Fly	Deserted Island	Bug-Catching	High	4,5
+148	Mega Fishing Fly	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+148	Mega Fishing Fly	Flooded Forest	Bug-Catching	G	Secret
+148	Mega Fishing Fly	Flooded Forest	Bug-Catching	Low	4
+148	Mega Fishing Fly	Misty Peaks	Bug-Catching	G	5,7,9
+148	Mega Fishing Fly	Misty Peaks	Bug-Catching	High	5,7,9
+148	Mega Fishing Fly	Misty Peaks	Gathering	G	3
+148	Mega Fishing Fly	Misty Peaks	Gathering	High	3
+148	Mega Fishing Fly	Moga Woods	Bug-Catching	High	3,4
+148	Mega Fishing Fly	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+148	Mega Fishing Fly	Sandy Plains	Bug-Catching	G	1
+148	Mega Fishing Fly	Sandy Plains	Bug-Catching	High	Secret
+148	Mega Fishing Fly	Sandy Plains	Bug-Catching	Low	4
+148	Mega Fishing Fly	Volcano	Bug-Catching	High	1,2
+149	Frog	Deserted Island	Bug-Catching	G	1,2,3,4,5
+149	Frog	Deserted Island	Bug-Catching	High	1,2,3,4,5
+149	Frog	Deserted Island	Gathering	G	10
+149	Frog	Deserted Island	Gathering	High	10
+149	Frog	Deserted Island	Gathering	Low	10
+149	Frog	Flooded Forest	Gathering	G	2
+149	Frog	Flooded Forest	Gathering	High	2
+149	Frog	Flooded Forest	Gathering	Low	2
+149	Frog	Moga Woods	Gathering	High	10
+149	Frog	Moga Woods	Gathering	Low	10
+167	Whetstone	Deserted Island	Gathering	G	7
+167	Whetstone	Deserted Island	Gathering	High	7
+167	Whetstone	Deserted Island	Gathering	Low	7
+167	Whetstone	Deserted Island	Mining	G	1,4,7,8,10
+167	Whetstone	Deserted Island	Mining	High	1,6,7,10
+167	Whetstone	Deserted Island	Mining	Low	1,4,6,7,8,10
+167	Whetstone	Flooded Forest	Mining	G	8
+167	Whetstone	Flooded Forest	Mining	High	8
+167	Whetstone	Flooded Forest	Mining	Low	3,6,8,10
+167	Whetstone	Misty Peaks	Gathering	G	1,2,8
+167	Whetstone	Misty Peaks	Gathering	High	1,2,8
+167	Whetstone	Misty Peaks	Mining	G	Secret,2,3,6
+167	Whetstone	Misty Peaks	Mining	High	Secret,2,3,6,8
+167	Whetstone	Moga Woods	Gathering	High	1,7
+167	Whetstone	Moga Woods	Gathering	Low	1,7
+167	Whetstone	Moga Woods	Mining	High	1,4,7,8,10,12
+167	Whetstone	Moga Woods	Mining	Low	1,4,7,8,10
+167	Whetstone	Sandy Plains	Mining	G	4,6,11
+167	Whetstone	Sandy Plains	Mining	High	4,6,11
+167	Whetstone	Sandy Plains	Mining	Low	4,6,11
+167	Whetstone	Tundra	Mining	G	4,5,7,9
+167	Whetstone	Tundra	Mining	High	4
+167	Whetstone	Tundra	Mining	Low	6
+167	Whetstone	Volcano	Gathering	G	1
+167	Whetstone	Volcano	Mining	G	8,9,10
+167	Whetstone	Volcano	Mining	High	9
+167	Whetstone	Volcano	Mining	Low	3,5,9,10
+175	Honey	Deserted Island	Gathering	G	2,3
+175	Honey	Deserted Island	Gathering	High	2,3
+175	Honey	Deserted Island	Gathering	Low	2,3
+175	Honey	Misty Peaks	Gathering	G	5,9
+175	Honey	Misty Peaks	Gathering	High	5,9
+175	Honey	Moga Woods	Gathering	High	2,3
+175	Honey	Moga Woods	Gathering	Low	2,3
+175	Honey	Tundra	Gathering	G	1
+175	Honey	Tundra	Gathering	High	1
+175	Honey	Tundra	Gathering	Low	1
+176	Herb	Deserted Island	Gathering	G	1,2
+176	Herb	Deserted Island	Gathering	High	1,2
+176	Herb	Deserted Island	Gathering	Low	1,2,7
+176	Herb	Flooded Forest	Gathering	G	1,3,4,5,8
+176	Herb	Flooded Forest	Gathering	High	1,3,4,5,8
+176	Herb	Flooded Forest	Gathering	Low	1,3,4,5,8
+176	Herb	Misty Peaks	Gathering	G	1,4,5,6,7
+176	Herb	Misty Peaks	Gathering	High	1,4,5,6,7
+176	Herb	Moga Woods	Gathering	High	1,2,7
+176	Herb	Moga Woods	Gathering	Low	1,2,7
+176	Herb	Sandy Plains	Gathering	G	7
+176	Herb	Sandy Plains	Gathering	High	7
+176	Herb	Sandy Plains	Gathering	Low	7
+176	Herb	Volcano	Gathering	G	1,7
+176	Herb	Volcano	Gathering	High	7
+176	Herb	Volcano	Gathering	Low	7
+177	Antidote Herb	Deserted Island	Gathering	G	2,9
+177	Antidote Herb	Deserted Island	Gathering	High	2,9
+177	Antidote Herb	Deserted Island	Gathering	Low	2,9
+177	Antidote Herb	Flooded Forest	Gathering	G	1,3
+177	Antidote Herb	Flooded Forest	Gathering	High	1,3
+177	Antidote Herb	Flooded Forest	Gathering	Low	1,3
+177	Antidote Herb	Misty Peaks	Gathering	G	1,5,7
+177	Antidote Herb	Misty Peaks	Gathering	High	1,5,7
+177	Antidote Herb	Moga Woods	Gathering	High	2,9
+177	Antidote Herb	Moga Woods	Gathering	Low	2,9
+177	Antidote Herb	Volcano	Gathering	G	1,7
+177	Antidote Herb	Volcano	Gathering	High	7
+177	Antidote Herb	Volcano	Gathering	Low	7
+178	Fire Herb	Flooded Forest	Gathering	G	9
+178	Fire Herb	Flooded Forest	Gathering	High	9
+178	Fire Herb	Flooded Forest	Gathering	Low	9
+178	Fire Herb	Misty Peaks	Gathering	G	7
+178	Fire Herb	Misty Peaks	Gathering	High	7
+178	Fire Herb	Sandy Plains	Gathering	G	1,3,8,9
+178	Fire Herb	Sandy Plains	Gathering	High	1,3,8,9
+178	Fire Herb	Sandy Plains	Gathering	Low	1,3,8,9
+178	Fire Herb	Volcano	Gathering	G	7
+178	Fire Herb	Volcano	Gathering	High	7
+178	Fire Herb	Volcano	Gathering	Low	7
+180	Ivy	Deserted Island	Gathering	G	1,2,7,9
+180	Ivy	Deserted Island	Gathering	High	1,2,7,9
+180	Ivy	Deserted Island	Gathering	Low	1,2,9
+180	Ivy	Flooded Forest	Gathering	G	3
+180	Ivy	Flooded Forest	Gathering	High	3
+180	Ivy	Flooded Forest	Gathering	Low	3
+180	Ivy	Misty Peaks	Gathering	G	3,4
+180	Ivy	Misty Peaks	Gathering	High	3,4
+180	Ivy	Moga Woods	Gathering	High	1,2,9
+180	Ivy	Moga Woods	Gathering	Low	1,2,9
+180	Ivy	Sandy Plains	Gathering	G	1,3,7,8,9
+180	Ivy	Sandy Plains	Gathering	High	1,3,7,8,9
+180	Ivy	Sandy Plains	Gathering	Low	1,3,7,8,9
+180	Ivy	Volcano	Gathering	G	4
+180	Ivy	Volcano	Gathering	High	1,4
+180	Ivy	Volcano	Gathering	Low	1,4
+181	Sleep Herb	Flooded Forest	Gathering	G	1
+181	Sleep Herb	Flooded Forest	Gathering	High	1
+181	Sleep Herb	Flooded Forest	Gathering	Low	1
+181	Sleep Herb	Misty Peaks	Gathering	G	1,5,7
+181	Sleep Herb	Misty Peaks	Gathering	High	1,5,7
+181	Sleep Herb	Sandy Plains	Gathering	G	3,9
+181	Sleep Herb	Sandy Plains	Gathering	High	3,9
+181	Sleep Herb	Sandy Plains	Gathering	Low	3,9
+181	Sleep Herb	Tundra	Gathering	G	7
+181	Sleep Herb	Tundra	Gathering	High	7
+181	Sleep Herb	Tundra	Gathering	Low	7
+181	Sleep Herb	Volcano	Gathering	G	1
+182	Sap Plant	Deserted Island	Gathering	G	1,2,9
+182	Sap Plant	Deserted Island	Gathering	High	1,2,9
+182	Sap Plant	Deserted Island	Gathering	Low	1,2,9
+182	Sap Plant	Flooded Forest	Gathering	G	1,3,4,5,8
+182	Sap Plant	Flooded Forest	Gathering	High	1,3,4,5,8
+182	Sap Plant	Flooded Forest	Gathering	Low	1,3,4,5,8
+182	Sap Plant	Misty Peaks	Gathering	G	1,4,6,7
+182	Sap Plant	Misty Peaks	Gathering	High	1,4,6,7
+182	Sap Plant	Moga Woods	Gathering	High	1,2,9
+182	Sap Plant	Moga Woods	Gathering	Low	1,2,9
+182	Sap Plant	Volcano	Gathering	G	1,7
+182	Sap Plant	Volcano	Gathering	High	7
+182	Sap Plant	Volcano	Gathering	Low	7
+183	Felvine	Deserted Island	Gathering	G	1
+183	Felvine	Deserted Island	Gathering	High	1
+183	Felvine	Deserted Island	Gathering	Low	1,7
+183	Felvine	Misty Peaks	Gathering	G	1,6,7
+183	Felvine	Misty Peaks	Gathering	High	1,6,7
+183	Felvine	Moga Woods	Gathering	High	1,7
+183	Felvine	Moga Woods	Gathering	Low	1,7
+183	Felvine	Sandy Plains	Gathering	G	3,7,9
+183	Felvine	Sandy Plains	Gathering	High	3,7,9
+183	Felvine	Sandy Plains	Gathering	Low	3,7,9
+183	Felvine	Volcano	Gathering	G	1
+184	Cactus Flower	Sandy Plains	Gathering	G	3,7,9
+184	Cactus Flower	Sandy Plains	Gathering	High	3,7,9
+184	Cactus Flower	Sandy Plains	Gathering	Low	3,7,9
+185	Airweed	Deserted Island	Gathering	G	1,2
+185	Airweed	Deserted Island	Gathering	High	1,2
+185	Airweed	Deserted Island	Gathering	Low	1,2
+185	Airweed	Flooded Forest	Gathering	G	3,4,5,8
+185	Airweed	Flooded Forest	Gathering	High	3,4,5,8
+185	Airweed	Flooded Forest	Gathering	Low	3,4,5,8
+185	Airweed	Moga Woods	Gathering	High	1,2
+185	Airweed	Moga Woods	Gathering	Low	1,2
+186	Hot Pepper	Volcano	Gathering	G	4
+186	Hot Pepper	Volcano	Gathering	High	1,4
+186	Hot Pepper	Volcano	Gathering	Low	1,4
+188	Blue Mushroom	Deserted Island	Gathering	G	2,3,6,7
+188	Blue Mushroom	Deserted Island	Gathering	High	2,3,6,7
+188	Blue Mushroom	Deserted Island	Gathering	Low	2,3,6,7
+188	Blue Mushroom	Flooded Forest	Gathering	G	1,8
+188	Blue Mushroom	Flooded Forest	Gathering	High	1,8
+188	Blue Mushroom	Flooded Forest	Gathering	Low	1,8
+188	Blue Mushroom	Misty Peaks	Gathering	G	1,2,4,5,7,9
+188	Blue Mushroom	Misty Peaks	Gathering	High	1,2,4,5,7,9
+188	Blue Mushroom	Moga Woods	Gathering	High	2,3,7
+188	Blue Mushroom	Moga Woods	Gathering	Low	2,3,7
+188	Blue Mushroom	Sandy Plains	Gathering	G	7
+188	Blue Mushroom	Sandy Plains	Gathering	High	7
+188	Blue Mushroom	Sandy Plains	Gathering	Low	7
+188	Blue Mushroom	Volcano	Gathering	G	1
+189	Nitroshroom	Flooded Forest	Gathering	G	4
+189	Nitroshroom	Flooded Forest	Gathering	High	4
+189	Nitroshroom	Flooded Forest	Gathering	Low	4
+189	Nitroshroom	Misty Peaks	Gathering	G	1,4,7,9
+189	Nitroshroom	Misty Peaks	Gathering	High	1,4,7,9
+189	Nitroshroom	Sandy Plains	Gathering	G	6,7
+189	Nitroshroom	Sandy Plains	Gathering	High	6,7
+189	Nitroshroom	Sandy Plains	Gathering	Low	6,7
+189	Nitroshroom	Volcano	Gathering	G	1
+190	Parashroom	Flooded Forest	Gathering	G	1,2,8
+190	Parashroom	Flooded Forest	Gathering	High	1,2,8
+190	Parashroom	Flooded Forest	Gathering	Low	1,2,8
+190	Parashroom	Misty Peaks	Gathering	G	4
+190	Parashroom	Misty Peaks	Gathering	High	4
+190	Parashroom	Sandy Plains	Gathering	G	6,7
+190	Parashroom	Sandy Plains	Gathering	High	6,7
+190	Parashroom	Sandy Plains	Gathering	Low	6,7
+191	Toadstool	Flooded Forest	Gathering	G	4,8
+191	Toadstool	Flooded Forest	Gathering	High	4,8
+191	Toadstool	Flooded Forest	Gathering	Low	4,8
+191	Toadstool	Misty Peaks	Gathering	G	1,4,7,9
+191	Toadstool	Misty Peaks	Gathering	High	1,4,7,9
+191	Toadstool	Volcano	Gathering	G	1
+192	Exciteshroom	Deserted Island	Gathering	G	2,3
+192	Exciteshroom	Deserted Island	Gathering	High	2,3
+192	Exciteshroom	Deserted Island	Gathering	Low	2,3
+192	Exciteshroom	Flooded Forest	Gathering	G	2
+192	Exciteshroom	Flooded Forest	Gathering	High	2
+192	Exciteshroom	Flooded Forest	Gathering	Low	2
+192	Exciteshroom	Misty Peaks	Gathering	G	9
+192	Exciteshroom	Misty Peaks	Gathering	High	9
+192	Exciteshroom	Moga Woods	Gathering	High	2,3
+192	Exciteshroom	Moga Woods	Gathering	Low	2,3
+192	Exciteshroom	Sandy Plains	Gathering	G	6
+192	Exciteshroom	Sandy Plains	Gathering	High	6
+192	Exciteshroom	Sandy Plains	Gathering	Low	6
+194	Dragon Toadstool	Deserted Island	Gathering	G	2,3
+194	Dragon Toadstool	Deserted Island	Gathering	High	2,3
+194	Dragon Toadstool	Deserted Island	Gathering	Low	2,3
+194	Dragon Toadstool	Misty Peaks	Gathering	G	5,9
+194	Dragon Toadstool	Misty Peaks	Gathering	High	5,9
+194	Dragon Toadstool	Sandy Plains	Gathering	G	6
+194	Dragon Toadstool	Sandy Plains	Gathering	High	6
+194	Dragon Toadstool	Sandy Plains	Gathering	Low	6
+194	Dragon Toadstool	Volcano	Gathering	G	4
+194	Dragon Toadstool	Volcano	Gathering	High	1,4
+194	Dragon Toadstool	Volcano	Gathering	Low	1,4
+196	Paintberry	Deserted Island	Gathering	G	2,9
+196	Paintberry	Deserted Island	Gathering	High	2,9
+196	Paintberry	Deserted Island	Gathering	Low	2,9
+196	Paintberry	Flooded Forest	Gathering	G	4,5,7,8
+196	Paintberry	Flooded Forest	Gathering	High	4,5,7,8
+196	Paintberry	Flooded Forest	Gathering	Low	4,5,7,8
+196	Paintberry	Misty Peaks	Gathering	G	4,6,7
+196	Paintberry	Misty Peaks	Gathering	High	4,6,7
+196	Paintberry	Moga Woods	Gathering	High	2,9
+196	Paintberry	Moga Woods	Gathering	Low	2,9
+196	Paintberry	Sandy Plains	Gathering	G	1,8
+196	Paintberry	Sandy Plains	Gathering	High	1,8
+196	Paintberry	Sandy Plains	Gathering	Low	1,8
+196	Paintberry	Tundra	Gathering	G	1,7
+196	Paintberry	Tundra	Gathering	High	1,7
+196	Paintberry	Tundra	Gathering	Low	1,7
+196	Paintberry	Volcano	Gathering	G	6
+196	Paintberry	Volcano	Gathering	High	1,6
+196	Paintberry	Volcano	Gathering	Low	1,6
+197	Might Seed	Deserted Island	Gathering	G	1,2,9
+197	Might Seed	Deserted Island	Gathering	High	1,2,9
+197	Might Seed	Deserted Island	Gathering	Low	1,2,9
+197	Might Seed	Flooded Forest	Gathering	G	2,7
+197	Might Seed	Flooded Forest	Gathering	High	2,7
+197	Might Seed	Flooded Forest	Gathering	Low	2,7
+197	Might Seed	Moga Woods	Gathering	High	1,2,9
+197	Might Seed	Moga Woods	Gathering	Low	1,2,9
+197	Might Seed	Sacred Land	Gathering	G	1
+197	Might Seed	Sacred Land	Gathering	High	1
+197	Might Seed	Tundra	Gathering	G	1
+197	Might Seed	Tundra	Gathering	High	1
+197	Might Seed	Tundra	Gathering	Low	1
+197	Might Seed	Volcano	Gathering	G	6,8
+197	Might Seed	Volcano	Gathering	High	1,6,8
+197	Might Seed	Volcano	Gathering	Low	1,6,8
+198	Adamant Seed	Flooded Forest	Gathering	G	1,2,7
+198	Adamant Seed	Flooded Forest	Gathering	High	1,2,7
+198	Adamant Seed	Flooded Forest	Gathering	Low	1,2,7
+198	Adamant Seed	Tundra	Gathering	G	1,7
+198	Adamant Seed	Tundra	Gathering	High	1,7
+198	Adamant Seed	Tundra	Gathering	Low	1,7
+198	Adamant Seed	Volcano	Gathering	G	6,8
+198	Adamant Seed	Volcano	Gathering	High	1,6,8
+198	Adamant Seed	Volcano	Gathering	Low	1,6,8
+199	Dragonfell Berry	Volcano	Gathering	G	6,8
+199	Dragonfell Berry	Volcano	Gathering	High	1,6,8
+199	Dragonfell Berry	Volcano	Gathering	Low	1,6,8
+200	Scatternut	Flooded Forest	Gathering	G	2,7
+200	Scatternut	Flooded Forest	Gathering	High	2,7
+200	Scatternut	Flooded Forest	Gathering	Low	2,7
+200	Scatternut	Misty Peaks	Gathering	G	4,6,7
+200	Scatternut	Misty Peaks	Gathering	High	4,6,7
+200	Scatternut	Volcano	Gathering	G	6,8
+200	Scatternut	Volcano	Gathering	High	1,6,8
+200	Scatternut	Volcano	Gathering	Low	1,6,8
+201	Needleberry	Flooded Forest	Gathering	G	1,2,7
+201	Needleberry	Flooded Forest	Gathering	High	1,2,7
+201	Needleberry	Flooded Forest	Gathering	Low	1,2,7
+201	Needleberry	Misty Peaks	Gathering	G	1,4,6
+201	Needleberry	Misty Peaks	Gathering	High	1,4,6
+201	Needleberry	Volcano	Gathering	G	1
+201	Needleberry	Volcano	Gathering	High	1
+201	Needleberry	Volcano	Gathering	Low	1
+203	Bomberry	Flooded Forest	Gathering	G	2,7
+203	Bomberry	Flooded Forest	Gathering	High	2,7
+203	Bomberry	Flooded Forest	Gathering	Low	2,7
+203	Bomberry	Misty Peaks	Gathering	G	4,6
+203	Bomberry	Misty Peaks	Gathering	High	4,6
+203	Bomberry	Sandy Plains	Gathering	G	1,8
+203	Bomberry	Sandy Plains	Gathering	High	1,8
+203	Bomberry	Sandy Plains	Gathering	Low	1,8
+203	Bomberry	Tundra	Gathering	G	1,6
+203	Bomberry	Tundra	Gathering	High	1,6
+203	Bomberry	Tundra	Gathering	Low	1,6
+203	Bomberry	Volcano	Gathering	G	6
+203	Bomberry	Volcano	Gathering	High	1,6
+203	Bomberry	Volcano	Gathering	Low	1,6
+208	Nulberry	Flooded Forest	Gathering	G	2,3,4,5,7
+208	Nulberry	Flooded Forest	Gathering	High	2,3,4,5,7
+208	Nulberry	Flooded Forest	Gathering	Low	2,3,4,5,7
+208	Nulberry	Misty Peaks	Gathering	G	2,4,6,7
+208	Nulberry	Misty Peaks	Gathering	High	2,4,6,7
+208	Nulberry	Sacred Land	Gathering	G	1
+208	Nulberry	Sacred Land	Gathering	High	1
+208	Nulberry	Sandy Plains	Gathering	G	1,8
+208	Nulberry	Sandy Plains	Gathering	High	1,8
+208	Nulberry	Sandy Plains	Gathering	Low	1,8
+208	Nulberry	Tundra	Gathering	G	1,6,7
+208	Nulberry	Tundra	Gathering	High	1,6,7
+208	Nulberry	Tundra	Gathering	Low	1,6,7
+208	Nulberry	Volcano	Gathering	G	6
+208	Nulberry	Volcano	Gathering	High	6
+208	Nulberry	Volcano	Gathering	Low	6
+210	Broken Shell	Deserted Island	Gathering	G	10,11
+210	Broken Shell	Deserted Island	Gathering	High	10,11
+210	Broken Shell	Deserted Island	Gathering	Low	10,11
+210	Broken Shell	Moga Woods	Gathering	High	10
+210	Broken Shell	Moga Woods	Gathering	Low	10
+211	Black Pearl	Deserted Island	Gathering	G	10,11
+211	Black Pearl	Deserted Island	Gathering	High	10,11
+212	Jumbo Pearl	Deserted Island	Gathering	G	10,11
+212	Jumbo Pearl	Deserted Island	Gathering	High	10,11
+212	Jumbo Pearl	Deserted Island	Gathering	Low	10,11
+212	Jumbo Pearl	Moga Woods	Gathering	High	10
+212	Jumbo Pearl	Moga Woods	Gathering	Low	10
+213	Stone	Deserted Island	Gathering	G	7,10,11
+213	Stone	Deserted Island	Gathering	High	7,10,11
+213	Stone	Deserted Island	Gathering	Low	7,10,11
+213	Stone	Deserted Island	Mining	G	1,4,7
+213	Stone	Deserted Island	Mining	Low	1,4,7,8
+213	Stone	Flooded Forest	Gathering	G	2
+213	Stone	Flooded Forest	Gathering	High	2
+213	Stone	Flooded Forest	Gathering	Low	2
+213	Stone	Flooded Forest	Mining	Low	3,5,6,8,10
+213	Stone	Misty Peaks	Gathering	G	1,2,6,8
+213	Stone	Misty Peaks	Gathering	High	1,2,6,8
+213	Stone	Misty Peaks	Mining	G	2,4,8
+213	Stone	Misty Peaks	Mining	High	2,4,8
+213	Stone	Moga Woods	Gathering	High	1,7,10
+213	Stone	Moga Woods	Gathering	Low	1,7,10
+213	Stone	Moga Woods	Mining	High	1,4,7,8,10
+213	Stone	Moga Woods	Mining	Low	1,4,7,8
+213	Stone	Sandy Plains	Mining	G	4,6
+213	Stone	Sandy Plains	Mining	High	4,6,11
+213	Stone	Sandy Plains	Mining	Low	4,6,11
+213	Stone	Tundra	Mining	G	5,7
+213	Stone	Tundra	Mining	High	5,7
+213	Stone	Tundra	Mining	Low	4,5,7
+213	Stone	Volcano	Gathering	G	1
+213	Stone	Volcano	Mining	Low	3
+214	Iron Ore	Deserted Island	Mining	G	1,4,6,8,10
+214	Iron Ore	Deserted Island	Mining	High	Secret,1,4,6,7,8,10
+214	Iron Ore	Deserted Island	Mining	Low	1,4,6,7,8,10,12
+214	Iron Ore	Flooded Forest	Mining	G	1,3,5,6,8,10
+214	Iron Ore	Flooded Forest	Mining	High	1,5,6,8,10
+214	Iron Ore	Flooded Forest	Mining	Low	1,3,5,6,8,10
+214	Iron Ore	Misty Peaks	Mining	G	2,3,4,8
+214	Iron Ore	Misty Peaks	Mining	High	2,3,4,8
+214	Iron Ore	Moga Woods	Mining	High	1,4,7,8,10,12
+214	Iron Ore	Moga Woods	Mining	Low	1,4,7,8,10,12
+214	Iron Ore	Sandy Plains	Mining	G	4,6
+214	Iron Ore	Sandy Plains	Mining	High	4,6,11
+214	Iron Ore	Sandy Plains	Mining	Low	4,6,11
+214	Iron Ore	Tundra	Mining	G	5,7
+214	Iron Ore	Tundra	Mining	High	5,7
+214	Iron Ore	Tundra	Mining	Low	5,6,7
+214	Iron Ore	Volcano	Mining	G	9
+214	Iron Ore	Volcano	Mining	High	3,5,9
+214	Iron Ore	Volcano	Mining	Low	5,8,9,10
+215	Earth Crystal	Deserted Island	Mining	G	1,4,7,8,10,12
+215	Earth Crystal	Deserted Island	Mining	High	1,4,7,8,10,12
+215	Earth Crystal	Deserted Island	Mining	Low	1,4,7,8,10
+215	Earth Crystal	Flooded Forest	Mining	G	1,3,5,6,8,10
+215	Earth Crystal	Flooded Forest	Mining	High	1,3,5,6,8,10
+215	Earth Crystal	Flooded Forest	Mining	Low	1,3,6,8,10
+215	Earth Crystal	Misty Peaks	Gathering	G	2
+215	Earth Crystal	Misty Peaks	Gathering	High	Secret,2
+215	Earth Crystal	Misty Peaks	Mining	G	3,4,6,8
+215	Earth Crystal	Misty Peaks	Mining	High	3,4,6,8
+215	Earth Crystal	Moga Woods	Mining	High	1,4,7,8,10
+215	Earth Crystal	Moga Woods	Mining	Low	1,4,7,8,10
+215	Earth Crystal	Sandy Plains	Mining	G	4,6,11
+215	Earth Crystal	Sandy Plains	Mining	High	Secret,4,6,11
+215	Earth Crystal	Sandy Plains	Mining	Low	4,6,11
+215	Earth Crystal	Tundra	Mining	G	4,5,7,9
+215	Earth Crystal	Tundra	Mining	High	4,5,7,9
+215	Earth Crystal	Tundra	Mining	Low	4,5,6,7
+215	Earth Crystal	Volcano	Mining	G	3,5
+215	Earth Crystal	Volcano	Mining	High	3,5,10
+215	Earth Crystal	Volcano	Mining	Low	3,5,9
+216	Machalite Ore	Deserted Island	Gathering	G	8
+216	Machalite Ore	Deserted Island	Gathering	High	8
+216	Machalite Ore	Deserted Island	Gathering	Low	8
+216	Machalite Ore	Deserted Island	Mining	G	8,10
+216	Machalite Ore	Deserted Island	Mining	High	1,4,6,7,8,10,12
+216	Machalite Ore	Deserted Island	Mining	Low	1,4,6,7,8,10,12
+216	Machalite Ore	Flooded Forest	Mining	G	3,6,8
+216	Machalite Ore	Flooded Forest	Mining	High	3,6,8,10
+216	Machalite Ore	Flooded Forest	Mining	Low	3,5,6,8,10
+216	Machalite Ore	Misty Peaks	Mining	G	3,8
+216	Machalite Ore	Misty Peaks	Mining	High	2,3,6,8
+216	Machalite Ore	Moga Woods	Gathering	High	8
+216	Machalite Ore	Moga Woods	Gathering	Low	8
+216	Machalite Ore	Moga Woods	Mining	High	1,4,8,10,12
+216	Machalite Ore	Moga Woods	Mining	Low	1,4,8,10,12
+216	Machalite Ore	Sandy Plains	Mining	G	4,6
+216	Machalite Ore	Sandy Plains	Mining	High	4,6,11
+216	Machalite Ore	Sandy Plains	Mining	Low	4,6,11
+216	Machalite Ore	Tundra	Mining	Low	4,5
+216	Machalite Ore	Volcano	Mining	G	9
+216	Machalite Ore	Volcano	Mining	High	3,5,9
+216	Machalite Ore	Volcano	Mining	Low	5,8,9,10
+217	Dragonite Ore	Deserted Island	Mining	G	1,4,6,7
+217	Dragonite Ore	Deserted Island	Mining	High	12
+217	Dragonite Ore	Flooded Forest	Mining	G	3,6,8
+217	Dragonite Ore	Misty Peaks	Mining	G	Secret,4,6,8
+217	Dragonite Ore	Misty Peaks	Mining	High	Secret,4,6,8
+217	Dragonite Ore	Moga Woods	Mining	High	10
+217	Dragonite Ore	Sandy Plains	Mining	G	Secret,4,6,11
+217	Dragonite Ore	Sandy Plains	Mining	High	Secret
+217	Dragonite Ore	Volcano	Mining	G	9
+217	Dragonite Ore	Volcano	Mining	High	3,5,8,9,10
+217	Dragonite Ore	Volcano	Mining	Low	3,5,8,9,10
+218	Pelagicite Ore	Flooded Forest	Mining	G	Secret,1,5,6
+218	Pelagicite Ore	Flooded Forest	Mining	High	Secret,1,5,6
+218	Pelagicite Ore	Flooded Forest	Mining	Low	1,3,5,6
+222	Carbalite Ore	Deserted Island	Mining	G	1,4,6,7,8,10,12
+222	Carbalite Ore	Deserted Island	Mining	High	Secret,1,4,6,7,12
+222	Carbalite Ore	Flooded Forest	Mining	G	3,6,8,10
+222	Carbalite Ore	Flooded Forest	Mining	High	3,6,8,10
+222	Carbalite Ore	Misty Peaks	Mining	G	2,3,6,8
+222	Carbalite Ore	Misty Peaks	Mining	High	Secret,2,6,8
+222	Carbalite Ore	Moga Woods	Mining	High	1,4,7,8,10,12
+222	Carbalite Ore	Sandy Plains	Mining	G	4,6,11
+222	Carbalite Ore	Sandy Plains	Mining	High	Secret,4,6,11
+222	Carbalite Ore	Tundra	Mining	G	4,5,7,9
+222	Carbalite Ore	Tundra	Mining	High	4,5,7,9
+222	Carbalite Ore	Volcano	Mining	G	3,5,8,9,10
+222	Carbalite Ore	Volcano	Mining	High	Secret,3,5,8,9,10
+223	Eltalite Ore	Deserted Island	Mining	G	Secret,1,4,6,7,10,12
+223	Eltalite Ore	Flooded Forest	Mining	G	8
+223	Eltalite Ore	Misty Peaks	Mining	G	Secret,2,8
+223	Eltalite Ore	Sandy Plains	Mining	G	Secret,6,11
+223	Eltalite Ore	Tundra	Mining	G	Secret,6
+223	Eltalite Ore	Volcano	Mining	G	Secret,3,5,8,9,10
+224	Fucium Ore	Sandy Plains	Mining	G	6,11
+224	Fucium Ore	Tundra	Mining	G	4
+224	Fucium Ore	Tundra	Mining	High	4
+224	Fucium Ore	Volcano	Mining	G	5,10
+224	Fucium Ore	Volcano	Mining	High	8,9,10
+225	Meldspar Ore	Sandy Plains	Mining	G	Secret,6,11
+225	Meldspar Ore	Tundra	Mining	G	4
+225	Meldspar Ore	Volcano	Mining	G	5,8,9,10
+226	Bathycite Ore	Flooded Forest	Mining	G	Secret,3,5,6
+226	Bathycite Ore	Flooded Forest	Mining	High	Secret,3,5,6
+228	Firestone	Volcano	Mining	G	3,5,10
+228	Firestone	Volcano	Mining	High	3,5,8,9,10
+228	Firestone	Volcano	Mining	Low	3,5,8,9,10
+229	Firecell Stone	Volcano	Gathering	High	Secret
+229	Firecell Stone	Volcano	Mining	G	Secret,3,5,8,9,10
+229	Firecell Stone	Volcano	Mining	High	Secret,3,5,8,9,10
+230	Allfire Stone	Volcano	Gathering	G	Secret
+230	Allfire Stone	Volcano	Mining	G	Secret,3,8,9,10
+231	Lightcrystal	Deserted Island	Mining	High	Secret
+231	Lightcrystal	Flooded Forest	Gathering	High	Secret
+231	Lightcrystal	Flooded Forest	Mining	High	Secret
+231	Lightcrystal	Misty Peaks	Mining	High	3,8
+231	Lightcrystal	Moga Woods	Mining	High	4,10
+231	Lightcrystal	Sandy Plains	Mining	High	6,11
+231	Lightcrystal	Tundra	Gathering	High	Secret
+231	Lightcrystal	Tundra	Mining	G	4,5,7,9
+231	Lightcrystal	Tundra	Mining	High	Secret,4,5,6,7,9
+231	Lightcrystal	Tundra	Mining	Low	4,5,6,7
+231	Lightcrystal	Volcano	Mining	High	3,5
+232	Isisium	Tundra	Mining	G	4,5,7,9
+232	Isisium	Tundra	Mining	High	Secret,5,6
+232	Isisium	Tundra	Mining	Low	4,5
+234	Gracium	Tundra	Gathering	High	Secret
+234	Gracium	Tundra	Mining	G	Secret,4,5,6,7,9
+234	Gracium	Tundra	Mining	High	Secret,4,5,6,7,9
+236	Ice Crystal	Sandy Plains	Mining	G	6,11
+236	Ice Crystal	Sandy Plains	Mining	High	6,11
+236	Ice Crystal	Sandy Plains	Mining	Low	6
+236	Ice Crystal	Tundra	Gathering	G	1
+236	Ice Crystal	Tundra	Gathering	High	1
+236	Ice Crystal	Tundra	Gathering	Low	1
+236	Ice Crystal	Tundra	Mining	G	4
+236	Ice Crystal	Tundra	Mining	High	4
+236	Ice Crystal	Tundra	Mining	Low	4,6
+238	Armor Sphere	Deserted Island	Mining	High	1,4,7
+238	Armor Sphere	Flooded Forest	Mining	G	8
+238	Armor Sphere	Flooded Forest	Mining	High	8
+238	Armor Sphere	Flooded Forest	Mining	Low	5,8,10
+238	Armor Sphere	Misty Peaks	Mining	High	8
+238	Armor Sphere	Moga Woods	Mining	High	4,8
+238	Armor Sphere	Sandy Plains	Mining	High	4,6
+238	Armor Sphere	Tundra	Mining	G	5,7
+238	Armor Sphere	Tundra	Mining	High	5,7
+238	Armor Sphere	Tundra	Mining	Low	5,7
+238	Armor Sphere	Volcano	Mining	Low	3,5,9
+239	Armor Sphere+	Deserted Island	Mining	High	8,10
+239	Armor Sphere+	Flooded Forest	Mining	High	3,6
+239	Armor Sphere+	Misty Peaks	Gathering	High	Secret
+239	Armor Sphere+	Misty Peaks	Mining	High	Secret,8
+239	Armor Sphere+	Moga Woods	Mining	High	4,10
+239	Armor Sphere+	Sandy Plains	Mining	High	6,11
+239	Armor Sphere+	Tundra	Mining	G	5,7
+239	Armor Sphere+	Tundra	Mining	High	5,7
+239	Armor Sphere+	Tundra	Mining	Low	4,5,7
+239	Armor Sphere+	Volcano	Mining	High	3,5
+239	Armor Sphere+	Volcano	Mining	Low	5,8,9,10
+240	Adv Armor Sphere	Deserted Island	Gathering	High	Secret
+240	Adv Armor Sphere	Deserted Island	Mining	G	7
+240	Adv Armor Sphere	Deserted Island	Mining	High	Secret
+240	Adv Armor Sphere	Flooded Forest	Gathering	High	Secret
+240	Adv Armor Sphere	Flooded Forest	Mining	G	3,6,8,10
+240	Adv Armor Sphere	Flooded Forest	Mining	High	Secret,5,6,8
+240	Adv Armor Sphere	Misty Peaks	Mining	G	Secret,8
+240	Adv Armor Sphere	Misty Peaks	Mining	High	8
+240	Adv Armor Sphere	Sandy Plains	Gathering	High	Secret
+240	Adv Armor Sphere	Sandy Plains	Mining	G	6,11
+240	Adv Armor Sphere	Tundra	Mining	G	4
+240	Adv Armor Sphere	Tundra	Mining	High	Secret,5,6
+240	Adv Armor Sphere	Volcano	Mining	G	3
+240	Adv Armor Sphere	Volcano	Mining	High	3,5
+241	Hrd Armor Sphere	Deserted Island	Mining	G	7
+241	Hrd Armor Sphere	Flooded Forest	Mining	G	Secret
+241	Hrd Armor Sphere	Misty Peaks	Mining	G	Secret,8
+241	Hrd Armor Sphere	Sandy Plains	Mining	G	6,11
+241	Hrd Armor Sphere	Tundra	Mining	G	5
+241	Hrd Armor Sphere	Volcano	Gathering	High	Secret
+241	Hrd Armor Sphere	Volcano	Mining	G	3,5
+241	Hrd Armor Sphere	Volcano	Mining	High	Secret,3,5,8,9,10
+242	Hvy Armor Sphere	Deserted Island	Gathering	G	Secret
+242	Hvy Armor Sphere	Deserted Island	Mining	G	Secret,12
+242	Hvy Armor Sphere	Flooded Forest	Gathering	G	Secret
+242	Hvy Armor Sphere	Flooded Forest	Mining	G	Secret,3,6,8,10
+242	Hvy Armor Sphere	Sandy Plains	Gathering	G	Secret
+242	Hvy Armor Sphere	Sandy Plains	Mining	G	Secret,6,11
+242	Hvy Armor Sphere	Tundra	Mining	G	4,5
+242	Hvy Armor Sphere	Volcano	Mining	G	3,5,10
+244	Tru Armor Sphere	Volcano	Gathering	G	Secret
+244	Tru Armor Sphere	Volcano	Mining	G	5,8,9,10
+245	Whetfish	Deserted Island	Fishing	G	Camp,10
+245	Whetfish	Deserted Island	Fishing	High	Camp,10
+245	Whetfish	Deserted Island	Fishing	Low	Camp,10
+245	Whetfish	Flooded Forest	Fishing	G	Camp
+245	Whetfish	Flooded Forest	Fishing	High	Camp
+245	Whetfish	Flooded Forest	Fishing	Low	Camp
+245	Whetfish	Misty Peaks	Fishing	G	7
+245	Whetfish	Misty Peaks	Fishing	High	7
+245	Whetfish	Moga Woods	Fishing	High	Camp,10
+245	Whetfish	Moga Woods	Fishing	Low	Camp,10
+245	Whetfish	Sandy Plains	Fishing	G	7
+245	Whetfish	Sandy Plains	Fishing	High	7
+245	Whetfish	Sandy Plains	Fishing	Low	7
+245	Whetfish	Tundra	Fishing	G	Camp
+245	Whetfish	Tundra	Fishing	High	Camp
+245	Whetfish	Tundra	Fishing	Low	Camp
+246	Sushifish	Deserted Island	Fishing	G	10
+246	Sushifish	Deserted Island	Fishing	High	10
+246	Sushifish	Deserted Island	Fishing	Low	10
+246	Sushifish	Flooded Forest	Fishing	G	Camp,4
+246	Sushifish	Flooded Forest	Fishing	High	Camp,4
+246	Sushifish	Flooded Forest	Fishing	Low	Camp,4
+246	Sushifish	Misty Peaks	Fishing	G	6
+246	Sushifish	Misty Peaks	Fishing	High	6
+246	Sushifish	Moga Woods	Fishing	High	10
+246	Sushifish	Moga Woods	Fishing	Low	10
+246	Sushifish	Sandy Plains	Fishing	G	7
+246	Sushifish	Sandy Plains	Fishing	High	7
+246	Sushifish	Sandy Plains	Fishing	Low	7
+246	Sushifish	Volcano	Fishing	G	4
+246	Sushifish	Volcano	Fishing	High	4
+246	Sushifish	Volcano	Fishing	Low	4
+247	Sleepyfish	Tundra	Fishing	G	Camp
+247	Sleepyfish	Tundra	Fishing	High	Camp
+247	Sleepyfish	Tundra	Fishing	Low	Camp
+248	Pin Tuna	Deserted Island	Fishing	G	Camp,10
+248	Pin Tuna	Deserted Island	Fishing	High	Camp,10
+248	Pin Tuna	Deserted Island	Fishing	Low	Camp,10
+248	Pin Tuna	Misty Peaks	Fishing	G	6,7
+248	Pin Tuna	Misty Peaks	Fishing	High	6,7
+248	Pin Tuna	Moga Woods	Fishing	High	Camp,10
+248	Pin Tuna	Moga Woods	Fishing	Low	Camp,10
+248	Pin Tuna	Tundra	Fishing	G	Camp
+248	Pin Tuna	Tundra	Fishing	High	Camp
+248	Pin Tuna	Tundra	Fishing	Low	Camp
+248	Pin Tuna	Volcano	Fishing	G	4
+248	Pin Tuna	Volcano	Fishing	High	4
+248	Pin Tuna	Volcano	Fishing	Low	4
+249	Popfish	Deserted Island	Fishing	G	Camp,10
+249	Popfish	Deserted Island	Fishing	High	Camp,10
+249	Popfish	Deserted Island	Fishing	Low	Camp,10
+249	Popfish	Flooded Forest	Fishing	G	Camp
+249	Popfish	Flooded Forest	Fishing	High	Camp
+249	Popfish	Flooded Forest	Fishing	Low	Camp
+249	Popfish	Misty Peaks	Fishing	G	6,7
+249	Popfish	Misty Peaks	Fishing	High	6,7
+249	Popfish	Moga Woods	Fishing	High	Camp
+249	Popfish	Moga Woods	Fishing	Low	Camp
+249	Popfish	Sandy Plains	Fishing	G	7
+249	Popfish	Sandy Plains	Fishing	High	7
+249	Popfish	Sandy Plains	Fishing	Low	7
+250	Scatterfish	Flooded Forest	Fishing	G	4
+250	Scatterfish	Flooded Forest	Fishing	High	4
+250	Scatterfish	Flooded Forest	Fishing	Low	4
+250	Scatterfish	Moga Woods	Fishing	High	10
+250	Scatterfish	Moga Woods	Fishing	Low	10
+250	Scatterfish	Sandy Plains	Fishing	G	7
+250	Scatterfish	Sandy Plains	Fishing	High	7
+250	Scatterfish	Sandy Plains	Fishing	Low	7
+250	Scatterfish	Volcano	Fishing	G	4
+250	Scatterfish	Volcano	Fishing	High	4
+250	Scatterfish	Volcano	Fishing	Low	4
+251	Burst Arowana	Flooded Forest	Fishing	G	Camp,4
+251	Burst Arowana	Flooded Forest	Fishing	High	Camp,4
+251	Burst Arowana	Flooded Forest	Fishing	Low	Camp,4
+251	Burst Arowana	Tundra	Fishing	G	Camp
+251	Burst Arowana	Tundra	Fishing	High	Camp
+251	Burst Arowana	Tundra	Fishing	Low	Camp
+252	Bomb Arowana	Flooded Forest	Fishing	G	Camp,4
+252	Bomb Arowana	Flooded Forest	Fishing	High	Camp,4
+252	Bomb Arowana	Flooded Forest	Fishing	Low	Camp,4
+252	Bomb Arowana	Volcano	Fishing	G	4
+252	Bomb Arowana	Volcano	Fishing	High	4
+252	Bomb Arowana	Volcano	Fishing	Low	4
+253	Glutton Tuna	Deserted Island	Fishing	G	Camp
+253	Glutton Tuna	Deserted Island	Fishing	High	Camp
+253	Glutton Tuna	Deserted Island	Fishing	Low	Camp
+253	Glutton Tuna	Moga Woods	Fishing	High	Camp
+253	Glutton Tuna	Moga Woods	Fishing	Low	Camp
+253	Glutton Tuna	Volcano	Fishing	G	4
+253	Glutton Tuna	Volcano	Fishing	High	4
+253	Glutton Tuna	Volcano	Fishing	Low	4
+254	Small Goldenfish	Deserted Island	Fishing	G	Camp,10
+254	Small Goldenfish	Deserted Island	Fishing	High	Camp,10
+254	Small Goldenfish	Deserted Island	Fishing	Low	Camp,10
+254	Small Goldenfish	Flooded Forest	Fishing	G	Camp,4
+254	Small Goldenfish	Flooded Forest	Fishing	High	Camp,4
+254	Small Goldenfish	Flooded Forest	Fishing	Low	Camp,4
+254	Small Goldenfish	Misty Peaks	Fishing	G	7
+254	Small Goldenfish	Misty Peaks	Fishing	High	6,7
+254	Small Goldenfish	Moga Woods	Fishing	High	Camp,10
+254	Small Goldenfish	Moga Woods	Fishing	Low	Camp,10
+254	Small Goldenfish	Tundra	Fishing	G	Camp
+254	Small Goldenfish	Tundra	Fishing	High	Camp
+254	Small Goldenfish	Tundra	Fishing	Low	Camp
+255	Wanchovy	Volcano	Fishing	G	4
+255	Wanchovy	Volcano	Fishing	High	4
+255	Wanchovy	Volcano	Fishing	Low	4
+260	Insect Husk	Deserted Island	Bug-Catching	G	1,2,3,4,5
+260	Insect Husk	Deserted Island	Bug-Catching	High	1,2,3,4,5
+260	Insect Husk	Deserted Island	Bug-Catching	Low	1,2,3,5
+260	Insect Husk	Deserted Island	Gathering	G	1,2,3,7,9
+260	Insect Husk	Deserted Island	Gathering	High	1,2,3,7,9
+260	Insect Husk	Deserted Island	Gathering	Low	1,2,3,7,9
+260	Insect Husk	Flooded Forest	Bug-Catching	G	4
+260	Insect Husk	Flooded Forest	Bug-Catching	High	4
+260	Insect Husk	Flooded Forest	Bug-Catching	Low	2,4,7,10
+260	Insect Husk	Flooded Forest	Gathering	G	9
+260	Insect Husk	Flooded Forest	Gathering	High	9
+260	Insect Husk	Flooded Forest	Gathering	Low	9
+260	Insect Husk	Misty Peaks	Gathering	G	3
+260	Insect Husk	Misty Peaks	Gathering	High	3
+260	Insect Husk	Moga Woods	Bug-Catching	High	1,2,3,4,5
+260	Insect Husk	Moga Woods	Bug-Catching	Low	1,2,3
+260	Insect Husk	Moga Woods	Gathering	High	1,2,3,7
+260	Insect Husk	Moga Woods	Gathering	Low	1,2,3,7
+260	Insect Husk	Sandy Plains	Bug-Catching	G	1,2,10
+260	Insect Husk	Sandy Plains	Bug-Catching	High	1,2,4,10
+260	Insect Husk	Sandy Plains	Bug-Catching	Low	1,2,4,10
+260	Insect Husk	Tundra	Bug-Catching	G	1,3,8
+260	Insect Husk	Tundra	Bug-Catching	High	1,3,8,9
+260	Insect Husk	Tundra	Bug-Catching	Low	1,3
+260	Insect Husk	Tundra	Gathering	G	1
+260	Insect Husk	Tundra	Gathering	High	1
+260	Insect Husk	Tundra	Gathering	Low	1
+260	Insect Husk	Volcano	Bug-Catching	High	1,2
+260	Insect Husk	Volcano	Bug-Catching	Low	1,2
+262	Bughopper	Deserted Island	Bug-Catching	Low	4,5
+262	Bughopper	Flooded Forest	Bug-Catching	High	2,4,7,10
+262	Bughopper	Flooded Forest	Bug-Catching	Low	4
+262	Bughopper	Moga Woods	Bug-Catching	Low	4,5
+262	Bughopper	Sandy Plains	Bug-Catching	G	2,10
+262	Bughopper	Sandy Plains	Bug-Catching	High	2,4,10
+262	Bughopper	Sandy Plains	Bug-Catching	Low	2,10
+262	Bughopper	Volcano	Bug-Catching	Low	1,2
+264	Stinkhopper	Deserted Island	Bug-Catching	G	1,2,3,4,5
+264	Stinkhopper	Deserted Island	Bug-Catching	High	4
+264	Stinkhopper	Deserted Island	Bug-Catching	Low	4,5
+264	Stinkhopper	Flooded Forest	Bug-Catching	High	10
+264	Stinkhopper	Flooded Forest	Bug-Catching	Low	4,10
+264	Stinkhopper	Moga Woods	Bug-Catching	Low	3,4,5
+264	Stinkhopper	Volcano	Bug-Catching	Low	1,2
+265	Snakebee Larva	Deserted Island	Gathering	G	2,3
+265	Snakebee Larva	Deserted Island	Gathering	High	2,3
+265	Snakebee Larva	Deserted Island	Gathering	Low	2,3
+265	Snakebee Larva	Moga Woods	Gathering	High	2,3
+265	Snakebee Larva	Moga Woods	Gathering	Low	2,3
+265	Snakebee Larva	Tundra	Gathering	G	1
+265	Snakebee Larva	Tundra	Gathering	High	1
+265	Snakebee Larva	Tundra	Gathering	Low	1
+266	Godbug	Deserted Island	Bug-Catching	G	Secret,4,5
+266	Godbug	Deserted Island	Bug-Catching	High	Secret,1,2,3,4,5
+266	Godbug	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+266	Godbug	Flooded Forest	Bug-Catching	G	Secret,2,4,7
+266	Godbug	Flooded Forest	Bug-Catching	High	Secret,2,4,7
+266	Godbug	Flooded Forest	Bug-Catching	Low	2,4,7
+266	Godbug	Misty Peaks	Bug-Catching	G	1,5,9
+266	Godbug	Misty Peaks	Bug-Catching	High	1,5,9
+266	Godbug	Moga Woods	Bug-Catching	High	1,2,3,4,5
+266	Godbug	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+266	Godbug	Sandy Plains	Bug-Catching	G	1,2,10
+266	Godbug	Sandy Plains	Bug-Catching	High	1,2,10
+266	Godbug	Sandy Plains	Bug-Catching	Low	1,2,10
+266	Godbug	Tundra	Bug-Catching	G	1,3,8,9
+266	Godbug	Tundra	Bug-Catching	High	1,3,8,9
+266	Godbug	Tundra	Bug-Catching	Low	1,3
+266	Godbug	Volcano	Bug-Catching	G	Secret,1,2
+266	Godbug	Volcano	Bug-Catching	High	Secret,1,2
+266	Godbug	Volcano	Bug-Catching	Low	1,2
+267	Bitterbug	Deserted Island	Bug-Catching	G	1,2,3,4,5
+267	Bitterbug	Deserted Island	Bug-Catching	High	1,2,3,4,5
+267	Bitterbug	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+267	Bitterbug	Flooded Forest	Bug-Catching	High	2,4,7
+267	Bitterbug	Flooded Forest	Bug-Catching	Low	2,4,7
+267	Bitterbug	Misty Peaks	Bug-Catching	High	1,5,7,9
+267	Bitterbug	Moga Woods	Bug-Catching	High	1,2,3,4,5
+267	Bitterbug	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+267	Bitterbug	Sandy Plains	Bug-Catching	G	1,2,10
+267	Bitterbug	Sandy Plains	Bug-Catching	High	1,2,4,10
+267	Bitterbug	Sandy Plains	Bug-Catching	Low	1,2,4,10
+267	Bitterbug	Tundra	Bug-Catching	High	1,3,8
+267	Bitterbug	Tundra	Bug-Catching	Low	1,3
+267	Bitterbug	Volcano	Bug-Catching	High	1
+267	Bitterbug	Volcano	Bug-Catching	Low	1,2
+268	Flashbug	Deserted Island	Bug-Catching	G	1,2,3,4,5
+268	Flashbug	Deserted Island	Bug-Catching	High	1,2,3,4,5
+268	Flashbug	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+268	Flashbug	Flooded Forest	Bug-Catching	G	10
+268	Flashbug	Flooded Forest	Bug-Catching	High	2,4,7,10
+268	Flashbug	Flooded Forest	Bug-Catching	Low	2,4,7,10
+268	Flashbug	Misty Peaks	Bug-Catching	High	1,5,7,9
+268	Flashbug	Moga Woods	Bug-Catching	High	1,2,3,4,5
+268	Flashbug	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+268	Flashbug	Tundra	Bug-Catching	High	1,3,8,9
+268	Flashbug	Tundra	Bug-Catching	Low	1,3
+268	Flashbug	Volcano	Bug-Catching	High	1,2
+268	Flashbug	Volcano	Bug-Catching	Low	1,2
+269	Thunderbug	Deserted Island	Bug-Catching	G	Secret,4,5
+269	Thunderbug	Deserted Island	Bug-Catching	High	Secret,1,2,3,4,5
+269	Thunderbug	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+269	Thunderbug	Flooded Forest	Bug-Catching	G	Secret,2,4,7
+269	Thunderbug	Flooded Forest	Bug-Catching	High	Secret
+269	Thunderbug	Flooded Forest	Bug-Catching	Low	2,7,10
+269	Thunderbug	Misty Peaks	Bug-Catching	G	5,7,9
+269	Thunderbug	Misty Peaks	Bug-Catching	High	5,7,9
+269	Thunderbug	Moga Woods	Bug-Catching	High	1,2,3,4,5
+269	Thunderbug	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+269	Thunderbug	Sandy Plains	Bug-Catching	G	Secret,1,2,4,10
+269	Thunderbug	Sandy Plains	Bug-Catching	High	Secret,1,2,10
+269	Thunderbug	Sandy Plains	Bug-Catching	Low	1,2,4,10
+269	Thunderbug	Tundra	Bug-Catching	G	1,3,8,9
+269	Thunderbug	Tundra	Bug-Catching	High	1,3,8,9
+269	Thunderbug	Tundra	Bug-Catching	Low	1,3
+269	Thunderbug	Volcano	Bug-Catching	G	2
+269	Thunderbug	Volcano	Bug-Catching	High	Secret,1,2
+269	Thunderbug	Volcano	Bug-Catching	Low	1,2
+271	Carpenterbug	Deserted Island	Bug-Catching	G	1,2,3,4,5
+271	Carpenterbug	Deserted Island	Bug-Catching	High	Secret,1,2,3,4,5
+271	Carpenterbug	Deserted Island	Bug-Catching	Low	1,2,3,4,5
+271	Carpenterbug	Misty Peaks	Bug-Catching	G	1,5,7,9
+271	Carpenterbug	Misty Peaks	Bug-Catching	High	5,7,9
+271	Carpenterbug	Moga Woods	Bug-Catching	Low	1,2,3,4,5
+271	Carpenterbug	Sandy Plains	Bug-Catching	G	2,10
+271	Carpenterbug	Sandy Plains	Bug-Catching	High	Secret,1,2,10
+271	Carpenterbug	Sandy Plains	Bug-Catching	Low	1,2,4,10
+271	Carpenterbug	Tundra	Bug-Catching	G	1,3,8
+271	Carpenterbug	Tundra	Bug-Catching	Low	1
+271	Carpenterbug	Volcano	Bug-Catching	G	1,2
+271	Carpenterbug	Volcano	Bug-Catching	Low	1
+272	Killer Beetle	Deserted Island	Bug-Catching	G	4,5
+272	Killer Beetle	Deserted Island	Bug-Catching	High	Secret
+272	Killer Beetle	Flooded Forest	Bug-Catching	G	Secret,2,4,7
+272	Killer Beetle	Flooded Forest	Bug-Catching	High	Secret,2,4,7,10
+272	Killer Beetle	Flooded Forest	Bug-Catching	Low	2,4,7,10
+272	Killer Beetle	Tundra	Bug-Catching	G	1,3,8,9
+272	Killer Beetle	Tundra	Bug-Catching	High	1,3,8,9
+272	Killer Beetle	Tundra	Bug-Catching	Low	1,3
+272	Killer Beetle	Volcano	Bug-Catching	G	2
+272	Killer Beetle	Volcano	Bug-Catching	High	Secret,1,2
+272	Killer Beetle	Volcano	Bug-Catching	Low	1,2
+273	Hercudrome	Deserted Island	Bug-Catching	G	Secret,1,2,3,4,5
+273	Hercudrome	Deserted Island	Bug-Catching	High	Secret,1,2,3,4,5
+273	Hercudrome	Flooded Forest	Bug-Catching	G	2,4,7,10
+273	Hercudrome	Flooded Forest	Bug-Catching	High	Secret,2,4,7,10
+273	Hercudrome	Misty Peaks	Bug-Catching	G	9
+273	Hercudrome	Moga Woods	Bug-Catching	High	1,2,3,4,5
+273	Hercudrome	Sandy Plains	Bug-Catching	G	Secret,1,4
+273	Hercudrome	Sandy Plains	Bug-Catching	High	Secret,4
+273	Hercudrome	Tundra	Bug-Catching	G	1,3,8,9
+273	Hercudrome	Tundra	Bug-Catching	High	1,3,8,9
+273	Hercudrome	Volcano	Bug-Catching	G	Secret,2
+273	Hercudrome	Volcano	Bug-Catching	High	Secret,1,2
+273	Hercudrome	Volcano	Bug-Catching	Low	1
+275	King Scarab	Deserted Island	Bug-Catching	G	Secret,4,5
+275	King Scarab	Deserted Island	Bug-Catching	High	Secret,1,2,3,5
+275	King Scarab	Flooded Forest	Bug-Catching	G	2,4,7,10
+275	King Scarab	Flooded Forest	Bug-Catching	High	Secret,4
+275	King Scarab	Misty Peaks	Bug-Catching	G	1,5,7,9
+275	King Scarab	Misty Peaks	Bug-Catching	High	1,5,7,9
+275	King Scarab	Moga Woods	Bug-Catching	High	3,4
+275	King Scarab	Sandy Plains	Bug-Catching	G	Secret,1,4
+275	King Scarab	Sandy Plains	Bug-Catching	High	Secret,4
+275	King Scarab	Tundra	Bug-Catching	G	1,3,8,9
+275	King Scarab	Tundra	Bug-Catching	High	1,3,8,9
+275	King Scarab	Volcano	Bug-Catching	G	Secret,1,2
+275	King Scarab	Volcano	Bug-Catching	High	Secret,1,2
+276	Rare Scarab	Deserted Island	Bug-Catching	G	4,5
+276	Rare Scarab	Flooded Forest	Bug-Catching	G	4,10
+276	Rare Scarab	Misty Peaks	Bug-Catching	G	1,9
+276	Rare Scarab	Sandy Plains	Bug-Catching	G	4
+276	Rare Scarab	Tundra	Bug-Catching	G	1,3,8,9
+276	Rare Scarab	Tundra	Bug-Catching	High	1,3,8,9
+276	Rare Scarab	Volcano	Bug-Catching	G	Secret,1,2
+276	Rare Scarab	Volcano	Bug-Catching	High	Secret,1,2
+278	Flutterfly	Deserted Island	Bug-Catching	G	Secret
+278	Flutterfly	Flooded Forest	Bug-Catching	G	Secret,2,4,7,10
+278	Flutterfly	Misty Peaks	Bug-Catching	G	5,7,9
+278	Flutterfly	Sandy Plains	Bug-Catching	G	Secret
+278	Flutterfly	Tundra	Bug-Catching	G	1,3,8,9
+278	Flutterfly	Volcano	Bug-Catching	G	Secret
+301	Monster Bone S	Deserted Island	Gathering	G	5,6,8
+301	Monster Bone S	Deserted Island	Gathering	High	5,6,8
+301	Monster Bone S	Deserted Island	Gathering	Low	5,6,8
+301	Monster Bone S	Misty Peaks	Gathering	G	8
+301	Monster Bone S	Misty Peaks	Gathering	High	8
+301	Monster Bone S	Moga Woods	Gathering	High	5,6
+301	Monster Bone S	Moga Woods	Gathering	Low	5,6
+301	Monster Bone S	Sandy Plains	Gathering	G	5,9
+301	Monster Bone S	Sandy Plains	Gathering	High	5,9
+301	Monster Bone S	Sandy Plains	Gathering	Low	5,9
+301	Monster Bone S	Tundra	Gathering	G	4,5
+301	Monster Bone S	Tundra	Gathering	High	4,5
+301	Monster Bone S	Tundra	Gathering	Low	4,5
+302	Monster Bone M	Tundra	Gathering	Low	4
+304	Mystery Bone	Deserted Island	Gathering	G	5,6,8,12
+304	Mystery Bone	Deserted Island	Gathering	High	5,6,8,12
+304	Mystery Bone	Deserted Island	Gathering	Low	5,6,8,12
+304	Mystery Bone	Misty Peaks	Gathering	G	2,8
+304	Mystery Bone	Misty Peaks	Gathering	High	2,8
+304	Mystery Bone	Moga Woods	Gathering	High	5,6,8,12
+304	Mystery Bone	Moga Woods	Gathering	Low	5,6,8,12
+304	Mystery Bone	Sandy Plains	Gathering	G	5,9
+304	Mystery Bone	Sandy Plains	Gathering	High	5,9
+304	Mystery Bone	Sandy Plains	Gathering	Low	5,9
+304	Mystery Bone	Tundra	Gathering	G	Secret,5,7,9
+304	Mystery Bone	Tundra	Gathering	High	Secret,5,7,9
+304	Mystery Bone	Tundra	Gathering	Low	4,5,7
+305	Unknown Skull	Deserted Island	Gathering	G	5,6
+305	Unknown Skull	Deserted Island	Gathering	High	5,6
+305	Unknown Skull	Deserted Island	Gathering	Low	5,6
+305	Unknown Skull	Misty Peaks	Gathering	G	8
+305	Unknown Skull	Misty Peaks	Gathering	High	8
+305	Unknown Skull	Moga Woods	Gathering	High	5,6
+305	Unknown Skull	Moga Woods	Gathering	Low	5,6
+305	Unknown Skull	Sandy Plains	Gathering	G	5,9
+305	Unknown Skull	Sandy Plains	Gathering	High	5,9
+305	Unknown Skull	Sandy Plains	Gathering	Low	5,9
+305	Unknown Skull	Sandy Plains	Mining	G	6,11
+305	Unknown Skull	Sandy Plains	Mining	High	6,11
+305	Unknown Skull	Sandy Plains	Mining	Low	11
+305	Unknown Skull	Tundra	Gathering	G	Secret,4,5,7,9
+305	Unknown Skull	Tundra	Gathering	High	4,5,7
+305	Unknown Skull	Tundra	Gathering	Low	4,5,7
+306	Bone	Deserted Island	Gathering	G	5,6,8,12
+306	Bone	Deserted Island	Gathering	High	5,6,8,12
+306	Bone	Deserted Island	Gathering	Low	5,6,8,12
+306	Bone	Misty Peaks	Gathering	G	2,8
+306	Bone	Misty Peaks	Gathering	High	2,8
+306	Bone	Moga Woods	Gathering	High	5,6,8,12
+306	Bone	Moga Woods	Gathering	Low	5,6,8,12
+306	Bone	Sandy Plains	Gathering	G	5,7
+306	Bone	Sandy Plains	Gathering	High	5,7
+306	Bone	Sandy Plains	Gathering	Low	5,7
+306	Bone	Tundra	Gathering	G	4,5,7
+306	Bone	Tundra	Gathering	High	4,5,7
+306	Bone	Tundra	Gathering	Low	4,5,7
+316	Dragonbone Relic	Tower	Gathering	G	1
+316	Dragonbone Relic	Tundra	Gathering	G	Secret,4,9
+316	Dragonbone Relic	Tundra	Gathering	High	Secret,4,9
+329	Armorfish Morsel	Moga Woods	Fishing	High	Camp
+329	Armorfish Morsel	Moga Woods	Fishing	Low	Camp
+333	Dragonbone Piece	Moga Woods	Gathering	High	4,6,10,11
+333	Dragonbone Piece	Moga Woods	Gathering	Low	4,6,10,11
+334	Abalone Piece	Moga Woods	Gathering	High	10
+334	Abalone Piece	Moga Woods	Gathering	Low	10
+335	Fossil Piece	Moga Woods	Gathering	High	4,6,10
+335	Fossil Piece	Moga Woods	Gathering	Low	4,6,10
+338	Mystic Narwhal	Moga Woods	Fishing	High	10
+338	Mystic Narwhal	Moga Woods	Fishing	Low	10
+351	Odd Egg	Moga Woods	Gathering	High	6,8
+351	Odd Egg	Moga Woods	Gathering	Low	6,8
+1004	Rustshard	Tundra	Mining	G	5,7
+1004	Rustshard	Tundra	Mining	High	5,7
+1004	Rustshard	Tundra	Mining	Low	5,7
+1004	Rustshard	Volcano	Gathering	High	Secret
+1004	Rustshard	Volcano	Mining	G	9
+1004	Rustshard	Volcano	Mining	High	Secret,5,8,9,10
+1004	Rustshard	Volcano	Mining	Low	5,9,10
+1005	Ancient Shard	Tundra	Mining	G	Secret,6
+1005	Ancient Shard	Volcano	Gathering	G	Secret
+1005	Ancient Shard	Volcano	Mining	G	Secret,5,8,9,10
+1011	First-aid Med	Tainted Sea	Gathering	G	1
+1012	Ration	Misty Peaks	Gathering	G	4
+1012	Ration	Misty Peaks	Gathering	High	4
+1012	Ration	Ruins	Gathering	G	3
+1012	Ration	Ruins	Gathering	Low	3
+1012	Ration	Tainted Sea	Gathering	G	1
+1016	EZ Flash Bomb	Land Arena	Gathering	G	1
+1016	EZ Flash Bomb	Land Arena	Gathering	High	1
+1016	EZ Flash Bomb	Land Arena	Gathering	Low	1
+1016	EZ Flash Bomb	Water Arena	Gathering	G	1
+1016	EZ Flash Bomb	Water Arena	Gathering	High	1
+1016	EZ Flash Bomb	Water Arena	Gathering	Low	1
+1018	EZ Max Potion	Tainted Sea	Gathering	G	1
+1020	Mini Oxy Supply	Ruins	Gathering	G	3
+1020	Mini Oxy Supply	Ruins	Gathering	Low	3
+1021	EZ Barrel Bomb L	Tainted Sea	Gathering	G	1
+1022	Ballista Ammo	Great Desert	Gathering	G	1,2
+1022	Ballista Ammo	Great Desert	Gathering	High	1,2
+1022	Ballista Ammo	Sacred Land	Gathering	G	1
+1022	Ballista Ammo	Sacred Land	Gathering	High	1
+1022	Ballista Ammo	Tainted Sea	Gathering	G	1
+1025	Cannon Ammo	Great Desert	Gathering	G	1,2
+1025	Cannon Ammo	Great Desert	Gathering	High	1,2
+1027	Torch	Moga Woods	Gathering	High	1
+1027	Torch	Moga Woods	Gathering	Low	1
+1029	Royal Honey	Misty Peaks	Gathering	G	5,9
+1029	Royal Honey	Misty Peaks	Gathering	High	5,9
+1030	Unique Mushroom	Deserted Island	Gathering	G	2,3,6,7
+1030	Unique Mushroom	Deserted Island	Gathering	High	2,3,6,7
+1030	Unique Mushroom	Deserted Island	Gathering	Low	2,3,6,7
+1030	Unique Mushroom	Flooded Forest	Gathering	G	1,2,4,8
+1030	Unique Mushroom	Flooded Forest	Gathering	High	1,2,4,8
+1030	Unique Mushroom	Flooded Forest	Gathering	Low	1,2,4,8
+1030	Unique Mushroom	Misty Peaks	Gathering	G	1,2,4,5,7,9
+1030	Unique Mushroom	Misty Peaks	Gathering	High	1,2,4,5,7,9
+1030	Unique Mushroom	Moga Woods	Gathering	High	3,7
+1030	Unique Mushroom	Moga Woods	Gathering	Low	3,7
+1030	Unique Mushroom	Sandy Plains	Gathering	G	6,7
+1030	Unique Mushroom	Sandy Plains	Gathering	High	6,7
+1030	Unique Mushroom	Sandy Plains	Gathering	Low	6,7
+1030	Unique Mushroom	Volcano	Gathering	G	1
+1031	Choice Mushroom	Deserted Island	Gathering	G	2,3,6,7
+1031	Choice Mushroom	Deserted Island	Gathering	High	2,3,6,7
+1031	Choice Mushroom	Deserted Island	Gathering	Low	2,3,6,7
+1031	Choice Mushroom	Flooded Forest	Gathering	G	1
+1031	Choice Mushroom	Flooded Forest	Gathering	High	1
+1031	Choice Mushroom	Flooded Forest	Gathering	Low	1
+1031	Choice Mushroom	Misty Peaks	Gathering	G	1,2,5,7,9
+1031	Choice Mushroom	Misty Peaks	Gathering	High	1,2,5,7,9
+1031	Choice Mushroom	Moga Woods	Gathering	High	3,7
+1031	Choice Mushroom	Moga Woods	Gathering	Low	3,7
+1031	Choice Mushroom	Sandy Plains	Gathering	G	6
+1031	Choice Mushroom	Sandy Plains	Gathering	High	6
+1031	Choice Mushroom	Sandy Plains	Gathering	Low	6
+1031	Choice Mushroom	Volcano	Gathering	G	1
+1033	Great Shroom	Misty Peaks	Gathering	G	1,2,4,5,7,9
+1033	Great Shroom	Misty Peaks	Gathering	High	1,2,4,5,7,9
+1033	Great Shroom	Volcano	Gathering	G	1
+1034	Super Sprout	Misty Peaks	Gathering	G	3
+1034	Super Sprout	Misty Peaks	Gathering	High	3
+1037	Silverfish	Deserted Island	Fishing	G	10
+1037	Silverfish	Deserted Island	Fishing	High	10
+1037	Silverfish	Flooded Forest	Fishing	G	4
+1037	Silverfish	Flooded Forest	Fishing	High	4
+1037	Silverfish	Misty Peaks	Fishing	G	6,7
+1037	Silverfish	Misty Peaks	Fishing	High	6,7
+1037	Silverfish	Sandy Plains	Fishing	G	7
+1037	Silverfish	Sandy Plains	Fishing	High	7
+1040	Goldenfish	Deserted Island	Fishing	G	10
+1040	Goldenfish	Deserted Island	Fishing	High	10
+1040	Goldenfish	Deserted Island	Fishing	Low	10
+1040	Goldenfish	Flooded Forest	Fishing	G	4
+1040	Goldenfish	Flooded Forest	Fishing	High	4
+1040	Goldenfish	Flooded Forest	Fishing	Low	4
+1040	Goldenfish	Misty Peaks	Fishing	G	6
+1040	Goldenfish	Misty Peaks	Fishing	High	6
+1040	Goldenfish	Sandy Plains	Fishing	G	7
+1040	Goldenfish	Sandy Plains	Fishing	High	7
+1040	Goldenfish	Sandy Plains	Fishing	Low	7
+1041	Royal Rhino	Flooded Forest	Bug-Catching	High	Secret,2,4,7,10
+1041	Royal Rhino	Flooded Forest	Bug-Catching	Low	2,4,7,10
+1041	Royal Rhino	Misty Peaks	Bug-Catching	G	1,5,7,9
+1041	Royal Rhino	Misty Peaks	Bug-Catching	High	1,5,7,9
+1041	Royal Rhino	Sandy Plains	Bug-Catching	G	Secret,1,4
+1041	Royal Rhino	Sandy Plains	Bug-Catching	High	Secret,1,4
+1041	Royal Rhino	Sandy Plains	Bug-Catching	Low	1,4
+1041	Royal Rhino	Tundra	Bug-Catching	High	1,3,8
+1041	Royal Rhino	Tundra	Bug-Catching	Low	1,3
+1041	Royal Rhino	Volcano	Bug-Catching	G	1
+1042	Divine Rhino	Flooded Forest	Bug-Catching	G	2,4,7,10
+1042	Divine Rhino	Flooded Forest	Bug-Catching	High	2,4,7,10
+1042	Divine Rhino	Misty Peaks	Bug-Catching	G	1,5,7,9
+1042	Divine Rhino	Misty Peaks	Bug-Catching	High	1,5,7,9
+1042	Divine Rhino	Sandy Plains	Bug-Catching	G	Secret,4
+1042	Divine Rhino	Sandy Plains	Bug-Catching	High	Secret,4
+1042	Divine Rhino	Tundra	Bug-Catching	G	1,3,8
+1042	Divine Rhino	Tundra	Bug-Catching	High	1,3,8
+1042	Divine Rhino	Volcano	Bug-Catching	G	1
+1043	Silver Cricket	Deserted Island	Bug-Catching	G	1,2,3
+1043	Silver Cricket	Deserted Island	Bug-Catching	High	4,5
+1043	Silver Cricket	Deserted Island	Bug-Catching	Low	1,2,3
+1043	Silver Cricket	Moga Woods	Bug-Catching	Low	1,2,3
+1043	Silver Cricket	Volcano	Bug-Catching	G	2
+1043	Silver Cricket	Volcano	Bug-Catching	High	1,2
+1043	Silver Cricket	Volcano	Bug-Catching	Low	1,2
+1044	Gold Cricket	Deserted Island	Bug-Catching	G	1,2,3,4,5
+1044	Gold Cricket	Deserted Island	Bug-Catching	High	4,5
+1044	Gold Cricket	Volcano	Bug-Catching	G	2
+1044	Gold Cricket	Volcano	Bug-Catching	High	1,2
+1045	Auristone Piece	Sandy Plains	Gathering	High	Secret
+1045	Auristone Piece	Sandy Plains	Mining	High	6,11
+1045	Auristone Piece	Sandy Plains	Mining	Low	6
+1045	Auristone Piece	Tundra	Mining	G	4,5,7,9
+1045	Auristone Piece	Tundra	Mining	High	4,5,7,9
+1045	Auristone Piece	Tundra	Mining	Low	4,5
+1046	Auristone Chunk	Sandy Plains	Gathering	High	Secret
+1046	Auristone Chunk	Sandy Plains	Mining	G	6,11
+1046	Auristone Chunk	Sandy Plains	Mining	High	Secret,6,11
+1046	Auristone Chunk	Tundra	Gathering	G	Secret,9
+1046	Auristone Chunk	Tundra	Mining	G	4,5,7,9
+1046	Auristone Chunk	Tundra	Mining	High	4,5,7,9
+1047	Balmstone Piece	Misty Peaks	Gathering	G	Secret
+1047	Balmstone Piece	Misty Peaks	Gathering	High	Secret
+1047	Balmstone Piece	Misty Peaks	Mining	G	Secret,2,3,4,6,8
+1047	Balmstone Piece	Misty Peaks	Mining	High	Secret,2,3,4,6,8
+1048	Balmstone Chunk	Misty Peaks	Gathering	G	Secret
+1048	Balmstone Chunk	Misty Peaks	Gathering	High	Secret
+1048	Balmstone Chunk	Misty Peaks	Mining	G	Secret,2,4,6,8
+1048	Balmstone Chunk	Misty Peaks	Mining	High	Secret,2,4,6,8
+1049	Crystal Bone	Sandy Plains	Mining	G	4,6,11
+1049	Crystal Bone	Sandy Plains	Mining	High	4,6,11
+1049	Crystal Bone	Sandy Plains	Mining	Low	4,6,11
+1050	Golden Bone	Sandy Plains	Gathering	G	Secret,5,9
+1050	Golden Bone	Sandy Plains	Gathering	High	Secret,5,9
+1050	Golden Bone	Sandy Plains	Gathering	Low	5,9
+1050	Golden Bone	Sandy Plains	Mining	G	Secret,4,6,11
+1050	Golden Bone	Sandy Plains	Mining	High	Secret,4,6,11
+1050	Golden Bone	Sandy Plains	Mining	Low	11
+1050	Golden Bone	Tundra	Gathering	G	5
+1050	Golden Bone	Tundra	Gathering	High	Secret,5,9
+1050	Golden Bone	Tundra	Gathering	Low	4,5
+1050	Golden Bone	Tundra	Mining	Low	4,5
+1051	Bloodstone	Tundra	Mining	G	4,5
+1051	Bloodstone	Tundra	Mining	High	4,5,7,9
+1051	Bloodstone	Tundra	Mining	Low	4,5,7
+1052	Deep Bloodstone	Tundra	Mining	G	4,5,7,9
+1052	Deep Bloodstone	Tundra	Mining	High	4
+1053	Coal	Volcano	Mining	G	9
+1053	Coal	Volcano	Mining	High	5,9,10
+1053	Coal	Volcano	Mining	Low	9,10
+1054	Volatile Coal	Volcano	Mining	G	Secret,9
+1054	Volatile Coal	Volcano	Mining	High	Secret,3,5,9,10
+1055	Wyvern Egg	Deserted Island	Gathering	G	8
+1055	Wyvern Egg	Deserted Island	Gathering	High	8
+1055	Wyvern Egg	Deserted Island	Gathering	Low	8
+1055	Wyvern Egg	Misty Peaks	Gathering	G	8
+1055	Wyvern Egg	Misty Peaks	Gathering	High	8
+1056	Herbivore Egg	Sandy Plains	Gathering	G	7
+1056	Herbivore Egg	Sandy Plains	Gathering	High	7
+1056	Herbivore Egg	Sandy Plains	Gathering	Low	7
+1060	Powderstone	Volcano	Gathering	G	10
+1060	Powderstone	Volcano	Gathering	High	10
+1060	Powderstone	Volcano	Gathering	Low	10
+1071	Red Coral Stone	Deserted Island	Gathering	G	10,11
+1071	Red Coral Stone	Deserted Island	Gathering	High	10,11
+1071	Red Coral Stone	Deserted Island	Gathering	Low	10,11
+1071	Red Coral Stone	Moga Woods	Gathering	High	10
+1071	Red Coral Stone	Moga Woods	Gathering	Low	10
+1108	Aquaglow Jewel	Deserted Island	Mining	High	1,4,6,7,8,10
+1108	Aquaglow Jewel	Deserted Island	Mining	Low	1,4,6,7,8,10,12
+1108	Aquaglow Jewel	Flooded Forest	Mining	G	1,8
+1108	Aquaglow Jewel	Flooded Forest	Mining	High	1,5,6,8
+1108	Aquaglow Jewel	Flooded Forest	Mining	Low	1,3,5,6,8
+1108	Aquaglow Jewel	Moga Woods	Mining	High	4,8,10,12
+1108	Aquaglow Jewel	Moga Woods	Mining	Low	1,4,8,10,12
+1108	Aquaglow Jewel	Volcano	Mining	High	5
+1108	Aquaglow Jewel	Volcano	Mining	Low	5,10
+1109	Sunspire Jewel	Deserted Island	Mining	High	4,8,10
+1109	Sunspire Jewel	Flooded Forest	Mining	G	5,6,8
+1109	Sunspire Jewel	Flooded Forest	Mining	High	3,6,8,10
+1109	Sunspire Jewel	Tundra	Mining	G	5
+1109	Sunspire Jewel	Tundra	Mining	High	Secret,4,5,6,7,9
+1109	Sunspire Jewel	Tundra	Mining	Low	4,5,6,7
+1109	Sunspire Jewel	Volcano	Mining	High	3,5
+1109	Sunspire Jewel	Volcano	Mining	Low	3,5,8,10
+1110	Bloodrun Jewel	Deserted Island	Gathering	High	Secret
+1110	Bloodrun Jewel	Deserted Island	Mining	G	Secret,1,4,6,7,8,10,12
+1110	Bloodrun Jewel	Deserted Island	Mining	High	Secret,12
+1110	Bloodrun Jewel	Flooded Forest	Gathering	High	Secret
+1110	Bloodrun Jewel	Flooded Forest	Mining	G	3,6,8,10
+1110	Bloodrun Jewel	Flooded Forest	Mining	High	3,6,8,10
+1110	Bloodrun Jewel	Moga Woods	Mining	High	1,10
+1110	Bloodrun Jewel	Tundra	Mining	G	Secret,4,5,6,7,9
+1110	Bloodrun Jewel	Tundra	Mining	High	Secret,6
+1110	Bloodrun Jewel	Volcano	Mining	G	3,5,10
+1110	Bloodrun Jewel	Volcano	Mining	High	5,10
+1111	Lazurite Jewel	Deserted Island	Mining	G	Secret,8,10
+1111	Lazurite Jewel	Flooded Forest	Mining	G	3,6
+1111	Lazurite Jewel	Tundra	Gathering	High	Secret
+1111	Lazurite Jewel	Tundra	Mining	G	Secret,4,5,6,7,9
+1278	Emperor Hopper	Deserted Island	Bug-Catching	G	Secret,1,2,3,4,5
+1278	Emperor Hopper	Flooded Forest	Bug-Catching	G	Secret,2,4,7,10
+1278	Emperor Hopper	Misty Peaks	Bug-Catching	G	1,5,9
+1278	Emperor Hopper	Sandy Plains	Bug-Catching	G	Secret,1,4
+1278	Emperor Hopper	Tundra	Bug-Catching	G	1,3,8,9
+1278	Emperor Hopper	Volcano	Bug-Catching	G	Secret,1,2
+1279	Elder Dragonbone	Tower	Gathering	G	1
+1281	Purecrystal	Deserted Island	Mining	G	Secret,8,10
+1281	Purecrystal	Flooded Forest	Gathering	G	Secret
+1281	Purecrystal	Flooded Forest	Mining	G	8,10
+1281	Purecrystal	Misty Peaks	Gathering	G	Secret
+1281	Purecrystal	Misty Peaks	Mining	G	3,8
+1281	Purecrystal	Sandy Plains	Mining	G	Secret
+1281	Purecrystal	Tundra	Gathering	G	Secret
+1281	Purecrystal	Tundra	Mining	G	Secret,4,6
+1281	Purecrystal	Volcano	Mining	G	3
+1282	Adamant Orb	Deserted Island	Gathering	G	Secret
+1282	Adamant Orb	Deserted Island	Mining	G	1,6,10
+1282	Adamant Orb	Flooded Forest	Gathering	G	Secret
+1282	Adamant Orb	Flooded Forest	Mining	G	Secret,3,5,6,8,10
+1282	Adamant Orb	Misty Peaks	Gathering	G	Secret
+1282	Adamant Orb	Sandy Plains	Mining	G	6,11
+1282	Adamant Orb	Tower	Gathering	G	1
+1282	Adamant Orb	Tundra	Gathering	G	Secret
+1282	Adamant Orb	Volcano	Mining	G	Secret,5,9
+1307	Speartuna	Deserted Island	Fishing	G	10
+1307	Speartuna	Deserted Island	Fishing	High	10
+1307	Speartuna	Deserted Island	Fishing	Low	10
+1307	Speartuna	Tundra	Fishing	G	Camp
+1307	Speartuna	Tundra	Fishing	High	Camp
+1307	Speartuna	Tundra	Fishing	Low	Camp
+1350	Giant Fossil	Moga Woods	Gathering	High	4,6,10,11
+1377	Slickaxe	Deserted Island	Gathering	G	Secret
+1377	Slickaxe	Sandy Plains	Gathering	G	Secret
+1524	Gloamgrass Bud	Moga Woods	Gathering	High	4,6,8,10
