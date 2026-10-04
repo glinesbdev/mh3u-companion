@@ -192,8 +192,9 @@ The binary part (442 bytes for most quests, longer for 59 with extra data) start
 | 2 | kind: 1 slay, 2 deliver, 4 capture, 5 hunt (others: special goals) | matches the goal text on every quest looked at |
 | 10 + 11 k (k < 5) | large monster records: the first byte is the monster's id in the name table, 0 for none | matches the goal text (including two-monster hunts) |
 | 71 + 4 k (k < 43) | rewards `[item u16, quantity, chance]`; even k is the main box (monster parts), odd k the second box (supplies); chance 0 = always | the boxes add up to 100 on 412 of 413 quests (quest 1707's main box adds up to 110); the Arzuros capture quest matches what a hunter received |
-| 327 + 4 k (k < 4) | four u32: 100 to 540 (in the hall a tenth of the next), the next (600 to 19400), a third of that, and the **hunter rank points** the quest gives | the last matched the points a hunter's save gained after 4 of 6 quests, and the sum for two; the other 2 gained less. The first two are probably the fee and the zenny reward, unchecked |
-| 328 on | stage, spawn lists | not decoded |
+| 327 + 4 k (k < 4) | four u32: the **fee**, the zenny **reward**, a third of the reward, and the **hunter rank points** the quest gives | fee and reward match the quest board on 3 quests (Bug Hunt 100 and 600, The Fisherman's Tale 400 and 4000, Rathian's Wrath 920 and 9200); the points matched the total in the save for 4 of 6 quests, and the sum for two; the other 2 gained less |
+| 1 | the **map** (a number) | named for three numbers by the quest board: 0x24 Deserted Island (Bug Hunt), 0x17 Flooded Forest (The Fisherman's Tale), 0x16 Sandy Plains (Rathian's Wrath). A map has several numbers (0x0a, 0x21 and 0x16 all seem to be Sandy Plains from the quest texts, 0x20 and 0x17 Flooded Forest), probably its versions; no table of them was found in the text archive |
+| 328 on | spawn lists | not decoded |
 
 **Where a quest is taken** follows from its id (also the file name `q_NNNNN`): below 10000 is a village quest, 10000 to 19999 a hall quest
 (the hall's 1★ quests are 111xx, 6★ ones 116xx), 20000 and up are arena and event quests. Checked on a hunter whose guild card showed 8 village

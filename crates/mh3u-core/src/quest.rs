@@ -65,6 +65,18 @@ impl Place {
     }
 }
 
+/// The name of a map by the number in the quest file, for the numbers a quest board reading has named. A hunter read these maps off
+/// three quests: Bug Hunt (0x24, Deserted Island), The Fisherman's Tale (0x17, Flooded Forest) and Rathian's Wrath (0x16, Sandy Plains).
+/// The other numbers (0x0a is the most common) are maps too, but which is not known.
+pub fn stage_name(stage: u8) -> Option<&'static str> {
+    match stage {
+        0x24 => Some("Deserted Island"),
+        0x17 => Some("Flooded Forest"),
+        0x16 => Some("Sandy Plains"),
+        _ => None,
+    }
+}
+
 /// One thing a quest can give: `percent` is the chance among its box; 0 means every time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Reward {
@@ -86,10 +98,17 @@ pub struct Quest {
     pub minutes: u16,
     pub kind: Kind,
     pub place: Place,
-    /// Four numbers from the end of the file: 100 to 540 (hall: a tenth of the next), 600 to 19400, a third of the second, and the
-    /// hunter rank points the quest gives (4 of the 6 quests a hunter finished added exactly this to the save's rank points; the other
-    /// 2 added less, and the money ones are not checked against the game yet).
-    pub pay: [u32; 4],
+    /// What the quest board shows: the zenny reward and the fee to take the quest (read from the end of the file and checked on three
+    /// quests: Bug Hunt 600 and 100, The Fisherman's Tale 4000 and 400, Rathian's Wrath 9200 and 920; the fee is a tenth of the reward in
+    /// hall quests).
+    pub reward: u32,
+    pub fee: u32,
+    /// The hunter rank points it gives (the save's total at 0x5a46 grew by this for 4 of the 6 quests a hunter finished and by less for
+    /// the other 2).
+    pub rank_points: u32,
+    /// The map, as a number from the second byte of the binary part. One map has several numbers (its day and night versions, say), and
+    /// only three are named: see [`stage_name`].
+    pub stage: u8,
     /// Large monsters (ids in the monster name table), in the order the file lists them.
     pub monsters: Vec<u16>,
     /// The two reward boxes: the main one and the second.
@@ -104,7 +123,7 @@ const MONSTER_LEN: usize = 11;
 const MONSTER_SLOTS: usize = 5;
 const REWARDS_AT: usize = 71;
 const REWARD_ENTRIES: usize = 43;
-/// Where the four numbers of `Quest::pay` start in the binary part.
+/// Where the four payment numbers start in the binary part: the fee, the reward, a third of the reward, the rank points.
 const PAY_AT: usize = 327;
 
 struct Reader<'a> {
@@ -178,7 +197,7 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
         .take_while(|&m| m != 0)
         .collect();
     ensure!(tail.len() >= PAY_AT + 16, "quest file ends before its payment numbers");
-    let pay = std::array::from_fn(|k| {
+    let pay: [u32; 4] = std::array::from_fn(|k| {
         u32::from_le_bytes([
             tail[PAY_AT + 4 * k],
             tail[PAY_AT + 4 * k + 1],
@@ -208,7 +227,10 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
         minutes,
         kind,
         place: Place::of_quest(id),
-        pay,
+        fee: pay[0],
+        reward: pay[1],
+        rank_points: pay[3],
+        stage: tail[1],
         monsters,
         rewards,
     })
@@ -312,13 +334,15 @@ mod tests {
         let (mut read, mut off_by) = (0, 0);
         // the rank points the save gained after these quests (a hunter's rank points went up by exactly these amounts)
         let mut points = std::collections::HashMap::new();
+        let mut quests = Vec::new();
         for f in files
             .filter_map(|e| e.ok())
             .filter(|e| e.path().extension().is_some_and(|x| x == "quest"))
         {
             let q = parse(&std::fs::read(f.path()).unwrap()).unwrap();
             read += 1;
-            points.insert(q.id, q.pay[3]);
+            points.insert(q.id, q.rank_points);
+            quests.push(q.clone());
             assert!(q.monsters.iter().all(|&m| m < 100), "{}: monster {:?}", q.title, q.monsters);
             for (box_, rewards) in q.rewards.iter().enumerate() {
                 let total: u32 = rewards.iter().map(|r| u32::from(r.percent)).sum();
@@ -331,6 +355,15 @@ mod tests {
         assert!(read > 300, "read {read} quests");
         for (id, gained) in [(1205, 60), (11105, 200), (1202, 50), (1203, 70), (11106, 210)] {
             assert_eq!(points[&id], gained, "quest {id}");
+        }
+        // what the quest board showed: reward, fee and map
+        for (id, reward, fee, map) in [
+            (1202, 600, 100, "Deserted Island"),
+            (11106, 4000, 400, "Flooded Forest"),
+            (11615, 9200, 920, "Sandy Plains"),
+        ] {
+            let q = quests.iter().find(|q| q.id == id).unwrap();
+            assert_eq!((q.reward, q.fee, stage_name(q.stage)), (reward, fee, Some(map)), "quest {id}");
         }
         assert!(off_by <= 3, "{off_by} boxes do not add up to 100");
     }
