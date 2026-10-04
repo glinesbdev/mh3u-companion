@@ -89,13 +89,14 @@ pub fn map_name(map: u8) -> Option<&'static str> {
 }
 
 impl Quest {
-    /// The rank the quest is in. Village quests of 1 to 5 stars are low rank and 6 to 9 stars high rank (from a published list of village
-    /// quests by rank); hall quests of 1 to 5 stars are low rank. Hall quests of 6 stars and up are high rank or G rank, and which is not
-    /// known, so they, tutorials and event quests have none.
+    /// The rank the quest is in, from its place and stars (told by a player and checked against the files' difficulty numbers). Village:
+    /// 1 to 5 stars low rank, 6 to 9 high rank. Hall: 1 and 2 stars low rank (hunter rank 1 to 2), 3 to 5 high rank (3 to 5), 6 to 8 G rank
+    /// (6 and up); G rank exists only in the hall. Tutorials and event quests have none.
     pub fn rank(&self) -> Option<Rank> {
         match (self.place, self.stars) {
-            (Place::Village | Place::Hall, 1..=5) => Some(Rank::Low),
-            (Place::Village, 6..=9) => Some(Rank::High),
+            (Place::Village, 1..=5) | (Place::Hall, 1..=2) => Some(Rank::Low),
+            (Place::Village, 6..=9) | (Place::Hall, 3..=5) => Some(Rank::High),
+            (Place::Hall, 6..=8) => Some(Rank::G),
             _ => None,
         }
     }
@@ -336,7 +337,11 @@ mod tests {
         assert_eq!(quest(1911, 9).rank(), Some(Rank::High));
         assert_eq!(quest(1101, 0).rank(), None, "a tutorial");
         assert_eq!(quest(11106, 1).rank(), Some(Rank::Low));
-        assert_eq!(quest(11613, 6).rank(), None, "high or G rank in the hall: not known");
+        assert_eq!(quest(11202, 2).rank(), Some(Rank::Low));
+        assert_eq!(quest(11302, 3).rank(), Some(Rank::High), "the hall's high rank starts at 3 stars");
+        assert_eq!(quest(11505, 5).rank(), Some(Rank::High));
+        assert_eq!(quest(11613, 6).rank(), Some(Rank::G));
+        assert_eq!(quest(11803, 8).rank(), Some(Rank::G));
         assert_eq!(quest(60001, 2).rank(), None, "an arena quest");
     }
 

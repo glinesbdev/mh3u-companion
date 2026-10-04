@@ -193,16 +193,28 @@ The binary part (442 bytes for most quests, longer for 59 with extra data) start
 | 10 + 11 k (k < 5) | large monster records: the first byte is the monster's id in the name table, 0 for none | matches the goal text (including two-monster hunts) |
 | 71 + 4 k (k < 43) | rewards `[item u16, quantity, chance]`; even k is the main box (monster parts), odd k the second box (supplies); chance 0 = always | the boxes add up to 100 on 412 of 413 quests (quest 1707's main box adds up to 110); the Arzuros capture quest matches what a hunter received |
 | 327 + 4 k (k < 4) | four u32: the **fee**, the zenny **reward**, a third of the reward, and the **points** (hunter rank points in the hall; the game gives none for village quests, though the number is there) | fee and reward match the quest board on 3 quests (Bug Hunt 100 and 600, The Fisherman's Tale 400 and 4000, Rathian's Wrath 920 and 9200); the points matched the rise in the save's total at 0x5a46 for 4 of 6 quests (hall and village), and the sum for two; the other 2 gained less |
-| 1 | the **map** (a number) | named for three numbers by the quest board: 0x24 Deserted Island (Bug Hunt), 0x17 Flooded Forest (The Fisherman's Tale), 0x16 Sandy Plains (Rathian's Wrath). A map has several numbers (0x0a, 0x21 and 0x16 all seem to be Sandy Plains from the quest texts, 0x20 and 0x17 Flooded Forest), probably its versions; no table of them was found in the text archive |
-| 328 on | spawn lists | not decoded |
+| 0, 1 | the two **small monsters** of the quest (ids in the name table, 0 for none) | Bug Hunt has Altaroth and Bnahabra, Farm Aid Jaggia and Jaggi, No Love for Ludroth Ludroth and Fish; fits the goal text of the quests looked at |
+| 344 on | spawn lists | not decoded |
 
 **Where a quest is taken** follows from its id (also the file name `q_NNNNN`): below 10000 is a village quest, 10000 to 19999 a hall quest
 (the hall's 1★ quests are 111xx, 6★ ones 116xx), 20000 and up are arena and event quests. Checked on a hunter whose guild card showed 8 village
 and 3 hall quests: the 8 titles in its quest history were quests 1101, 1102, 1103, 1202, 1203, 1204, 1205 and 2201, and the 3 hall ones 11105,
-11106 and 11112. The same title can exist in both places (Playing with Fire is quests 1302, 11105 and 11611). In hall quests the last byte of
-the first monster record is 1 for 1 to 5 stars and 2 for 6 to 8 stars; in village quests it is always 0.
+11106 and 11112. The same title can exist in both places (Playing with Fire is quests 1302, 11105 and 11611). 
+The save keeps a total of the points at 0x5a46 (see "Guild card"); it rose after village quests too, so it is not the hall's hunter rank points alone.
 
-The save keeps the points: a 16-bit total at 0x5a46 (see "Guild card").
+**The rank** (low, high, G) is not stored as such; it follows from the place and the stars, as a player described the game's tiers: village quests of
+1 to 5 stars are low rank and 6 to 9 high rank; hall quests of 1 and 2 stars are low rank (hunter rank 1 to 2), 3 to 5 high rank (3 to 5) and 6 to
+8 G rank (6 and up). G rank exists only in the hall. The files agree with this: the monster record's tenth byte, a difficulty number, is 0 or 1 up to
+5 stars in the village and 10 to 14 from 6 stars, and in the hall it is 1 to 7 up to 5 stars and 18 to 26 from 6 stars. A published list of village
+quests with stars differs by one for some quests (Guts: It's What's for Dinner is 1 star in the files, The Merchant's Mission 6), so the files'
+stars are used.
+
+**The map** is the byte after the star rank in the text part: 1 Deserted Island, 2 Sandy Plains, 3 Flooded Forest, 4 Tundra, 5 Volcano,
+6 Great Desert, 7 Underwater Ruins, 8 Land Arena, 11 Sacred Land, 12 Water Arena (named from its quests, which are all about the sea),
+13 Misty Peaks; 14 and 15 are Elder Dragon places not named. Found by looking up the quests of a published list of one quest per map and
+checked by a quest board reading of three (Bug Hunt Deserted Island, The Fisherman's Tale Flooded Forest, Rathian's Wrath Sandy Plains).
+Day and night quests of one map have the same number; no byte of the quest was found that tells them apart. (An earlier note here that
+named the map from the first byte of the binary part was wrong: those bytes are the small monsters.)
 
 The quest folders: `quest/us` holds the English quests; `quest/eu` has the same files (byte for byte, for the one compared; every quest holds all five languages); `quest/btl` and
 `quest/support` hold other kinds of files (`.quest_btl`, `.supp`) that are not read. The `DLC/us` folder was empty in this dump.
