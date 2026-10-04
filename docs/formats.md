@@ -77,9 +77,18 @@ The stored attack is a base number; the displayed attack is that times a per-typ
 hammer 5.2, lance 2.3, long sword 3.3, switch axe 4.6, gunlance 2.3, dual blades 1.4, hunting horn 4.6, light bowgun 1.3,
 bow 1.2, heavy bowgun 1.48 (rounded down). Compared with Kiranico's weapon list, 97 to 100% of weapons agree on attack (the rest
 are ids past the tables' ends, which hold zeros, and a few disagreements in that list); slots and affinity agree on 97 to 99%.
-Not yet checked against the game's own screens. Sharpness and element are not in these records and were not found in the
-executable's data or rodata sections as plain bytes, 16-bit values, cumulative values or scaled values (a table in an archive
-or in code is still possible).
+Not yet checked against the game's own screens.
+
+**Sharpness (partly understood, 2026-10-05).** In the melee records two bytes select the sharpness bar: `p+4` (a "family", 0 to about 90) and
+`p+5` (a level, 0 to 6). Against a public database's bars they agree one to one for the great sword (130 weapons, 109 bars, no
+conflicts) and nearly for the long sword (109 weapons, 81 bars, 2 conflicts). In the database's numbers a bar's total is 33 + 11 per level,
+and the bar with Sharpness +1 is the bar plus 11 more points (it equals the next level's bar), filled colour by colour from red, each
+colour up to a per-family limit. The totals fit a game unit of 1/1.1 of those numbers (30, 40, 50 ...). **The table the family
+selects was not found:** the bars were searched for in the data section, the read-only section and the code, as bytes, 16-bit and
+32-bit values in both byte orders, floats, running totals, reversed, divided by 2 to 5, divided by 1.1, and as ratios (any scale).
+Nothing matched except coincidences. Byte `p+19` is different for every weapon of a type (an index of some kind, not the sharpness) and the element is
+not a function of any record bytes except that one, so the element lives in another table indexed by it (also not found: a table
+indexed by it holding the element value in 1, 2, 5 or 10 units does not exist at any stride up to 32).
 
 ## Monster drops (`drops.rs`)
 
@@ -210,7 +219,7 @@ three Attack Up descriptions read as small, medium and large. Torso Up (one effe
 
 ## Not found / not decoded
 
-- Weapon sharpness and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.
+- Weapon sharpness (the selector bytes are known, the table is not) and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.
 - How the game stores which pieces the blacksmith has unlocked, and what the high-rank (S, X...) sets need. The app uses the hunt rule.
 
 ## Per-piece flag tables (partly understood)
