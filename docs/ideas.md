@@ -29,9 +29,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   also cannot limit itself to the ranks the hunter has reached (**Needs:** the save's hunter rank found, and a quest's rank, which is not
   decoded).
 - **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards, and whether it is a village or a
-  hall quest. Not decoded: whether a map is day or night (no byte tells them apart), the
-  two Elder Dragon places (maps 14 and 15) The hunter rank points: the save's total at 0x5a46 also
-  rises with village quests, so what it counts is unclear.
+  hall quest. Not decoded: whether a map is day or night (the game's makers chose it as flavor,
+  and no byte tells them apart), the two Elder Dragon places (maps 14 and 15) and what the save's points total at 0x5a46 counts (it also
+  rises with village quests, so it is not the hall's hunter rank points alone).
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 
