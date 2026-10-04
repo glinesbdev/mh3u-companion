@@ -83,6 +83,24 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
                     ]),
                 );
             }
+            if e.kind == 6 {
+                for (n, &code) in e.talisman_decorations().iter().enumerate().rev() {
+                    let name = match code {
+                        0 => "empty".to_string(),
+                        c => app
+                            .game
+                            .decoration(c)
+                            .and_then(|d| app.game.item_name(d.item))
+                            .unwrap_or("?")
+                            .to_string(),
+                    };
+                    let style = if code == 0 { muted() } else { Style::default() };
+                    lines.insert(
+                        3,
+                        Line::from(vec![Span::styled(format!("  {} ", n + 1), muted()), Span::styled(name, style)]),
+                    );
+                }
+            }
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }

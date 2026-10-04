@@ -147,7 +147,14 @@ impl App {
                     kind: 6,
                     id: e.id,
                     owned: true,
-                    stats: mh3u_core::armor::ArmorStats::talisman(e.talisman_skills(), e.talisman_slots()),
+                    stats: {
+                        // socketed decorations count as its skills and use up its slots
+                        let codes = e.talisman_decorations();
+                        let used: u8 = codes.iter().filter_map(|&c| self.game.decoration(c)).map(|d| d.slots).sum();
+                        let mut skills = e.talisman_skills();
+                        skills.extend(self.game.decoration_points(&codes));
+                        mh3u_core::armor::ArmorStats::talisman(skills, e.talisman_slots().saturating_sub(used))
+                    },
                 });
             }
         }

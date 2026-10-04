@@ -18,7 +18,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   for which weapon type.
 - **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
 - **Skill levels above the first** (15, 20 points) and their effect names. **Needs:** the skill effect tables decoded.
-- **Decorations (jewels)** in a talisman's or a piece's slots, counted in the Builds search, and more than two talisman skills. **Needs:** a save with a decoration socketed to see where the record keeps it (bytes 8 to 15 of the record are the guess), and a talisman with three skills in the game.
+- **Decorations (jewels) in armor pieces**, and more than two talisman skills. Talismans are done. **Needs:** a save with a jewel socketed in an armor piece (the record's byte 1 is an upgrade state and the tail is empty, so it may live elsewhere), and a talisman with three skills in the game.
 
 ## Where to get things
 

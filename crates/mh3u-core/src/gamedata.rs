@@ -232,6 +232,16 @@ impl GameData {
         self.decorations.get(usize::from(code).checked_sub(1)?)
     }
 
+    /// The skill points a set of socketed decorations (save numbers, 0 = empty) add up to, penalties as negative points.
+    pub fn decoration_points(&self, codes: &[u16]) -> Vec<(u8, i8)> {
+        let mut out = Vec::new();
+        for d in codes.iter().filter_map(|&c| self.decoration(c)) {
+            out.push((d.skill, d.points));
+            out.extend(d.penalty);
+        }
+        out
+    }
+
     /// What a shop pays for an item, in zenny; `None` for an item with no value (or an id past the table).
     pub fn sell_price(&self, item: u16) -> Option<u32> {
         self.sell_prices.get(usize::from(item)).copied().filter(|&p| p > 0)

@@ -20,7 +20,7 @@ Equipment record: byte 0 `kind`, byte 1 (for a talisman: its **gem slots**, 0 to
 2-3 piece id (u16), bytes 4-15 talisman skills / decorations. A talisman (kind 6) holds `(skill id, points)` byte pairs from byte 4: the
 first pair (a Pawn Talisman, id 1, bytes `06 00 00 01 25 0a`: Auto-Guard +10 confirmed in game) and a second pair at bytes 6-7 (written with
 the `talisman` debug command and read back by the game as two skills: `06 03 00 01 25 0a 63 05` was Auto-Guard +10, Psychic +5 and 3 slots;
-byte 1 was written as 3 with `equip 0 @1 3` and the game gave the talisman 3 slots). Decorations socketed in a talisman are u16s from byte 8, one per slot (`00 91 00 15` = slots 1 and 2; slot 3 at byte 12 by the same pattern, unseen):
+byte 1 was written as 3 with `equip 0 @1 3` and the game gave the talisman 3 slots). Decorations socketed in a talisman are u16s from byte 8, one per slot (`00 91 00 15` = slots 1 and 2; all three seen):
 a 1-based number into the decoration table at data 0x7fe (12-byte records: penalty skill, penalty points, slots needed, 0, item id u16, u32 price, skill, points; 202 of them,
 some DUMMY); 0 is an empty socket. Pairs beyond the second and what the id decides are
 untested. The worn talisman is a u16 slot number at 0xcc (after the five armor pointers; 0xffff = none), and the 16 bytes at 0xb0 are a copy of

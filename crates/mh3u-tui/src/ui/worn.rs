@@ -128,7 +128,13 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     }
     gear.push(Line::from(spans));
     gear.push(Line::raw(""));
-    gear.push(Line::styled("Decorations are not read yet.", muted()));
+    if let Some(t) = talisman {
+        for &code in t.talisman_decorations().iter().filter(|&&c| c != 0) {
+            let name = app.game.decoration(code).and_then(|d| app.game.item_name(d.item)).unwrap_or("?");
+            gear.push(Line::from(vec![Span::styled("  Charm ", muted()), Span::raw(name.to_string())]));
+        }
+    }
+    gear.push(Line::styled("Decorations in armor are not read yet.", muted()));
     f.render_widget(
         Paragraph::new(gear)
             .wrap(Wrap { trim: false })
@@ -141,7 +147,11 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
         .collect();
-    let charm = talisman.map(|t| mh3u_core::armor::ArmorStats::talisman(t.talisman_skills(), t.talisman_slots()));
+    let charm = talisman.map(|t| {
+        let mut skills = t.talisman_skills();
+        skills.extend(app.game.decoration_points(&t.talisman_decorations()));
+        mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
+    });
     let mut counted = stats;
     if let Some(c) = &charm {
         counted.push((6, c));
