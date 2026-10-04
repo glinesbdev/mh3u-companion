@@ -131,13 +131,13 @@ was exactly the starting gear (the rows with flag 1).
 ## Guild card
 
 Read by comparing the saves of two hunters with the numbers on their guild cards in the game. The **play time** is a u32 in seconds at
-0x4c, straight after the zenny (checked on two hunters to the second: 6863 s was 1 h 54 min and 7820 s was 2 h 10 min). A byte at 0x7568 counts the village quests done (4, 4, 5, 6, 7, 8, 8 over seven snapshots of one hunter; 0 for another; the card agreed), and a
-byte at 0x792f the guild-hall quests (0, 0, 0, 1, 1, 1, 2; the card showed 1 and then 2 after a hall quest). Both are copied into the guild card's
-own record at 0x7a30, which starts with the hunter's name: the village count at 0x7a4d and the hall count at 0x7a51 (and again at 0x7b61). A byte
-at 0x7569 is 1 for the hunter with rank 1 and 0 for the one with rank 0, and did not change with a hall quest, so it may be the **hunter rank**;
-that waits for a rank-up to be sure. A 16-bit number at 0x5a46 grows with every quest (170, 230, 275, 475, 595, 805 over six snapshots), perhaps
-the points towards the next rank. The weapon usage list (great sword 11, 12, 13 over three saves) is not found: no byte or 16-bit
-number goes up by one with each quest, so it is stored in some other form or not in this file.
+0x4c, straight after the zenny (checked on two hunters to the second: 6863 s was 1 h 54 min and 7820 s was 2 h 10 min). The two quest counts are bytes in the guild card's own record, which starts at 0x7a30 with the hunter's name: the village quests at 0x7a4d and the hall quests at 0x7a51 (6, 8, 8, 8 and 1, 1, 2, 3 over four snapshots; the card agreed each time; a hunter with none has zeros). The same numbers sit elsewhere
+too, but not reliably: 0x7b61 follows the hall count, while 0x7568 (village) lags the card record by a quest in some snapshots and 0x792f (hall) stopped
+at 2 when the card went to 3, so they are something else. A byte at 0x7578 counts hall quests since the first (0, 0, 1, 2) and may be the progress
+towards the next rank. A byte at 0x7569 is 1 for the hunter with rank 1 and 0 for the one with rank 0 and did not change with hall quests, so it
+may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 grows with every quest (170, 230, 275, 475, 595, 805, 1045
+over seven snapshots), perhaps the points towards the next rank. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
+byte or 16-bit number goes up by one with each quest, so it is stored in some other form or not in this file.
 
 ## Monster hit zones
 

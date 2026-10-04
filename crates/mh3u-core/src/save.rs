@@ -18,10 +18,10 @@ const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
-/// byte each, not next to each other). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
+/// byte each, in the guild card's own record). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
-const VILLAGE_QUESTS_OFFSET: usize = 0x7568;
-const GUILD_QUESTS_OFFSET: usize = 0x792f;
+const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
+const GUILD_QUESTS_OFFSET: usize = 0x7a51;
 const HUNTED_OFFSET: usize = 0x57a0;
 const HUNTED_FIRST_MONSTER: u16 = 6;
 const HUNTED_COUNT: usize = 90;
@@ -238,6 +238,9 @@ mod tests {
         }
         if let Some(later) = read("11-hall-quest", "user2") {
             assert_eq!(card(&later), ("2 h 20 min".to_string(), 8, 2));
+        }
+        if let Some(latest) = read("12-hall-quest-2", "user2") {
+            assert_eq!(card(&latest), ("2 h 40 min".to_string(), 8, 3));
         }
     }
 
