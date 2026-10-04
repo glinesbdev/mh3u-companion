@@ -24,7 +24,8 @@ pub(super) fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
     }
     let len = rows.len();
     let mut state = ListState::default().with_selected(selected.and_then(|m| view.iter().position(|&(v, _)| v == m)));
-    f.render_stateful_widget(
+    render_list(
+        f,
         List::new(rows)
             .block(theme::pane(title, true))
             .highlight_style(theme::selection())

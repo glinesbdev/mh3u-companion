@@ -11,7 +11,8 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("Nothing here yet.", muted())]);
     } else {
-        f.render_stateful_widget(
+        render_list(
+            f,
             List::new(rows)
                 .block(theme::pane(title, true))
                 .highlight_style(theme::selection())

@@ -1,5 +1,7 @@
 use crate::builds::{self, Candidate, Found, Settings, Target};
 use crate::files::Files;
+use crate::input::{Key, Mods};
+use crate::select::ListState;
 use crate::templates::{self, Template};
 use crate::unlocked::Unlocked;
 use crate::{commands, search};
@@ -12,11 +14,6 @@ use mh3u_core::{
     prices::{Ledger, Outcome, PriceEntry, PriceTracker, RecipeBook, Recorded, Route, Skip, SkipReason, Source},
     recipes::{Recipe, Upgrade},
     save::{ItemStack, Save},
-};
-use ratatui::{
-    DefaultTerminal,
-    crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers},
-    widgets::ListState,
 };
 use std::{
     collections::{HashMap, HashSet},
@@ -264,20 +261,17 @@ impl App {
         Ok(app)
     }
 
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        while !self.quit {
-            terminal.draw(|f| crate::ui::draw(f, self))?;
-            if event::poll(Duration::from_millis(250))?
-                && let Event::Key(key) = event::read()?
-                && key.kind == KeyEventKind::Press
-            {
-                self.on_key(key.code, key.modifiers);
-            }
-            self.poll_live();
-            self.tick_prices();
-            self.reload_if_changed();
-        }
-        Ok(())
+    /// Whatever should happen with time and not a key: news from the game, the price watcher, a save file that changed. A screen calls
+    /// this about four times a second.
+    pub fn tick(&mut self) {
+        self.poll_live();
+        self.tick_prices();
+        self.reload_if_changed();
+    }
+
+    /// The user asked to quit (and confirmed, if that was needed).
+    pub fn wants_quit(&self) -> bool {
+        self.quit
     }
 
     fn switch_tab(&mut self, step: isize) {

@@ -208,36 +208,36 @@ impl App {
     }
 
     /// Keys while the monster popup is open: move, Enter shows the monster, Esc closes.
-    pub(super) fn monster_choice_key(&mut self, code: KeyCode) {
+    pub(super) fn monster_choice_key(&mut self, code: Key) {
         let Some(choice) = self.quests.choosing.as_mut() else { return };
         let last = choice.monsters.len().saturating_sub(1);
         let at = choice.state.selected().unwrap_or(0);
         match code {
-            KeyCode::Down | KeyCode::Char('j') => choice.state.select(Some((at + 1).min(last))),
-            KeyCode::Up | KeyCode::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
-            KeyCode::Enter => {
+            Key::Down | Key::Char('j') => choice.state.select(Some((at + 1).min(last))),
+            Key::Up | Key::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
+            Key::Enter => {
                 let monster = choice.monsters.get(at).copied();
                 self.quests.choosing = None;
                 if let Some(monster) = monster {
                     self.show_monster(monster);
                 }
             }
-            KeyCode::Esc | KeyCode::Char('q') => self.quests.choosing = None,
+            Key::Esc | Key::Char('q') => self.quests.choosing = None,
             _ => {}
         }
     }
 
-    pub(super) fn quests_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn quests_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('s') => {
+            Key::Char('/') => self.searching = true,
+            Key::Char('s') => {
                 self.quests.sort = self.quests.sort.next();
                 self.refresh_quests();
             }
-            KeyCode::Char('x') => self.clear_search(),
-            KeyCode::Char('m') => self.show_quest_monster(),
-            KeyCode::PageDown => self.quests.scroll = self.quests.scroll.saturating_add(10),
-            KeyCode::PageUp => self.quests.scroll = self.quests.scroll.saturating_sub(10),
+            Key::Char('x') => self.clear_search(),
+            Key::Char('m') => self.show_quest_monster(),
+            Key::PageDown => self.quests.scroll = self.quests.scroll.saturating_add(10),
+            Key::PageUp => self.quests.scroll = self.quests.scroll.saturating_sub(10),
             _ => return false,
         }
         true

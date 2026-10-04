@@ -61,14 +61,14 @@ impl App {
             .collect()
     }
 
-    pub(super) fn hunts_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn hunts_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('r') => {
+            Key::Char('r') => {
                 self.hunts.filter = self.hunts.filter.next();
                 self.refresh_hunts();
             }
             // show the step's monster on the Monsters tab, or its quest on the Quests tab
-            KeyCode::Enter => {
+            Key::Enter => {
                 let Some(origin) = self
                     .hunts
                     .state

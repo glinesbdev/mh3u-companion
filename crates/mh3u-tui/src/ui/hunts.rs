@@ -56,7 +56,8 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
         };
         empty_pane(f, list_area, title, true, vec![Line::styled(text, muted())]);
     } else {
-        f.render_stateful_widget(
+        render_list(
+            f,
             List::new(rows)
                 .block(theme::pane(title, true))
                 .highlight_style(theme::selection())

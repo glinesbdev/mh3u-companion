@@ -92,16 +92,16 @@ impl App {
         self.families.state.select((len > 0).then_some(at));
     }
 
-    pub(super) fn families_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn families_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('o') => {
+            Key::Char('/') => self.searching = true,
+            Key::Char('o') => {
                 self.families.only_owned = !self.families.only_owned;
                 self.refresh_families();
             }
-            KeyCode::Char('x') => self.clear_search(),
+            Key::Char('x') => self.clear_search(),
             // look the family up on the Crafting tab
-            KeyCode::Enter => {
+            Key::Enter => {
                 let Some(name) = self.families.selected().map(|f| f.name.clone()) else {
                     return true;
                 };

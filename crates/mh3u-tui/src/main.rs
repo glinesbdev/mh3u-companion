@@ -6,7 +6,9 @@ mod families;
 mod files;
 mod gains;
 mod hunts;
+mod input;
 mod search;
+mod select;
 mod surplus;
 mod templates;
 mod theme;
@@ -149,7 +151,29 @@ fn main() -> Result<()> {
         }
     }
     let mut terminal = ratatui::init();
-    let result = app.run(&mut terminal);
+    let result = run(&mut app, &mut terminal);
     ratatui::restore();
     result
+}
+
+/// Draw, wait a moment for a key, let the app catch up with the world, until the app wants to quit.
+fn run(app: &mut App, terminal: &mut ratatui::DefaultTerminal) -> Result<()> {
+    use ratatui::crossterm::event::{self, Event, KeyEventKind};
+    while !app.wants_quit() {
+        terminal.draw(|f| ui::draw(f, app))?;
+        if event::poll(std::time::Duration::from_millis(250))?
+            && let Event::Key(key) = event::read()?
+            && key.kind == KeyEventKind::Press
+            && let Some(code) = input::from_terminal(key.code)
+        {
+            app.on_key(
+                code,
+                input::Mods {
+                    ctrl: key.modifiers.contains(event::KeyModifiers::CONTROL),
+                },
+            );
+        }
+        app.tick();
+    }
+    Ok(())
 }

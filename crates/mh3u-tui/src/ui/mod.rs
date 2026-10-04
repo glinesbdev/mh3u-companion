@@ -1,4 +1,5 @@
 use crate::app::{App, Availability, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
+use crate::select::ListState;
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
 use mh3u_core::prices::{Route, Source};
 use ratatui::{
@@ -6,7 +7,7 @@ use ratatui::{
     layout::{Constraint, Layout, Margin, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Clear, List, ListItem, ListState, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Tabs, Wrap},
+    widgets::{Clear, List, ListItem, Paragraph, Scrollbar, ScrollbarOrientation, ScrollbarState, Tabs, Wrap},
 };
 
 mod builds;
@@ -294,6 +295,16 @@ fn scrollbar(f: &mut Frame, area: Rect, len: usize, selected: Option<usize>) {
 /// What a list pane says when it has no rows.
 fn empty_pane(f: &mut Frame, area: Rect, title: String, active: bool, lines: Vec<Line<'static>>) {
     f.render_widget(Paragraph::new(lines).block(theme::pane(title, active)), area);
+}
+
+/// Draw a list with the app's own selection state. ratatui keeps the scroll position in a state of its own, so it is copied in and
+/// the new position copied back.
+fn render_list(f: &mut Frame, list: List, area: Rect, state: &mut ListState) {
+    let mut drawn = ratatui::widgets::ListState::default()
+        .with_offset(state.offset())
+        .with_selected(state.selected());
+    f.render_stateful_widget(list, area, &mut drawn);
+    state.set_offset(drawn.offset());
 }
 
 /// A list pane's look: the highlighted row only stands out in the list that has the keys.

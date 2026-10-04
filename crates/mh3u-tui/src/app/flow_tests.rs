@@ -4,12 +4,12 @@ use super::*;
 
 fn press(app: &mut App, keys: &str) {
     for c in keys.chars() {
-        app.on_key(KeyCode::Char(c), KeyModifiers::NONE);
+        app.on_key(Key::Char(c), Mods::default());
     }
 }
 
-fn key(app: &mut App, code: KeyCode) {
-    app.on_key(code, KeyModifiers::NONE);
+fn key(app: &mut App, code: Key) {
+    app.on_key(code, Mods::default());
 }
 
 /// An app on the second hunter's save (after the Arzuros quest) with its files in a fresh temporary folder.
@@ -35,9 +35,9 @@ fn tabs_wrap_around_and_the_help_scrolls_and_closes() {
     let dir = temp_dir("tabs");
     let Some(mut app) = app_in(&dir) else { return };
     assert_eq!(app.tab, Tab::Items);
-    key(&mut app, KeyCode::Left);
+    key(&mut app, Key::Left);
     assert_eq!(app.tab, Tab::Gains, "left of the first tab is the last");
-    key(&mut app, KeyCode::Right);
+    key(&mut app, Key::Right);
     assert_eq!(app.tab, Tab::Items);
     press(&mut app, "?");
     assert!(app.show_help);
@@ -53,7 +53,7 @@ fn the_crafting_filters_toggle_and_narrow_the_list() {
     let dir = temp_dir("crafting");
     let Some(mut app) = app_in(&dir) else { return };
     for _ in 0..3 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Crafting);
     let all = app.craft.pieces.len();
@@ -75,28 +75,28 @@ fn the_crafting_filters_toggle_and_narrow_the_list() {
 fn a_build_is_searched_saved_as_a_template_edited_and_remembered_for_the_hunter() {
     let dir = temp_dir("builds");
     let Some(mut app) = app_in(&dir) else { return };
-    key(&mut app, KeyCode::Left);
-    key(&mut app, KeyCode::Left); // Builds
+    key(&mut app, Key::Left);
+    key(&mut app, Key::Left); // Builds
     press(&mut app, "a");
     assert!(app.builds.skill_picker.is_some());
     press(&mut app, "auto");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert_eq!(app.builds.settings.targets.len(), 1, "Auto-Guard at 10 points");
     assert!(!app.builds.results.is_empty(), "the Pawn Talisman alone reaches it");
 
     // the sets list, save the first set as a template with the suggested name
     press(&mut app, "fs");
     assert!(app.builds.name_prompt.is_some());
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert_eq!(app.builds.templates.len(), 1);
     assert_eq!(app.builds.templates[0].name, "Build 1");
 
     // the templates list: swap the head for nothing
     press(&mut app, "f");
     assert_eq!(app.builds.focus, BuildFocus::Templates);
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert!(app.builds.piece_picker.is_some());
-    key(&mut app, KeyCode::Enter); // the first choice empties the slot
+    key(&mut app, Key::Enter); // the first choice empties the slot
     assert!(app.builds.templates[0].pieces.iter().all(|p| p.kind != 5), "no head piece any more");
 
     // the pool setting cycles and is kept
@@ -139,7 +139,7 @@ fn the_hunt_plan_follows_the_wishlist_and_opens_the_monsters_drops() {
     app.wish.items = lacking;
     app.after_wishlist_change();
     for _ in 0..6 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Hunts);
     assert!(
@@ -149,7 +149,7 @@ fn the_hunt_plan_follows_the_wishlist_and_opens_the_monsters_drops() {
     press(&mut app, "r");
     assert_eq!(app.hunts.filter.label(), "Low rank");
     let first = app.hunts.plan.steps.first().expect("a step").origin;
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     match first {
         crate::hunts::Origin::Monster { monster, .. } => {
             assert_eq!(app.tab, Tab::Monsters, "Enter shows the monster");
@@ -207,16 +207,16 @@ fn the_families_tab_groups_armor_searches_and_opens_the_crafting_search() {
     let Some(mut app) = app_in(&dir) else { return };
     assert!(app.families.rows.len() > 50, "dozens of armor families");
     for _ in 0..8 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Families);
     press(&mut app, "/arzuros");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert_eq!(app.families.rows.len(), 1);
     let family = app.families.selected().expect("a family");
     assert_eq!(family.name, "Arzuros");
     assert_eq!(family.variants().len(), 3, "base, S and X");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert_eq!(app.tab, Tab::Crafting);
     assert_eq!(app.craft.search, "Arzuros");
     let _ = std::fs::remove_dir_all(&dir);
@@ -251,10 +251,10 @@ fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swappe
     use mh3u_core::armor::ArmorClass;
     let dir = temp_dir("weapon");
     let Some(mut app) = app_in(&dir) else { return };
-    key(&mut app, KeyCode::Left);
-    key(&mut app, KeyCode::Left); // Builds
+    key(&mut app, Key::Left);
+    key(&mut app, Key::Left); // Builds
     press(&mut app, "aauto");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     let before = app.builds.pool.len();
 
     // choose a bow: gunner armor only from then on
@@ -263,7 +263,7 @@ fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swappe
     press(&mut app, "p");
     assert!(app.builds.piece_picker.is_some());
     press(&mut app, &name);
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     let (kind, _) = app.builds.settings.weapon.expect("a weapon was chosen");
     assert_eq!(kind, 17);
     assert_eq!(app.builds.settings.effective_class(), Some(ArmorClass::Gunner));
@@ -278,15 +278,15 @@ fn a_weapon_sets_the_armor_class_and_goes_into_a_template_where_it_can_be_swappe
 
     // saved as a template with the weapon, and the weapon slot can be emptied
     press(&mut app, "fs");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert!(
         app.builds.templates[0].pieces.iter().any(|p| p.kind == 17),
         "the weapon is in the template"
     );
     press(&mut app, "f");
     press(&mut app, "]]]]]]"); // head, body, arms, waist, legs, talisman, then the weapon
-    key(&mut app, KeyCode::Enter);
-    key(&mut app, KeyCode::Enter); // the first choice empties the slot
+    key(&mut app, Key::Enter);
+    key(&mut app, Key::Enter); // the first choice empties the slot
     assert!(app.builds.templates[0].pieces.iter().all(|p| p.kind != 17));
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -297,11 +297,11 @@ fn the_quests_tab_finds_a_quest_by_its_monster_or_a_reward_and_stars_what_the_wi
     let Some(mut app) = app_in(&dir) else { return };
     assert!(app.quests.rows.len() > 300, "every quest is listed");
     for _ in 0..7 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Quests);
     press(&mut app, "/arzuros capture");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     let quest = app.quests.selected(app.game.quests()).expect("a quest");
     assert_eq!((quest.id, quest.title.as_str(), quest.stars), (1204, "Bear Trap", 2));
     assert_eq!(quest.monsters, [42], "Arzuros");
@@ -309,7 +309,7 @@ fn the_quests_tab_finds_a_quest_by_its_monster_or_a_reward_and_stars_what_the_wi
     // search by a reward item instead
     press(&mut app, "x");
     press(&mut app, "/rathian shell");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert!(!app.quests.rows.is_empty());
     let best = &app.game.quests()[app.quests.rows[0].quest];
     assert!(
@@ -369,7 +369,7 @@ fn the_hunt_plan_sends_you_to_a_quest_for_what_no_monster_drops() {
     app.wish.items = vec![(5, piece)];
     app.after_wishlist_change();
     for _ in 0..6 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert!(
         app.hunts.plan.steps.iter().any(|s| matches!(s.origin, Origin::Quest(_))),
@@ -399,15 +399,15 @@ fn m_on_a_quest_shows_its_monster_and_asks_which_when_there_are_several() {
     assert_eq!(app.tab, Tab::Quests, "still on the quest while choosing");
     let choice = app.quests.choosing.as_ref().expect("a list of monsters");
     assert_eq!(choice.monsters, [8, 12]);
-    key(&mut app, KeyCode::Down);
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Down);
+    key(&mut app, Key::Enter);
     assert!(app.quests.choosing.is_none());
     assert_eq!((app.tab, app.monsters.selected), (Tab::Monsters, Some(12)));
 
     // Esc closes the list without going anywhere
     app.show_quest(1403);
     press(&mut app, "m");
-    key(&mut app, KeyCode::Esc);
+    key(&mut app, Key::Esc);
     assert!(app.quests.choosing.is_none());
     assert_eq!(app.tab, Tab::Quests);
 
@@ -477,13 +477,13 @@ fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
     let Some(mut app) = app_in(&dir) else { return };
     // Crafting tab, a great sword
     for _ in 0..3 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     press(&mut app, "/great sword");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     press(&mut app, "v");
     assert_eq!(app.compare.weapons.len(), 1);
-    key(&mut app, KeyCode::Down);
+    key(&mut app, Key::Down);
     press(&mut app, "v");
     assert_eq!(app.compare.weapons.len(), 2);
     press(&mut app, "v"); // the same one again takes it out
@@ -492,7 +492,7 @@ fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
     // armor cannot be compared
     press(&mut app, "x");
     press(&mut app, "/jaggi helm");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     press(&mut app, "v");
     assert_eq!(app.compare.weapons.len(), 1);
     assert!(app.status.contains("only weapons"), "{}", app.status);
@@ -500,15 +500,15 @@ fn weapons_are_put_in_the_comparison_with_v_and_taken_out_again() {
     // the tab holds at most four, x removes one, c clears
     press(&mut app, "x");
     press(&mut app, "/sword");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     for _ in 0..8 {
         press(&mut app, "v");
-        key(&mut app, KeyCode::Down);
+        key(&mut app, Key::Down);
     }
     assert_eq!(app.compare.weapons.len(), crate::app::MAX_COMPARED);
     assert!(app.status.contains("holds 4"), "{}", app.status);
     for _ in 0..7 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Compare);
     press(&mut app, "x");
@@ -523,7 +523,7 @@ fn affordable_and_cheapest_first_use_the_forging_fee_against_the_zenny_you_have(
     let dir = temp_dir("afford");
     let Some(mut app) = app_in(&dir) else { return };
     for _ in 0..3 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     // the second hunter has plenty of zenny: lower it so that the filter has something to cut
     app.save.zenny = 1000;
@@ -551,11 +551,11 @@ fn the_skills_tab_lists_the_armor_with_a_skill_and_hands_it_to_builds() {
     let dir = temp_dir("skilltab");
     let Some(mut app) = app_in(&dir) else { return };
     for _ in 0..9 {
-        key(&mut app, KeyCode::Right);
+        key(&mut app, Key::Right);
     }
     assert_eq!(app.tab, Tab::Skills);
     press(&mut app, "/attack");
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     let skill = app.skills.selected().expect("a skill");
     assert_eq!(app.game.skill_name(skill), Some("Attack"));
     let pieces = app.skills.pieces_with(skill);
@@ -566,7 +566,7 @@ fn the_skills_tab_lists_the_armor_with_a_skill_and_hands_it_to_builds() {
             .armor_stats(p.kind, p.id)
             .is_some_and(|a| a.skills.contains(&(skill, p.points)))
     }));
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Enter);
     assert_eq!(app.tab, Tab::Builds);
     assert!(app.builds.settings.targets.iter().any(|t| t.skill == skill && t.points == 10));
     let _ = std::fs::remove_dir_all(&dir);
@@ -602,12 +602,12 @@ fn h_lists_the_hunters_in_the_save_slots_and_shows_the_one_picked() {
         choice.slots.iter().all(|(.., played)| played.contains(" h ")),
         "the play time is shown"
     );
-    key(&mut app, KeyCode::Esc);
+    key(&mut app, Key::Esc);
     assert!(app.hunter_choice.is_none());
 
     press(&mut app, "H");
-    key(&mut app, KeyCode::Down);
-    key(&mut app, KeyCode::Enter);
+    key(&mut app, Key::Down);
+    key(&mut app, Key::Enter);
     assert_eq!(app.save.hunter_name, name2);
     assert_eq!(app.slot_shown(), Some(2));
     assert_eq!(app.wish.items, [(5, 2)], "slot 2's wishlist");

@@ -3,8 +3,9 @@
 use super::*;
 
 impl App {
-    pub(super) fn on_key(&mut self, code: KeyCode, mods: KeyModifiers) {
-        if mods.contains(KeyModifiers::CONTROL) && code == KeyCode::Char('c') {
+    /// A key press from whatever screen is showing the app.
+    pub fn on_key(&mut self, code: Key, mods: Mods) {
+        if mods.ctrl && code == Key::Char('c') {
             self.quit = true;
             return;
         }
@@ -15,9 +16,9 @@ impl App {
     }
 
     /// Whichever popup or prompt is open takes every key. Returns whether one was open.
-    fn modal_key(&mut self, code: KeyCode) -> bool {
+    fn modal_key(&mut self, code: Key) -> bool {
         if self.confirm_quit {
-            if matches!(code, KeyCode::Char('y' | 'Y')) {
+            if matches!(code, Key::Char('y' | 'Y')) {
                 self.quit = true;
             }
             self.confirm_quit = false;
@@ -45,58 +46,58 @@ impl App {
         true
     }
 
-    fn tree_key(&mut self, code: KeyCode) {
+    fn tree_key(&mut self, code: Key) {
         let Some(view) = &mut self.tree else { return };
         match code {
-            KeyCode::Esc | KeyCode::Char('t' | 'q') => self.tree = None,
-            KeyCode::Down | KeyCode::Char('j') => view.scroll = view.scroll.saturating_add(1),
-            KeyCode::Up | KeyCode::Char('k') => view.scroll = view.scroll.saturating_sub(1),
-            KeyCode::PageDown => view.scroll = view.scroll.saturating_add(10),
-            KeyCode::PageUp => view.scroll = view.scroll.saturating_sub(10),
-            KeyCode::Home | KeyCode::Char('g') => view.scroll = 0,
-            KeyCode::End | KeyCode::Char('G') => view.scroll = u16::MAX, // the drawing code clamps it
+            Key::Esc | Key::Char('t' | 'q') => self.tree = None,
+            Key::Down | Key::Char('j') => view.scroll = view.scroll.saturating_add(1),
+            Key::Up | Key::Char('k') => view.scroll = view.scroll.saturating_sub(1),
+            Key::PageDown => view.scroll = view.scroll.saturating_add(10),
+            Key::PageUp => view.scroll = view.scroll.saturating_sub(10),
+            Key::Home | Key::Char('g') => view.scroll = 0,
+            Key::End | Key::Char('G') => view.scroll = u16::MAX, // the drawing code clamps it
             _ => {}
         }
     }
 
-    fn command_key(&mut self, code: KeyCode) {
+    fn command_key(&mut self, code: Key) {
         match code {
-            KeyCode::Esc => self.console.active = false,
-            KeyCode::Enter => {
+            Key::Esc => self.console.active = false,
+            Key::Enter => {
                 self.console.active = false;
                 let text = std::mem::take(&mut self.console.text);
                 self.run_command(&text);
             }
-            KeyCode::Backspace => {
+            Key::Backspace => {
                 self.console.text.pop();
             }
-            KeyCode::Char(c) => self.console.text.push(c),
+            Key::Char(c) => self.console.text.push(c),
             _ => {}
         }
     }
 
-    fn search_key(&mut self, code: KeyCode) {
+    fn search_key(&mut self, code: Key) {
         match code {
-            KeyCode::Esc => {
+            Key::Esc => {
                 self.search_text_mut().clear();
                 self.searching = false;
             }
-            KeyCode::Enter => self.searching = false,
-            KeyCode::Backspace => {
+            Key::Enter => self.searching = false,
+            Key::Backspace => {
                 self.search_text_mut().pop();
             }
-            KeyCode::Char(c) => self.search_text_mut().push(c),
+            Key::Char(c) => self.search_text_mut().push(c),
             _ => {}
         }
         self.apply_search();
     }
 
-    fn help_key(&mut self, code: KeyCode) {
+    fn help_key(&mut self, code: Key) {
         match code {
-            KeyCode::Down | KeyCode::Char('j') => self.help_scroll = self.help_scroll.saturating_add(1),
-            KeyCode::Up | KeyCode::Char('k') => self.help_scroll = self.help_scroll.saturating_sub(1),
-            KeyCode::PageDown => self.help_scroll = self.help_scroll.saturating_add(10),
-            KeyCode::PageUp => self.help_scroll = self.help_scroll.saturating_sub(10),
+            Key::Down | Key::Char('j') => self.help_scroll = self.help_scroll.saturating_add(1),
+            Key::Up | Key::Char('k') => self.help_scroll = self.help_scroll.saturating_sub(1),
+            Key::PageDown => self.help_scroll = self.help_scroll.saturating_add(10),
+            Key::PageUp => self.help_scroll = self.help_scroll.saturating_sub(10),
             _ => {
                 self.show_help = false; // any other key closes the help overlay
                 self.help_scroll = 0;
@@ -105,7 +106,7 @@ impl App {
     }
 
     /// The keys of one tab. Returns whether the key was used.
-    fn tab_key(&mut self, code: KeyCode) -> bool {
+    fn tab_key(&mut self, code: Key) -> bool {
         match self.tab {
             Tab::Items => self.items_key(code),
             Tab::Crafting => self.crafting_key(code),
@@ -121,41 +122,41 @@ impl App {
         }
     }
 
-    fn items_key(&mut self, code: KeyCode) -> bool {
+    fn items_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('p') => self.inv.pouch_focus = !self.inv.pouch_focus,
-            KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('s') => {
+            Key::Char('p') => self.inv.pouch_focus = !self.inv.pouch_focus,
+            Key::Char('/') => self.searching = true,
+            Key::Char('s') => {
                 self.inv.box_sort = self.inv.box_sort.next();
                 self.refresh_box();
             }
-            KeyCode::Char('u') => {
+            Key::Char('u') => {
                 self.inv.spare_only = !self.inv.spare_only;
                 self.refresh_box();
             }
-            KeyCode::Char('x') => self.clear_search(),
+            Key::Char('x') => self.clear_search(),
             _ => return false,
         }
         true
     }
 
-    fn crafting_key(&mut self, code: KeyCode) -> bool {
+    fn crafting_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('c') => self.craft.craftable_only = !self.craft.craftable_only,
-            KeyCode::Char('o') => self.craft.hide_owned = !self.craft.hide_owned,
-            KeyCode::Char('b') => self.craft.blacksmith_only = !self.craft.blacksmith_only,
-            KeyCode::Char('u') => self.craft.unpriced_only = !self.craft.unpriced_only,
-            KeyCode::Char('z') => self.craft.affordable_only = !self.craft.affordable_only,
-            KeyCode::Char('s') => self.craft.sort = self.craft.sort.next(),
-            KeyCode::Char('w') => {
+            Key::Char('/') => self.searching = true,
+            Key::Char('c') => self.craft.craftable_only = !self.craft.craftable_only,
+            Key::Char('o') => self.craft.hide_owned = !self.craft.hide_owned,
+            Key::Char('b') => self.craft.blacksmith_only = !self.craft.blacksmith_only,
+            Key::Char('u') => self.craft.unpriced_only = !self.craft.unpriced_only,
+            Key::Char('z') => self.craft.affordable_only = !self.craft.affordable_only,
+            Key::Char('s') => self.craft.sort = self.craft.sort.next(),
+            Key::Char('w') => {
                 if let Some(p) = self.craft.state.selected().and_then(|i| self.craft.pieces.get(i)) {
                     let (kind, id) = (p.kind, p.id);
                     self.toggle_wish(kind, id);
                 }
                 return true; // the wishlist change refreshes the list itself
             }
-            KeyCode::Char('x') => {
+            Key::Char('x') => {
                 self.clear_search();
                 return true;
             }
@@ -165,9 +166,9 @@ impl App {
         true
     }
 
-    fn wishlist_key(&mut self, code: KeyCode) -> bool {
+    fn wishlist_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('w' | 'x') | KeyCode::Delete => {
+            Key::Char('w' | 'x') | Key::Delete => {
                 if let Some(&(kind, id)) = self.wish.state.selected().and_then(|i| self.wish.items.get(i)) {
                     self.toggle_wish(kind, id);
                 }
@@ -177,9 +178,9 @@ impl App {
         }
     }
 
-    fn equipment_key(&mut self, code: KeyCode) -> bool {
+    fn equipment_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('s') => {
+            Key::Char('s') => {
                 self.inv.equip_sort = self.inv.equip_sort.next();
                 self.refresh_equipment();
                 true
@@ -189,20 +190,20 @@ impl App {
     }
 
     /// On the Monsters tab the page keys scroll the drops, since the list is moved with the arrows and Home/End.
-    fn monsters_key(&mut self, code: KeyCode) -> bool {
+    fn monsters_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('s') => self.monsters.sort = self.monsters.sort.next(),
-            KeyCode::PageDown => self.monsters.scroll = self.monsters.scroll.saturating_add(10),
-            KeyCode::PageUp => self.monsters.scroll = self.monsters.scroll.saturating_sub(10),
+            Key::Char('s') => self.monsters.sort = self.monsters.sort.next(),
+            Key::PageDown => self.monsters.scroll = self.monsters.scroll.saturating_add(10),
+            Key::PageUp => self.monsters.scroll = self.monsters.scroll.saturating_sub(10),
             _ => return false,
         }
         true
     }
 
     /// The keys every tab shares: quitting, help, switching tabs and moving in the list.
-    fn global_key(&mut self, code: KeyCode) {
+    fn global_key(&mut self, code: Key) {
         match code {
-            KeyCode::Char('q') => {
+            Key::Char('q') => {
                 // Closing the TUI ends live updates from a Cemu that is still running, so ask first.
                 let cemu_running = self.live.as_mut().is_some_and(|l| l.child.try_wait().ok().flatten().is_none());
                 if cemu_running {
@@ -211,25 +212,25 @@ impl App {
                     self.quit = true;
                 }
             }
-            KeyCode::Char('?') => self.show_help = true,
-            KeyCode::Char('H') => self.open_hunter_picker(),
+            Key::Char('?') => self.show_help = true,
+            Key::Char('H') => self.open_hunter_picker(),
             // put the highlighted weapon in the comparison
-            KeyCode::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
-            KeyCode::Char('t') if self.tab != Tab::Items => self.open_tree(),
-            KeyCode::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
-            KeyCode::Char(':') if self.console.enabled => {
+            Key::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
+            Key::Char('t') if self.tab != Tab::Items => self.open_tree(),
+            Key::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
+            Key::Char(':') if self.console.enabled => {
                 self.console.active = true;
                 self.console.text.clear();
             }
-            KeyCode::Tab | KeyCode::Right | KeyCode::Char('l') => self.switch_tab(1),
-            KeyCode::BackTab | KeyCode::Left | KeyCode::Char('h') => self.switch_tab(-1),
-            KeyCode::Down | KeyCode::Char('j') => self.move_selection(1),
-            KeyCode::Up | KeyCode::Char('k') => self.move_selection(-1),
-            KeyCode::PageDown => self.move_selection(10),
-            KeyCode::PageUp => self.move_selection(-10),
-            KeyCode::Home | KeyCode::Char('g') => self.move_selection(isize::MIN),
-            KeyCode::End | KeyCode::Char('G') => self.move_selection(isize::MAX),
-            KeyCode::Esc => self.clear_search(),
+            Key::Tab | Key::Right | Key::Char('l') => self.switch_tab(1),
+            Key::BackTab | Key::Left | Key::Char('h') => self.switch_tab(-1),
+            Key::Down | Key::Char('j') => self.move_selection(1),
+            Key::Up | Key::Char('k') => self.move_selection(-1),
+            Key::PageDown => self.move_selection(10),
+            Key::PageUp => self.move_selection(-10),
+            Key::Home | Key::Char('g') => self.move_selection(isize::MIN),
+            Key::End | Key::Char('G') => self.move_selection(isize::MAX),
+            Key::Esc => self.clear_search(),
             _ => {}
         }
     }

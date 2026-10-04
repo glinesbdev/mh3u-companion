@@ -93,15 +93,15 @@ impl App {
         self.skills.state.select((len > 0).then_some(at));
     }
 
-    pub(super) fn skills_tab_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn skills_tab_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('/') => self.searching = true,
-            KeyCode::Char('o') => self.skills.reachable_only = !self.skills.reachable_only,
-            KeyCode::Char('x') => self.clear_search(),
-            KeyCode::PageDown => self.skills.scroll = self.skills.scroll.saturating_add(10),
-            KeyCode::PageUp => self.skills.scroll = self.skills.scroll.saturating_sub(10),
+            Key::Char('/') => self.searching = true,
+            Key::Char('o') => self.skills.reachable_only = !self.skills.reachable_only,
+            Key::Char('x') => self.clear_search(),
+            Key::PageDown => self.skills.scroll = self.skills.scroll.saturating_add(10),
+            Key::PageUp => self.skills.scroll = self.skills.scroll.saturating_sub(10),
             // build for this skill
-            KeyCode::Enter => {
+            Key::Enter => {
                 let Some(skill) = self.skills.selected() else { return true };
                 if !self.builds.settings.targets.iter().any(|t| t.skill == skill) {
                     self.builds.settings.targets.push(Target {

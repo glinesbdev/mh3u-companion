@@ -48,21 +48,21 @@ impl App {
         self.compare.state.select((len > 0).then_some(at));
     }
 
-    pub(super) fn compare_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn compare_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('x') | KeyCode::Delete => {
+            Key::Char('x') | Key::Delete => {
                 if let Some(at) = self.compare.state.selected().filter(|&i| i < self.compare.weapons.len()) {
                     self.compare.weapons.remove(at);
                     let len = self.compare.weapons.len();
                     self.compare.state.select((len > 0).then_some(at.min(len - 1)));
                 }
             }
-            KeyCode::Char('c') => {
+            Key::Char('c') => {
                 self.compare.weapons.clear();
                 self.compare.state.select(None);
             }
             // look the highlighted weapon up on the Crafting tab
-            KeyCode::Enter => {
+            Key::Enter => {
                 let Some(&(kind, id)) = self.compare.state.selected().and_then(|i| self.compare.weapons.get(i)) else {
                     return true;
                 };

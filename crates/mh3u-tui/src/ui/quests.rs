@@ -32,7 +32,8 @@ pub(super) fn draw_quests(f: &mut Frame, app: &mut App, area: Rect) {
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("No quest matches.", muted())]);
     } else {
-        f.render_stateful_widget(
+        render_list(
+            f,
             List::new(rows)
                 .block(theme::pane(title, true))
                 .highlight_style(theme::selection())
@@ -130,7 +131,8 @@ fn draw_monster_choice(f: &mut Frame, app: &mut App) {
     let (w, h) = (36.min(area.width), (rows.len() as u16 + 2).min(area.height));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
     f.render_widget(Clear, popup);
-    f.render_stateful_widget(
+    render_list(
+        f,
         List::new(rows)
             .block(theme::pane(" Show which monster? · Enter · Esc ", true))
             .highlight_style(theme::selection())

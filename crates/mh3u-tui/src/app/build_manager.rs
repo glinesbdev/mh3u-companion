@@ -219,23 +219,23 @@ impl App {
     }
 
     /// Keys while the skill picker is open.
-    pub(super) fn picker_key(&mut self, code: KeyCode) {
+    pub(super) fn picker_key(&mut self, code: Key) {
         let Some(picker) = self.builds.skill_picker.as_mut() else { return };
         match code {
-            KeyCode::Esc => self.builds.skill_picker = None,
-            KeyCode::Backspace => {
+            Key::Esc => self.builds.skill_picker = None,
+            Key::Backspace => {
                 picker.text.pop();
                 picker.state.select(Some(0));
             }
-            KeyCode::Char(c) => {
+            Key::Char(c) => {
                 picker.text.push(c);
                 picker.state.select(Some(0));
             }
-            KeyCode::Down => picker.state.select(Some(picker.state.selected().map_or(0, |i| i + 1))),
-            KeyCode::Up => picker
+            Key::Down => picker.state.select(Some(picker.state.selected().map_or(0, |i| i + 1))),
+            Key::Up => picker
                 .state
                 .select(Some(picker.state.selected().map_or(0, |i| i.saturating_sub(1)))),
-            KeyCode::Enter => {
+            Key::Enter => {
                 let text = picker.text.clone();
                 let at = picker.state.selected().unwrap_or(0);
                 let matches = self.skill_matches(&text);
@@ -259,32 +259,32 @@ impl App {
     }
 
     /// Keys on the Builds tab; returns whether the key was used.
-    pub(super) fn builds_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn builds_key(&mut self, code: Key) -> bool {
         use mh3u_core::armor::{ArmorClass, Gender};
         match code {
-            KeyCode::Char('a') => {
+            Key::Char('a') => {
                 self.builds.skill_picker = Some(SkillPicker {
                     text: String::new(),
                     state: ListState::default().with_selected(Some(0)),
                 });
             }
-            KeyCode::Char('p') => self.open_piece_picker(templates::Slot::Weapon, PickFor::BuildWeapon),
-            KeyCode::Char('f') => {
+            Key::Char('p') => self.open_piece_picker(templates::Slot::Weapon, PickFor::BuildWeapon),
+            Key::Char('f') => {
                 self.builds.focus = match self.builds.focus {
                     BuildFocus::Skills => BuildFocus::Sets,
                     BuildFocus::Sets => BuildFocus::Templates,
                     BuildFocus::Templates => BuildFocus::Skills,
                 };
             }
-            KeyCode::Char('o') => {
+            Key::Char('o') => {
                 self.builds.settings.pool = self.builds.settings.pool.next();
                 self.builds_changed();
             }
-            KeyCode::Char('m') => {
+            Key::Char('m') => {
                 self.builds.settings.use_talisman = !self.builds.settings.use_talisman;
                 self.builds_changed();
             }
-            KeyCode::Char('e') => {
+            Key::Char('e') => {
                 self.builds.settings.gender = match self.builds.settings.gender {
                     None => Some(Gender::Male),
                     Some(Gender::Male) => Some(Gender::Female),
@@ -292,7 +292,7 @@ impl App {
                 };
                 self.builds_changed();
             }
-            KeyCode::Char('c') => {
+            Key::Char('c') => {
                 self.builds.settings.class = match self.builds.settings.class {
                     None => Some(ArmorClass::Blademaster),
                     Some(ArmorClass::Blademaster) => Some(ArmorClass::Gunner),
@@ -311,10 +311,10 @@ impl App {
         true
     }
 
-    pub(super) fn skills_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn skills_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('+' | '=') | KeyCode::Char('-') => {
-                let step = if matches!(code, KeyCode::Char('-')) { -1 } else { 1 };
+            Key::Char('+' | '=') | Key::Char('-') => {
+                let step = if matches!(code, Key::Char('-')) { -1 } else { 1 };
                 if let Some(t) = self
                     .builds
                     .target_state
@@ -325,7 +325,7 @@ impl App {
                     self.builds_changed();
                 }
             }
-            KeyCode::Char('x') | KeyCode::Delete => {
+            Key::Char('x') | Key::Delete => {
                 if let Some(i) = self
                     .builds
                     .target_state
@@ -341,10 +341,10 @@ impl App {
         true
     }
 
-    pub(super) fn sets_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn sets_key(&mut self, code: Key) -> bool {
         match code {
-            KeyCode::Char('w') => self.wish_build(),
-            KeyCode::Char('s') | KeyCode::Enter => {
+            Key::Char('w') => self.wish_build(),
+            Key::Char('s') | Key::Enter => {
                 if let Some(i) = self.builds.result_state.selected().filter(|&i| i < self.builds.results.len()) {
                     self.builds.name_prompt = Some(NamePrompt {
                         text: templates::next_name(&self.builds.templates),
@@ -357,16 +357,16 @@ impl App {
         true
     }
 
-    pub(super) fn templates_key(&mut self, code: KeyCode) -> bool {
+    pub(super) fn templates_key(&mut self, code: Key) -> bool {
         let selected = self.builds.template_state.selected().filter(|&i| i < self.builds.templates.len());
         match code {
-            KeyCode::Char('n') => {
+            Key::Char('n') => {
                 self.builds.name_prompt = Some(NamePrompt {
                     text: templates::next_name(&self.builds.templates),
                     action: NameAction::FromWorn,
                 });
             }
-            KeyCode::Char('r') => {
+            Key::Char('r') => {
                 if let Some(i) = selected {
                     self.builds.name_prompt = Some(NamePrompt {
                         text: self.builds.templates[i].name.clone(),
@@ -374,7 +374,7 @@ impl App {
                     });
                 }
             }
-            KeyCode::Char('x') | KeyCode::Delete => {
+            Key::Char('x') | Key::Delete => {
                 if let Some(i) = selected {
                     let gone = self.builds.templates.remove(i);
                     self.builds
@@ -384,20 +384,18 @@ impl App {
                     self.save_templates();
                 }
             }
-            KeyCode::Char(']') | KeyCode::Char('.') => {
-                self.builds.template_slot = (self.builds.template_slot + 1) % templates::Slot::ALL.len()
-            }
-            KeyCode::Char('[') | KeyCode::Char(',') => {
+            Key::Char(']') | Key::Char('.') => self.builds.template_slot = (self.builds.template_slot + 1) % templates::Slot::ALL.len(),
+            Key::Char('[') | Key::Char(',') => {
                 let slots = templates::Slot::ALL.len();
                 self.builds.template_slot = (self.builds.template_slot + slots - 1) % slots;
             }
-            KeyCode::Enter => {
+            Key::Enter => {
                 if selected.is_some() {
                     self.open_piece_picker(templates::Slot::ALL[self.builds.template_slot], PickFor::Template);
                 }
             }
-            KeyCode::Char('w') => self.wish_template(false),
-            KeyCode::Char('W') => self.wish_template(true),
+            Key::Char('w') => self.wish_template(false),
+            Key::Char('W') => self.wish_template(true),
             _ => return false,
         }
         true
@@ -488,15 +486,15 @@ impl App {
         self.save_templates();
     }
 
-    pub(super) fn name_key(&mut self, code: KeyCode) {
+    pub(super) fn name_key(&mut self, code: Key) {
         let Some(prompt) = self.builds.name_prompt.as_mut() else { return };
         match code {
-            KeyCode::Esc => self.builds.name_prompt = None,
-            KeyCode::Backspace => {
+            Key::Esc => self.builds.name_prompt = None,
+            Key::Backspace => {
                 prompt.text.pop();
             }
-            KeyCode::Char(c) => prompt.text.push(c),
-            KeyCode::Enter => {
+            Key::Char(c) => prompt.text.push(c),
+            Key::Enter => {
                 if let Some(prompt) = self.builds.name_prompt.take() {
                     self.finish_name(&prompt);
                 }
@@ -629,23 +627,23 @@ impl App {
         });
     }
 
-    pub(super) fn piece_key(&mut self, code: KeyCode) {
+    pub(super) fn piece_key(&mut self, code: Key) {
         let Some(picker) = self.builds.piece_picker.as_mut() else { return };
         let (slot, mut text) = (picker.slot, picker.text.clone());
         match code {
-            KeyCode::Esc => self.builds.piece_picker = None,
-            KeyCode::Down | KeyCode::Up => {
+            Key::Esc => self.builds.piece_picker = None,
+            Key::Down | Key::Up => {
                 let last = picker.choices.len().saturating_sub(1);
                 let at = picker.state.selected().unwrap_or(0);
-                picker.state.select(Some(if code == KeyCode::Down {
+                picker.state.select(Some(if code == Key::Down {
                     (at + 1).min(last)
                 } else {
                     at.saturating_sub(1)
                 }));
             }
-            KeyCode::Backspace | KeyCode::Char(_) => {
+            Key::Backspace | Key::Char(_) => {
                 match code {
-                    KeyCode::Char(c) => text.push(c),
+                    Key::Char(c) => text.push(c),
                     _ => {
                         text.pop();
                     }
@@ -657,7 +655,7 @@ impl App {
                     picker.state.select(Some(0));
                 }
             }
-            KeyCode::Enter => {
+            Key::Enter => {
                 let Some(picker) = self.builds.piece_picker.take() else { return };
                 let at = picker.state.selected().unwrap_or(0);
                 let Some(choice) = picker.choices.into_iter().nth(at) else { return };

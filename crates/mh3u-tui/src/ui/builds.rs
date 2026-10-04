@@ -31,7 +31,8 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             })
             .collect()
     };
-    f.render_stateful_widget(
+    render_list(
+        f,
         focused_list(rows, " Skills wanted ".to_string(), app.builds.focus == BuildFocus::Skills),
         top,
         &mut app.builds.target_state,
@@ -67,7 +68,8 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .collect();
     let len = rows.len();
-    f.render_stateful_widget(
+    render_list(
+        f,
         focused_list(rows, format!(" Sets ({len}) · {pool} "), app.builds.focus == BuildFocus::Sets),
         middle,
         &mut app.builds.result_state,
@@ -93,7 +95,8 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             .collect()
     };
     let count = app.builds.templates.len();
-    f.render_stateful_widget(
+    render_list(
+        f,
         focused_list(rows, format!(" Templates ({count}) "), app.builds.focus == BuildFocus::Templates),
         bottom,
         &mut app.builds.template_state,
@@ -319,7 +322,8 @@ pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
             ]))
         })
         .collect();
-    f.render_stateful_widget(
+    render_list(
+        f,
         List::new(rows)
             .highlight_style(theme::selection())
             .highlight_symbol(theme::SELECTION_MARK),
@@ -360,7 +364,8 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
     if let Some(i) = picker.state.selected() {
         picker.state.select(Some(i.min(last)));
     }
-    f.render_stateful_widget(
+    render_list(
+        f,
         List::new(rows)
             .highlight_style(theme::selection())
             .highlight_symbol(theme::SELECTION_MARK),

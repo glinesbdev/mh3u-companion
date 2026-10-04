@@ -35,7 +35,8 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
         return;
     }
     let len = rows.len();
-    f.render_stateful_widget(
+    render_list(
+        f,
         List::new(rows)
             .block(theme::pane(title, true))
             .highlight_style(theme::selection())

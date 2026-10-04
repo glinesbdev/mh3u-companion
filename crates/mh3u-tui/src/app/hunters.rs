@@ -67,21 +67,21 @@ impl App {
     }
 
     /// Keys while the hunter list is open: move, Enter shows the hunter, Esc closes.
-    pub(super) fn hunter_choice_key(&mut self, code: KeyCode) {
+    pub(super) fn hunter_choice_key(&mut self, code: Key) {
         let Some(choice) = self.hunter_choice.as_mut() else { return };
         let last = choice.slots.len().saturating_sub(1);
         let at = choice.state.selected().unwrap_or(0);
         match code {
-            KeyCode::Down | KeyCode::Char('j') => choice.state.select(Some((at + 1).min(last))),
-            KeyCode::Up | KeyCode::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
-            KeyCode::Enter => {
+            Key::Down | Key::Char('j') => choice.state.select(Some((at + 1).min(last))),
+            Key::Up | Key::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
+            Key::Enter => {
                 let slot = choice.slots.get(at).map(|(slot, ..)| *slot);
                 self.hunter_choice = None;
                 if let Some(slot) = slot {
                     self.pick_hunter(slot);
                 }
             }
-            KeyCode::Esc | KeyCode::Char('q') => self.hunter_choice = None,
+            Key::Esc | Key::Char('q') => self.hunter_choice = None,
             _ => {}
         }
     }
