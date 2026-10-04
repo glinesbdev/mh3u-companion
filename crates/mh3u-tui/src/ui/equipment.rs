@@ -77,6 +77,15 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }
+            if app.console.enabled {
+                // for the debug commands `equip` and `talisman`: where the record is and what its 16 bytes are
+                let mut bytes = vec![e.kind, e.upgrade];
+                bytes.extend(e.id.to_be_bytes());
+                bytes.extend(e.raw_tail);
+                let hex: Vec<String> = bytes.iter().map(|b| format!("{b:02x}")).collect();
+                lines.push(Line::raw(""));
+                lines.push(Line::styled(format!("slot {} · {}", e.slot, hex.join(" ")), muted()));
+            }
             lines
         }
         None => Vec::new(),
