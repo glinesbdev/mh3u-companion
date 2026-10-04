@@ -17,6 +17,7 @@ macro_rules! fixture {
 
 pub mod arc;
 pub mod armor;
+pub mod barsearch;
 pub mod blacksmith;
 pub mod breakparts;
 pub mod decorations;

@@ -76,6 +76,7 @@ type a command:
 | `zenny 50000` | set the wallet (also `zenny +500`, `zenny -200`); limited to 999,999 |
 | `give iron ore` | fill that item's stack in the item box to 99. The name is matched as a whole: an exact name wins (`monster bone s` is Monster Bone S), then a name that starts with or contains what you typed (shortest first), and only then word by word with typo tolerance. If several names tie, the status line lists the others it could have meant |
 | `give slagtoth hood` | an armor piece or weapon goes to the first empty slot of the equipment box (`give slagtoth hood 3` adds 3, up to 20): kind and id only, no jewels, not upgraded. Items are matched first on a tie; pieces and weapons only by a whole name, its start or part of it, not loosely |
+| `find 22 11 22 11 20 2` | read-only: look in the game's memory for a sharpness bar (red first, as a database lists it) in any unit, as bytes, words, floats or running totals; writes `find-<time>.txt` beside the scan reports with the address and the bytes around each hit. Takes a minute, during which the screen stands still |
 | `give honey 5` | add 5 (a stack holds 99) |
 | `give tenderizer jwl 3` | a trailing number that makes an exact item name (here the 3-slot jewel) is part of the name, not a count; `give tenderizer jwl 1 3` adds 3 of the first |
 | `set honey 5` | set exactly 5; `set honey 0` removes it |

@@ -29,6 +29,7 @@ mod build_manager;
 mod compare;
 mod crafting;
 mod families;
+mod find;
 #[cfg(test)]
 mod flow_tests;
 mod gains;

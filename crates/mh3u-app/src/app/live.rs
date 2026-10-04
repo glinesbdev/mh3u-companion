@@ -102,6 +102,9 @@ impl App {
         if let commands::Command::Scan { kind, names } = command {
             return self.run_scan(kind, &names);
         }
+        if let commands::Command::Find { bar } = command {
+            return self.run_find(&bar);
+        }
         let connected = self.live_connected();
         let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {
             return self.status = "editing needs the game running through --live".into();
@@ -161,7 +164,7 @@ impl App {
                     push(edit::set_box_item(&data, found.id, count).map_err(|e| e.to_string())?, &mut data);
                     notes.push(format!("{} in the box set to {}", found.describe(), count.min(edit::MAX_STACK)));
                 }
-                commands::Command::Scan { .. } => {}
+                commands::Command::Scan { .. } | commands::Command::Find { .. } => {}
                 commands::Command::Equip { slot, offset, bytes } => {
                     if bytes.is_empty() {
                         let record = edit::equipment_record(&data, slot).map_err(|e| e.to_string())?;

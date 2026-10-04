@@ -50,6 +50,10 @@ pub enum Command {
     Talisman {
         skills: Vec<(String, i8)>,
     },
+    /// Look in the game's memory for a sharpness bar (its numbers in any unit), read-only.
+    Find {
+        bar: Vec<u32>,
+    },
     /// Look for the blacksmith's list of this kind of armor in the game's memory (read-only).
     Scan {
         kind: u8,
@@ -65,7 +69,7 @@ fn number(word: &str) -> Option<u32> {
 pub fn parse(text: &str) -> Result<Command, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     let Some((&verb, args)) = words.split_first() else {
-        return Err("type a command: zenny, give, set, stock, equip, talisman or scan".into());
+        return Err("type a command: zenny, give, set, stock, equip, talisman, scan or find".into());
     };
     match verb.to_lowercase().as_str() {
         "zenny" | "z" => {
@@ -149,6 +153,13 @@ pub fn parse(text: &str) -> Result<Command, String> {
             }
             Ok(Command::Talisman { skills })
         }
+        "find" => {
+            let bar: Vec<u32> = args.iter().filter_map(|w| number(w)).collect();
+            if bar.len() != args.len() || !(3..=7).contains(&bar.len()) || bar[0] == 0 {
+                return Err("find 22 11 22 11 20 2: a sharpness bar (3 to 7 numbers, red first)".into());
+            }
+            Ok(Command::Find { bar })
+        }
         "scan" => {
             let kind = match args.first().map(|w| w.to_lowercase()).as_deref() {
                 None | Some("head") => 5,
@@ -167,7 +178,7 @@ pub fn parse(text: &str) -> Result<Command, String> {
             Ok(Command::Scan { kind, names })
         }
         other => Err(format!(
-            "unknown command '{other}': zenny, give, set, stock, equip, talisman or scan"
+            "unknown command '{other}': zenny, give, set, stock, equip, talisman, scan or find"
         )),
     }
 }
@@ -395,6 +406,19 @@ mod tests {
         assert_eq!(parse("zenny -200"), Ok(Command::Zenny(ZennyOp::Add(-200))));
         assert!(parse("zenny").is_err());
         assert!(parse("zenny lots").is_err());
+    }
+
+    #[test]
+    fn parses_find_with_a_bar() {
+        assert_eq!(
+            parse("find 22 11 22 11 20 2"),
+            Ok(Command::Find {
+                bar: vec![22, 11, 22, 11, 20, 2]
+            })
+        );
+        assert!(parse("find").is_err());
+        assert!(parse("find 22 11").is_err());
+        assert!(parse("find 22 x 3").is_err());
     }
 
     #[test]

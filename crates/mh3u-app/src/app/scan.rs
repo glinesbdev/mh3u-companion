@@ -135,14 +135,19 @@ impl App {
         out
     }
 
-    fn write_scan_report(&self, report: &str) -> Result<PathBuf, String> {
+    pub(super) fn write_scan_report(&self, report: &str) -> Result<PathBuf, String> {
+        self.write_report("scan", report)
+    }
+
+    /// Save a report as `<name>-<seconds>.txt` in the app's data folder.
+    pub(super) fn write_report(&self, name: &str, report: &str) -> Result<PathBuf, String> {
         let dir = self
             .files
             .as_ref()
             .and_then(|f| f.backups.parent().map(std::path::Path::to_path_buf))
             .ok_or("no data folder for the report")?;
         let secs = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).map_or(0, |d| d.as_secs());
-        let path = dir.join(format!("scan-{secs}.txt"));
+        let path = dir.join(format!("{name}-{secs}.txt"));
         crate::files::save(&path, report, "scan report")?;
         Ok(path)
     }
