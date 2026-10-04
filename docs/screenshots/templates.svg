@@ -34,6 +34,8 @@
 <text x="928.0" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
 <text x="947.2" y="50.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Builds</text>
 <line x1="947.2" y1="53.4" x2="1004.8" y2="53.4" stroke="#0db9d7" stroke-width="1"/>
+<text x="1014.4" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">│</text>
+<text x="1033.6" y="50.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5">Pickups</text>
 <text x="1139.2" y="50.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="70.4" textLength="1132.8" lengthAdjust="spacing" fill="#c0caf5">╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯</text>
 <text x="16.0" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">╭</text>

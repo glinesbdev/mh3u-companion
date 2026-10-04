@@ -1,7 +1,8 @@
 //! The hunt plan: which monsters to hunt, in which rank, to get the materials the wishlist is still short of.
 //!
-//! Hunts are chosen one at a time, each time the monster and rank that cover the most of what is still missing (then the best
-//! chances), until nothing more can be covered. So the first step is the best single hunt, and later steps pick up what it left.
+//! Hunts are chosen one at a time, each time the monster and rank that cover the most of what is still missing (then the one that
+//! needs the fewest runs), until nothing more can be covered. So the first step is the best single hunt, and later steps pick up what
+//! it left. Each material also gets an estimate of how many runs it takes (see [`expected_runs`]).
 
 use mh3u_core::drops::{Method, Rank, Source};
 
@@ -57,6 +58,40 @@ pub enum How {
     },
 }
 
+/// How many times a list of drops is rolled in one run. These are assumptions, not read from the game: a large monster is carved three
+/// times, its tail once, a capture pays out twice and a break once. Shiny drops are counted once.
+fn drop_rolls(method: Method) -> u32 {
+    match method {
+        Method::BodyCarve => 3,
+        Method::TailCarve | Method::Shiny | Method::Break(_) => 1,
+        Method::Capture => 2,
+    }
+}
+
+/// How many times a quest's reward box is rolled (an assumption too). A reward with chance 0 is given every time, once.
+const MAIN_BOX_ROLLS: u32 = 3;
+const SECOND_BOX_ROLLS: u32 = 1;
+
+/// Runs of a hunt or quest it takes on average to get `missing` of a material: the number missing over what one run gives on
+/// average (rolls x chance x quantity), rounded up, at least one. `None` when a run never gives it.
+pub fn expected_runs(missing: u32, percent: u8, how: How) -> Option<u32> {
+    let (rolls, chance, quantity) = match how {
+        How::Drop(method) => (drop_rolls(method), f64::from(percent) / 100.0, 1),
+        How::Reward { .. } if percent == 0 => (1, 1.0, 1),
+        How::Reward { second_box, .. } => (
+            if second_box { SECOND_BOX_ROLLS } else { MAIN_BOX_ROLLS },
+            f64::from(percent) / 100.0,
+            1,
+        ),
+    };
+    let quantity = match how {
+        How::Reward { quantity, .. } => u32::from(quantity.max(1)),
+        How::Drop(_) => quantity,
+    };
+    let per_run = f64::from(rolls) * chance * f64::from(quantity);
+    (per_run > 0.0).then(|| ((f64::from(missing) / per_run).ceil() as u32).max(1))
+}
+
 /// One missing material a step can cover, and the best way that step gives it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Cover {
@@ -66,6 +101,8 @@ pub struct Cover {
     /// The best chance in percent. For a quest reward 0 means every time.
     pub percent: u8,
     pub how: How,
+    /// Runs it takes on average to get what is missing from this step alone (`None`: never).
+    pub runs: Option<u32>,
 }
 
 impl Cover {
@@ -76,6 +113,12 @@ impl Cover {
             _ => u32::from(self.percent),
         }
     }
+
+    /// Fewer runs is better, then a higher chance. A way that never gives it is the worst.
+    fn better_than(&self, other: &Cover) -> bool {
+        let (mine, theirs) = (self.runs.unwrap_or(u32::MAX), other.runs.unwrap_or(u32::MAX));
+        mine < theirs || (mine == theirs && self.chance() > other.chance())
+    }
 }
 
 /// One step: this monster in this rank, or this quest, covers these materials.
@@ -85,11 +128,29 @@ pub struct Step {
     pub covers: Vec<Cover>,
 }
 
+impl Step {
+    /// Runs this step takes on average to give everything it covers: the slowest of its materials, since one run rolls them all.
+    pub fn runs(&self) -> u32 {
+        runs_of(&self.covers)
+    }
+}
+
+fn runs_of(covers: &[Cover]) -> u32 {
+    covers.iter().map(|c| c.runs.unwrap_or(0)).max().unwrap_or(0)
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Plan {
     pub steps: Vec<Step>,
     /// Missing materials no hunt or quest in the allowed ranks gives (they come from gathering, the shop or another rank).
     pub unsourced: Vec<u16>,
+}
+
+impl Plan {
+    /// Runs the whole plan takes on average, step after step.
+    pub fn total_runs(&self) -> u32 {
+        self.steps.iter().map(Step::runs).sum()
+    }
 }
 
 /// What a quest gives: for each item, its best chance in one of the boxes.
@@ -118,7 +179,7 @@ pub fn plan<'a>(
         });
         let covers = &mut options[at].1;
         match covers.iter_mut().find(|c| c.item == cover.item) {
-            Some(c) if cover.chance() > c.chance() => *c = cover,
+            Some(c) if cover.better_than(c) => *c = cover,
             Some(_) => {}
             None => covers.push(cover),
         }
@@ -139,6 +200,7 @@ pub fn plan<'a>(
                     missing: need,
                     percent: s.percent,
                     how: How::Drop(s.method),
+                    runs: expected_runs(need, s.percent, How::Drop(s.method)),
                 },
             );
         }
@@ -153,6 +215,7 @@ pub fn plan<'a>(
                             missing: need,
                             percent,
                             how: How::Reward { second_box, quantity },
+                            runs: expected_runs(need, percent, How::Reward { second_box, quantity }),
                         },
                     );
                     let _ = reward;
@@ -167,16 +230,16 @@ pub fn plan<'a>(
     let mut steps = Vec::new();
     let mut left: Vec<u16> = missing.iter().map(|&(item, _)| item).filter(|i| !unsourced.contains(i)).collect();
     while !left.is_empty() {
-        // the option covering the most of what is left, then with the best total chance, then the first in order
+        // the option covering the most of what is left, then the one that needs the fewest runs, then the first in order
         let best = options
             .iter()
             .map(|(origin, covers)| {
                 let useful: Vec<Cover> = covers.iter().copied().filter(|c| left.contains(&c.item)).collect();
-                let chance: u32 = useful.iter().map(Cover::chance).sum();
-                (*origin, useful, chance)
+                let runs = runs_of(&useful);
+                (*origin, useful, runs)
             })
             .filter(|(_, useful, _)| !useful.is_empty())
-            .max_by_key(|(origin, useful, chance)| (useful.len(), *chance, std::cmp::Reverse(*origin)));
+            .max_by_key(|(origin, useful, runs)| (useful.len(), std::cmp::Reverse(*runs), std::cmp::Reverse(*origin)));
         let Some((origin, mut covers, _)) = best else { break };
         covers.sort_by_key(|c| (std::cmp::Reverse(c.chance()), c.item));
         left.retain(|item| !covers.iter().any(|c| c.item == *item));
@@ -231,11 +294,46 @@ mod tests {
             .iter()
             .map(|s| (monster(s), s.covers.iter().map(|c| c.item).collect()))
             .collect();
-        // monster 10 covers items 1, 2 (chances 30 + 20 = 50), monster 20 covers 2, 3 (50 + 5 = 55): 20 wins the tie on count
-        assert_eq!(steps[0], ((20, Rank::Low), vec![2, 3]));
-        assert_eq!(steps[1], ((10, Rank::Low), vec![1]));
-        assert_eq!(steps[2], ((30, Rank::High), vec![4]));
+        // monsters 10 and 20 each cover two items; 20 would need 20 runs for the 5% shiny drop, 10 only 5 for the 20% tail carve
+        assert_eq!(steps[0], ((10, Rank::Low), vec![1, 2]));
+        // then item 4 (about 5 runs) before item 3 (about 20)
+        assert_eq!(steps[1], ((30, Rank::High), vec![4]));
+        assert_eq!(steps[2], ((20, Rank::Low), vec![3]));
         assert!(plan.unsourced.is_empty());
+        assert_eq!(plan.total_runs(), 5 + 5 + 20);
+    }
+
+    #[test]
+    fn runs_are_the_number_missing_over_what_one_run_gives_on_average() {
+        let carve = How::Drop(Method::BodyCarve); // 3 rolls
+        assert_eq!(expected_runs(2, 30, carve), Some(3), "0.9 per run: 2 / 0.9 = 2.2");
+        assert_eq!(expected_runs(1, 50, carve), Some(1));
+        assert_eq!(expected_runs(1, 5, How::Drop(Method::Shiny)), Some(20));
+        assert_eq!(expected_runs(1, 10, How::Drop(Method::Capture)), Some(5), "2 rolls: 0.2 per run");
+        assert_eq!(expected_runs(4, 0, carve), None, "a run never gives it");
+        let always = How::Reward {
+            second_box: false,
+            quantity: 3,
+        };
+        assert_eq!(expected_runs(7, 0, always), Some(3), "given every time, 3 each: 7 / 3");
+        let second = How::Reward {
+            second_box: true,
+            quantity: 1,
+        };
+        assert_eq!(expected_runs(1, 40, second), Some(3), "one roll of the second box at 40%");
+        let main = How::Reward {
+            second_box: false,
+            quantity: 2,
+        };
+        assert_eq!(expected_runs(6, 25, main), Some(4), "3 rolls x 25% x 2 = 1.5 per run");
+    }
+
+    #[test]
+    fn a_step_takes_as_long_as_its_slowest_material() {
+        let plan = run(&table(), &[(1, 2), (2, 1)], RankFilter::All);
+        let step = &plan.steps[0];
+        assert_eq!(monster(step).0, 10);
+        assert_eq!(step.runs(), 5, "item 1 needs 3 runs, item 2 needs 5");
     }
 
     #[test]

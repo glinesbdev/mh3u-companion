@@ -95,10 +95,14 @@
 <text x="275.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">1</text>
 <text x="380.8" y="190.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">█│</text>
 <text x="419.2" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Zone</text>
-<text x="496.0" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Cut</text>
-<text x="534.4" y="190.4" textLength="105.6" lengthAdjust="spacing" fill="#8a8a8a">ImpShotFire</text>
-<text x="649.6" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Wat</text>
-<text x="688.0" y="190.4" textLength="105.6" lengthAdjust="spacing" fill="#8a8a8a">IceThunDrag</text>
+<text x="505.6" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Cut</text>
+<text x="553.6" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Imp</text>
+<text x="592.0" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Shot</text>
+<text x="640.0" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Fire</text>
+<text x="697.6" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Wat</text>
+<text x="745.6" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Ice</text>
+<text x="784.0" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Thun</text>
+<text x="832.0" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Drag</text>
 <text x="1139.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="44.8" y="210.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Epioth</text>
@@ -106,14 +110,14 @@
 <text x="275.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">1</text>
 <text x="380.8" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">█│</text>
 <text x="419.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">1</text>
-<text x="496.0" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">115</text>
-<text x="534.4" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">115</text>
-<text x="572.8" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">120</text>
-<text x="620.8" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">70</text>
-<text x="659.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
-<text x="697.6" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
-<text x="736.0" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
-<text x="774.4" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">10</text>
+<text x="505.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">115</text>
+<text x="553.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">115</text>
+<text x="601.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">120</text>
+<text x="659.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">70</text>
+<text x="707.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
+<text x="755.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
+<text x="803.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">50</text>
+<text x="851.2" y="210.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">10</text>
 <text x="1139.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="44.8" y="230.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">Wroggi</text>

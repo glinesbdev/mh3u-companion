@@ -5,8 +5,11 @@ use crate::hunts::{How, Origin};
 
 /// The hunts that cover what the wishlist is still short of, best first, and the highlighted one in full.
 pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
-    let [left, right] = theme::split(area, 40);
-    let title = format!(" Hunt plan ({}) · {} ", app.hunts.plan.steps.len(), app.hunts.filter.label());
+    let [left, right] = theme::split(area, 50);
+    let mut title = format!(" Hunt plan ({}) · {} ", app.hunts.plan.steps.len(), app.hunts.filter.label());
+    if !app.hunts.plan.steps.is_empty() {
+        title.push_str(&format!("· ~{} runs ", app.hunts.plan.total_runs()));
+    }
     let rows: Vec<ListItem> = app
         .hunts
         .plan
@@ -28,9 +31,10 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
             ListItem::new(Line::from(vec![
                 Span::styled(format!("{:>2}  ", n + 1), muted()),
                 Span::styled(format!("{what:<6}"), accent()),
-                Span::raw(format!("{:<20}", fit(&name, 19))),
+                Span::raw(format!("{:<18}", fit(&name, 17))),
                 Span::styled(format!("{detail:<10}"), muted()),
-                Span::styled(format!("{} item(s)", step.covers.len()), warn()),
+                Span::styled(format!("{:<8}", plural(step.covers.len() as u32, "item")), warn()),
+                Span::styled(format!("~{}", plural(step.runs(), "run")), muted()),
             ]))
         })
         .collect();
@@ -80,6 +84,11 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
     );
 }
 
+/// `1 run`, `3 runs`.
+fn plural(n: u32, noun: &str) -> String {
+    format!("{n} {noun}{}", if n == 1 { "" } else { "s" })
+}
+
 /// The materials no hunt in the allowed ranks gives, if there are any.
 fn unsourced_line(app: &App) -> Option<Vec<Line<'static>>> {
     let plan = &app.hunts.plan;
@@ -119,7 +128,7 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
                 Span::styled(format!("  {}", rank.label()), muted()),
             ]),
             Line::styled(
-                "The best chance for each material it gives. A carve or a break may give it more than once.",
+                "The way that gives each material in the fewest runs. A run is one hunt: the estimate assumes 3 carves, 1 tail carve, 2 capture rolls and 1 roll per break.",
                 muted(),
             ),
             Line::raw(""),
@@ -141,11 +150,12 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
             ),
         };
         lines.push(Line::from(vec![
-            Span::raw(format!("  {:<24}", fit(item, 24))),
+            Span::raw(format!("  {:<22}", fit(item, 22))),
             chance,
-            Span::raw(format!("{how:<18}")),
-            Span::styled(format!("have {have}, need {} more", cover.missing), muted()),
+            Span::raw(format!("{how:<17}")),
+            Span::styled(cover.runs.map_or(String::new(), |r| format!("~{}", plural(r, "run"))), warn()),
         ]));
+        lines.push(Line::styled(format!("      have {have}, need {} more", cover.missing), muted()));
         // where else it comes from
         let mut best: Vec<((String, &'static str), u8)> = Vec::new();
         for s in app.game.drops().sources(cover.item) {
@@ -200,7 +210,7 @@ fn quest_heading(app: &App, id: u16) -> Vec<Line<'static>> {
         lines.push(Line::from(vec![Span::styled("Monsters ", muted()), Span::raw(monsters.join(", "))]));
     }
     lines.push(Line::styled(
-        "The best chance for each material among its rewards (a box is rolled several times).",
+        "The best way to get each material among its rewards. The runs assume the main box is rolled 3 times and the second box once.",
         muted(),
     ));
     lines.push(Line::raw(""));
