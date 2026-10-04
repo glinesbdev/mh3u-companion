@@ -144,8 +144,8 @@ pub(super) fn part_line(part: &mh3u_core::weapon_extras::Part) -> Option<Line<'s
                 .iter()
                 .flat_map(|c| {
                     [
-                        Span::styled("██", Style::new().fg(theme::note_color(c))),
-                        Span::raw(format!(" {c}  ")),
+                        Span::raw("🎵"),
+                        Span::styled(format!("{c}  "), Style::new().fg(theme::note_color(c)).add_modifier(Modifier::BOLD)),
                     ]
                 })
                 .collect(),
