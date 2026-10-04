@@ -18,7 +18,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   for which weapon type.
 - **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
 - **Skill levels above the first** (15, 20 points) and their effect names. **Needs:** the skill effect tables decoded.
-- **More than two talisman skills.** **Needs:** a talisman with three skills made in the game.
 
 ## Where to get things
 

@@ -92,8 +92,9 @@ pub fn first_empty_equipment(data: &[u8]) -> Option<usize> {
     (0..EQUIP_SLOTS).find(|&slot| data[EQUIP_OFFSET + slot * EQUIP_LEN] == 0)
 }
 
-/// The most skills a talisman record is written with (pairs of skill id and points from byte 4).
-pub const TALISMAN_PAIRS: usize = 6;
+/// The most skills a talisman has (pairs of skill id and points from byte 4). A third pair lands on the decoration sockets: the game
+/// then shows a filled slot with no jewel that cannot be emptied (seen with `talisman a +20, b +10, c +5`).
+pub const TALISMAN_PAIRS: usize = 2;
 /// Equipment kind of a talisman.
 const TALISMAN_KIND: u8 = 6;
 
@@ -173,7 +174,7 @@ mod tests {
         assert_eq!(patch.offset, at(2));
         assert_eq!(patch.bytes, [6, 2, 0, 1, 0x25, 10, 0x30, 0xfd, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert!(new_talisman(&d, &[]).is_err());
-        assert!(new_talisman(&d, &[(1, 1); 7]).is_err());
+        assert!(new_talisman(&d, &[(1, 1); 3]).is_err());
     }
 
     #[test]

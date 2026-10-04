@@ -82,7 +82,7 @@ type a command:
 | `scan head` | read-only: look in the game's memory for the blacksmith's list of head pieces (also `body`, `arms`, `waist`, `legs`); see below |
 | `equip 12` | show the 16 bytes of equipment box slot 12 (slots count from 0; the Equipment tab's order is the box order unless sorted) |
 | `equip 12 = 06 00 00 01 25 0a ...` | write a whole record (32 hex digits); `equip 12 @4 25 0a` writes bytes from offset 4 of the record |
-| `talisman auto-guard 10, psychic 5` | add a talisman with those skills (names matched like items); its first four bytes are copied from a talisman you already have |
+| `talisman auto-guard 10, psychic 5` | add a talisman with those skills (two at most; names matched like items); its first four bytes are copied from a talisman you already have |
 | `stock all` | the same, but also for wishlisted pieces you already own (for crafting another copy, e.g. to learn a starter weapon's price) |
 
 Edited values are what the game sees from then on (a shop or the item box shows them), and they come back to the screen like
