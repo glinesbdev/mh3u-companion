@@ -75,7 +75,8 @@ impl Equipment {
     }
 
     /// The decorations socketed in a talisman, as numbers into the game's decoration table (see `decorations`), one per slot in
-    /// order. Seen so far: slot 1 of a 3-slot talisman held `0x0091` at bytes 8-9; slot 2 held `0x0015` at bytes 10-11 (confirmed); slot 3 held `0x0097` at bytes 12-13 (confirmed). Anything but a talisman has none (armor is not decoded yet).
+    /// order. Seen so far: slot 1 of a 3-slot talisman held `0x0091` at bytes 8-9; slot 2 held `0x0015` at bytes 10-11 (confirmed); slot 3 held `0x0097` at bytes 12-13 (confirmed). Anything but a talisman has none here (see
+    /// [`Equipment::decorations`]).
     pub fn talisman_decorations(&self) -> Vec<u16> {
         if self.kind != 6 {
             return Vec::new();
@@ -84,6 +85,19 @@ impl Equipment {
             .chunks(2)
             .take(usize::from(self.talisman_slots()))
             .map(|c| u16::from_be_bytes([c[0], c[1]]))
+            .collect()
+    }
+
+    /// The decorations socketed in an armor piece or talisman, numbers into the game's decoration table, empty sockets skipped. An armor
+    /// piece keeps them in the same place as a talisman (bytes 8-9 for a jewel in its first slot, seen on a Leather Headgear).
+    pub fn decorations(&self) -> Vec<u16> {
+        if !(1..=6).contains(&self.kind) {
+            return Vec::new();
+        }
+        self.raw_tail[4..10]
+            .chunks(2)
+            .map(|c| u16::from_be_bytes([c[0], c[1]]))
+            .filter(|&c| c != 0)
             .collect()
     }
 }
@@ -362,6 +376,9 @@ mod tests {
         let two = Save::parse(&fixture!("15-jewel2/user2")).unwrap();
         let both = two.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(both.talisman_decorations(), vec![0x91, 0x15, 0]);
+        let armor = Save::parse(&fixture!("17-armor-jewel/user2")).unwrap();
+        let head = armor.equipment_box.iter().find(|e| e.slot == 0).unwrap();
+        assert_eq!((head.kind, head.id, head.decorations()), (5, 1, vec![0x91]));
         let three = Save::parse(&fixture!("16-jewel3/user2")).unwrap();
         let full = three.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(full.talisman_decorations(), vec![0x91, 0x15, 0x97]);

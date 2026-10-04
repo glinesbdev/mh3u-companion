@@ -139,7 +139,15 @@ impl App {
                     kind: e.kind,
                     id: e.id,
                     owned: true,
-                    stats: stats.clone(),
+                    stats: {
+                        // socketed decorations count as the piece's skills and use up its slots
+                        let codes = e.decorations();
+                        let used: u8 = codes.iter().filter_map(|&c| self.game.decoration(c)).map(|d| d.slots).sum();
+                        let mut owned = stats.clone();
+                        owned.skills.extend(self.game.decoration_points(&codes));
+                        owned.slots = owned.slots.saturating_sub(used);
+                        owned
+                    },
                 });
             }
             if e.kind == 6 && self.builds.settings.use_talisman && !e.talisman_skills().is_empty() {

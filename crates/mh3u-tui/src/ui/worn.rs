@@ -95,6 +95,7 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         ]));
     }
     gear.push(Line::raw(""));
+    let mut pending_jewels: Vec<String> = Vec::new();
     for (kind, label) in [(5u8, "Head"), (1, "Body"), (2, "Arms"), (3, "Waist"), (4, "Legs")] {
         let piece = armor.iter().find(|&&(k, _)| k == kind).map(|&(_, e)| e);
         let mut spans = vec![Span::styled(format!("{label:<8}"), muted())];
@@ -104,6 +105,14 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
                     format!("{:<24}", fit(app.game.equipment_name(kind, e.id).unwrap_or("?"), 24)),
                     bold(),
                 ));
+                let jewels: Vec<&str> = e
+                    .decorations()
+                    .iter()
+                    .map(|&c| app.game.decoration(c).and_then(|d| app.game.item_name(d.item)).unwrap_or("?"))
+                    .collect();
+                if !jewels.is_empty() {
+                    pending_jewels.push(format!("  {label:<6}{}", jewels.join(", ")));
+                }
                 if let Some(a) = app.game.armor_stats(kind, e.id) {
                     spans.push(theme::rarity_badge(a.rarity));
                     spans.push(Span::styled(format!(" {}", theme::gems(a.slots)), accent()));
@@ -128,13 +137,15 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     }
     gear.push(Line::from(spans));
     gear.push(Line::raw(""));
+    for line in pending_jewels {
+        gear.push(Line::from(vec![Span::styled(line, muted())]));
+    }
     if let Some(t) = talisman {
         for &code in t.talisman_decorations().iter().filter(|&&c| c != 0) {
             let name = app.game.decoration(code).and_then(|d| app.game.item_name(d.item)).unwrap_or("?");
             gear.push(Line::from(vec![Span::styled("  Charm ", muted()), Span::raw(name.to_string())]));
         }
     }
-    gear.push(Line::styled("Decorations in armor are not read yet.", muted()));
     f.render_widget(
         Paragraph::new(gear)
             .wrap(Wrap { trim: false })
@@ -152,7 +163,14 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         skills.extend(app.game.decoration_points(&t.talisman_decorations()));
         mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
     });
+    // jewels in armor are counted apart from the piece, so Torso Up does not double them
+    let armor_jewels = mh3u_core::armor::ArmorStats::talisman(
+        app.game
+            .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>()),
+        0,
+    );
     let mut counted = stats;
+    counted.push((6, &armor_jewels));
     if let Some(c) = &charm {
         counted.push((6, c));
     }

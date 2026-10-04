@@ -101,6 +101,15 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
                     );
                 }
             }
+            if (1..=5).contains(&e.kind) {
+                for (n, &code) in e.decorations().iter().enumerate().rev() {
+                    let name = app.game.decoration(code).and_then(|d| app.game.item_name(d.item)).unwrap_or("?");
+                    lines.insert(
+                        3,
+                        Line::from(vec![Span::styled(format!("  {} ", n + 1), muted()), Span::raw(name.to_string())]),
+                    );
+                }
+            }
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }
