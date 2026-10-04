@@ -30,18 +30,22 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
         let goal = targets.iter().find(|g| g.skill == t.id);
         let (state, style) = if let Some(g) = goal {
             if t.points >= g.points {
-                (&*format!("✔ goal {}", g.points), good())
+                (format!("✔ goal {}", g.points), good())
             } else {
-                (&*format!("✘ goal {}", g.points), bad())
+                (format!("✘ goal {}", g.points), bad())
             }
-        } else if t.active() {
-            ("● active", good())
-        } else if t.penalty() {
-            ("▼ penalty", bad())
+        } else if t.active() || t.penalty() {
+            let name = t.effect().and_then(|e| app.game.effect_name(e));
+            match (name, t.active()) {
+                (Some(n), true) => (format!("● {n}"), good()),
+                (Some(n), false) => (format!("▼ {n}"), bad()),
+                (None, true) => ("● active".to_string(), good()),
+                (None, false) => ("▼ penalty".to_string(), bad()),
+            }
         } else if t.points > 0 {
-            (&*format!("{} more to activate", mh3u_app::worn::ACTIVE_AT - t.points), muted())
+            (format!("{} more to activate", mh3u_app::worn::ACTIVE_AT - t.points), muted())
         } else {
-            ("", muted())
+            (String::new(), muted())
         };
         let parts: Vec<String> = t
             .parts
@@ -55,7 +59,10 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
             Span::styled(parts.join(", "), muted()),
         ]));
         if app.skill_info
-            && let Some(text) = app.game.skill_description(t.id)
+            && let Some(text) = t
+                .effect()
+                .and_then(|e| app.game.effect_description(e))
+                .or_else(|| app.game.skill_description(t.id))
         {
             lines.push(Line::styled(format!("    {text}"), muted()));
         }
@@ -178,7 +185,7 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     let mut lines = totals_lines(app, &summary, &[]);
     lines.push(Line::raw(""));
     lines.push(Line::styled(
-        "A skill's first effect starts at 10 points and its penalty at -10. Higher tiers (15, 20) are not shown.",
+        "A skill's first effect starts at 10 points and its penalty at -10; higher tiers start at 15 and 20 where a skill has them. Torso Up has one effect.",
         muted(),
     ));
     f.render_widget(

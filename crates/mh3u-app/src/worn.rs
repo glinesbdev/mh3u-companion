@@ -23,6 +23,11 @@ impl SkillTotal {
         self.points >= ACTIVE_AT
     }
 
+    /// The effect these points give, an id for the game's effect text (`GameData::effect_name`). Torso Up has none.
+    pub fn effect(&self) -> Option<u16> {
+        mh3u_core::skilltiers::effect_for(self.id, self.points)
+    }
+
     /// The skill's penalty is on (-10 points or less).
     pub fn penalty(&self) -> bool {
         self.points <= -ACTIVE_AT

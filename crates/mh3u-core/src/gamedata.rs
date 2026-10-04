@@ -65,6 +65,9 @@ pub struct GameData {
     /// Text tables the game ships for descriptions; empty when a dump lacks them.
     item_details: Vec<String>,
     skill_details: Vec<String>,
+    /// Names and descriptions of skill effects (Attack Up (L)), by effect id.
+    effect_names: Vec<String>,
+    effect_details: Vec<String>,
     monsters: Vec<String>,
     /// The Hunter's Notes (see `notes`); empty when a dump lacks them.
     hunters_notes: Vec<String>,
@@ -162,6 +165,8 @@ impl GameData {
             items: names("Item00_eng")?,
             item_details: optional("ItemDetail_eng"),
             skill_details: optional("Skill_Type_Exp_eng"),
+            effect_names: names("Skill_eng").unwrap_or_default(),
+            effect_details: optional("Skill_Exp_eng"),
             monsters: names("Monster_eng").unwrap_or_default(),
             hunters_notes: optional("HNote_eng"),
             recipes,
@@ -408,6 +413,19 @@ impl GameData {
         })
     }
 
+    /// The name of a skill effect by its id, such as "Attack Up (L)".
+    pub fn effect_name(&self, id: u16) -> Option<&str> {
+        self.effect_names.get(usize::from(id)).map(String::as_str).filter(|n| !n.is_empty())
+    }
+
+    /// What a skill effect does, in the game's words on one line.
+    pub fn effect_description(&self, id: u16) -> Option<&str> {
+        self.effect_details
+            .get(usize::from(id))
+            .map(String::as_str)
+            .filter(|t| !t.is_empty() && *t != "DUMMY")
+    }
+
     pub fn skill_name(&self, id: u8) -> Option<&str> {
         self.skills.get(id as usize).map(String::as_str)
     }
@@ -514,6 +532,10 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // the effect text lines up with the tier table
+        let (_, effect) = crate::skilltiers::tiers(11).next().unwrap();
+        assert_eq!(game.effect_name(effect), Some("Attack Up (L)"));
+        assert!(game.effect_description(effect).is_some_and(|t| t.contains("Attack")));
         assert_eq!(game.decoration(5000), None);
     }
 

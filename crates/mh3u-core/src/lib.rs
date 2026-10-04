@@ -37,4 +37,5 @@ pub mod recipes;
 pub mod rpx;
 pub mod save;
 pub mod shopscan;
+pub mod skilltiers;
 pub mod weapons;

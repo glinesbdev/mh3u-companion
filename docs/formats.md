@@ -193,6 +193,21 @@ pieces agree. The other 19 are the Rathian S, Nargacuga X, Brachydios X, Damascu
 The waist and legs tables have the same layout and use the same formulas, but no list was available to check them against. The weights
 are an empirical fit, not something read from the game's own text. `armor::max_defense`.
 
+## Skill effects (`skilltiers.rs`)
+
+The text archive has two tables of effects: `Skill_eng` (336 names such as `Attack Up (L)`, `Fire Res +20`) and `Skill_Exp_eng` (what each does), both
+indexed by effect id and in the order the game lists them: the effects of one skill tree are neighbours, the positive ones first. What links
+a tree (`Skill_Type_eng`, 188 names, the id armor and talismans use) to its effects, and the points each starts at, was **not found** in the
+executable. Searched, in the data and read-only sections: runs of the effect ids of Attack (75 to 80) and Health in any width, records of
+(tree, points, effect) in any order, and a stride of the points 10, 15, 20. The only hits were runs of consecutive ids (menu orders)
+and armor price rows.
+
+So `skilltiers.rs` holds a hand-made table of 236 rows (tree, points, effect id) for 122 trees, made from a public database's list of
+each tree's effects and thresholds, matched to the game's own effect names (all matched exactly one name, except one duplicate: Combo Rate's
+`Combination -10%`, which exists twice in the game text; the first is used). It agrees with the game in what could be checked: every effect has a
+real name and description, the effects of a tree are neighbours in the game's order, every tree's first tier is 10 points, and the
+three Attack Up descriptions read as small, medium and large. Torso Up (one effect at 10) is not in the effect text and has no row.
+
 ## Not found / not decoded
 
 - Weapon sharpness and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.

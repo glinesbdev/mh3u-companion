@@ -14,10 +14,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - **More ways to rank** the sets: by resistances, by spare gem slots, "pieces I own first". Today it is by base defense, then by how
   many pieces you own.
 - **Skills that suit a weapon.** The Builds tab takes a weapon and filters by its armor class, but does not suggest skills for it (a
-  sharpness skill for a sword, reload speed for a bowgun). **Needs:** the skill effect tables decoded, to know what each skill does
-  for which weapon type.
+  sharpness skill for a sword, reload speed for a bowgun). **Needs:** which weapon type each skill effect suits (the effects and their tiers are read, but nothing says what they are for;
+  a hand-made list per effect would do).
 - **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
-- **Skill levels above the first** (15, 20 points) and their effect names. **Needs:** the skill effect tables decoded.
 
 ## Where to get things
 
@@ -40,7 +39,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   Rathalos), are numbered. The game's own source for the parts was searched for and not found: the monster archive's `em_status00` and
   `em_hitdata00` (the hit areas carry an index, not the kind of part), and the executable's data and read-only sections (no table of the
   kinds in a monster's order). **Needs:** the table that says which parts a monster can break, probably in code.
-- Skill **effect names and higher tiers**.
 - Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
 - Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (a byte at 0x7569 may be it; to confirm at the next rank-up), weapon usage (the count for the great sword shows 11; not found as a plain count) and the title.
 - **Item carry limits and buying prices.** The item table's byte 7 looks like the carry limit (652 of 681 agree with a published list, so it is not shown) and shops price their own goods; **Needs:** the shop tables.
