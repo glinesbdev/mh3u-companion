@@ -142,7 +142,12 @@ pub(super) fn part_line(part: &mh3u_core::weapon_extras::Part) -> Option<Line<'s
             "Notes",
             colors
                 .iter()
-                .map(|c| Span::styled("♪ ", Style::new().fg(theme::note_color(c))))
+                .flat_map(|c| {
+                    [
+                        Span::styled("██", Style::new().fg(theme::note_color(c))),
+                        Span::raw(format!(" {c}  ")),
+                    ]
+                })
                 .collect(),
         ),
     };
