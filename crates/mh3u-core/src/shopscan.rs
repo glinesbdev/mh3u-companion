@@ -9,6 +9,8 @@ use std::{collections::HashSet, io};
 
 /// Distances between the ids to try, in bytes.
 pub const STRIDES: [usize; 8] = [2, 4, 6, 8, 12, 16, 20, 24];
+/// The same for ids stored in one byte.
+pub const BYTE_STRIDES: [usize; 6] = [1, 2, 4, 8, 12, 16];
 
 /// A run of ids found in a block of memory.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -32,8 +34,25 @@ pub enum Order {
 /// Every run of at least `min_len` ids from `wanted`, `stride` bytes apart, starting at an even offset below `start_below`. A run is as
 /// long as it can be (it is not reported again from inside).
 pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, start_below: usize, order: Order) -> Vec<Run> {
+    runs_of_width(data, wanted, stride, min_len, start_below, order, 2)
+}
+
+/// Like [`runs`], with the ids stored in `width` bytes (1 or 2).
+pub fn runs_of_width(
+    data: &[u8],
+    wanted: &HashSet<u16>,
+    stride: usize,
+    min_len: usize,
+    start_below: usize,
+    order: Order,
+    width: usize,
+) -> Vec<Run> {
     let at = |o: usize| -> Option<u16> {
-        let v = u16::from_be_bytes([*data.get(o)?, *data.get(o + 1)?]);
+        let v = if width == 1 {
+            u16::from(*data.get(o)?)
+        } else {
+            u16::from_be_bytes([*data.get(o)?, *data.get(o + 1)?])
+        };
         wanted.contains(&v).then_some(v)
     };
     let mut out = Vec::new();
@@ -64,7 +83,7 @@ pub fn runs(data: &[u8], wanted: &HashSet<u16>, stride: usize, min_len: usize, s
                 }
             }
         }
-        o += 2;
+        o += width;
     }
     out
 }
@@ -88,13 +107,15 @@ pub struct Found {
 pub fn scan(mem: &ProcMem, wanted: &HashSet<u16>, min_len: usize, keep: usize) -> io::Result<Vec<Found>> {
     let mut found = Vec::new();
     mem.for_each_chunk(4096, |addr, data| {
-        for stride in STRIDES {
-            for order in [Order::Increasing, Order::Shuffled] {
-                for run in runs(data, wanted, stride, min_len, CHUNK_LEN, order) {
-                    found.push(Found {
-                        host: addr + run.offset as u64,
-                        run,
-                    });
+        for (width, strides) in [(2, &STRIDES[..]), (1, &BYTE_STRIDES[..])] {
+            for &stride in strides {
+                for order in [Order::Increasing, Order::Shuffled] {
+                    for run in runs_of_width(data, wanted, stride, min_len, CHUNK_LEN, order, width) {
+                        found.push(Found {
+                            host: addr + run.offset as u64,
+                            run,
+                        });
+                    }
                 }
             }
         }
@@ -107,11 +128,11 @@ pub fn scan(mem: &ProcMem, wanted: &HashSet<u16>, min_len: usize, keep: usize) -
 /// How a row of flags (one per piece) could be stored.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Layout {
-    /// One byte per flag, 0 or 1.
+    /// One byte per flag, zero for off, anything else for on.
     Bytes,
-    /// A big-endian u16 per flag, 0 or 1.
+    /// A big-endian u16 per flag.
     Words,
-    /// A big-endian u32 per flag, 0 or 1.
+    /// A big-endian u32 per flag.
     Dwords,
     /// Packed bits, the first flag in the top bit of the first byte.
     BitsMsb,
@@ -145,12 +166,8 @@ impl Layout {
     fn flag(self, data: &[u8], i: usize) -> Option<bool> {
         let value = |width: usize| -> Option<bool> {
             let at = i * width;
-            let cell = data.get(at..at + width)?;
-            match (cell[..width - 1].iter().all(|&b| b == 0), cell[width - 1]) {
-                (true, 0) => Some(false),
-                (true, 1) => Some(true),
-                _ => None,
-            }
+            // any non-zero value is "set": the game may keep a state (1 new, 2 seen...) and not just a yes or no
+            Some(data.get(at..at + width)?.iter().any(|&b| b != 0))
         };
         match self {
             Layout::Bytes => value(1),
@@ -177,7 +194,7 @@ pub struct FlagHit {
 pub fn flag_matches(data: &[u8], pattern: &[bool], layout: Layout, max_miss: usize, start_below: usize) -> Vec<(usize, usize)> {
     let mut out = Vec::new();
     // A cheap test that rules out nearly every offset before the full comparison. For flags stored as numbers: the first flag that
-    // is set must read 1. For packed bits: the first byte may differ from the pattern's first eight flags by at most `max_miss` bits.
+    // is set must be non-zero. For packed bits: the first byte may differ from the pattern's first eight flags by at most `max_miss` bits.
     let anchor = pattern.iter().position(|&f| f);
     let first_byte = (pattern.len() >= 8).then(|| {
         let bits = |i: usize| u8::from(pattern[i]);
@@ -196,7 +213,10 @@ pub fn flag_matches(data: &[u8], pattern: &[bool], layout: Layout, max_miss: usi
     };
     for o in 0..data.len().min(start_below) {
         let plausible = match layout {
-            Layout::Bytes | Layout::Words | Layout::Dwords => anchor.is_none_or(|a| data.get(o + a * width + width - 1) == Some(&1)),
+            Layout::Bytes | Layout::Words | Layout::Dwords => anchor.is_none_or(|a| {
+                data.get(o + a * width..o + (a + 1) * width)
+                    .is_some_and(|c| c.iter().any(|&b| b != 0))
+            }),
             _ => first_byte.is_none_or(|(at, want)| data.get(o + at).is_some_and(|&b| ((b ^ want).count_ones() as usize) <= max_miss)),
         };
         if !plausible {
@@ -301,6 +321,21 @@ mod tests {
     }
 
     #[test]
+    fn ids_stored_in_single_bytes_are_found() {
+        let wanted: HashSet<u16> = [3, 5, 9, 12, 20].into();
+        let d = [0xffu8, 3, 5, 9, 12, 20, 0xff];
+        let found = runs_of_width(&d, &wanted, 1, 4, d.len(), Order::Increasing, 1);
+        assert_eq!(
+            found,
+            vec![Run {
+                offset: 1,
+                stride: 1,
+                ids: vec![3, 5, 9, 12, 20]
+            }]
+        );
+    }
+
+    #[test]
     fn a_shuffled_run_is_found_when_the_order_is_not_by_id() {
         let wanted: HashSet<u16> = [3, 5, 9, 12, 20].into();
         let d = be(&[9, 3, 12, 5, 20], 4);
@@ -330,7 +365,8 @@ mod tests {
         };
         for (layout, w) in [(Layout::Bytes, 1), (Layout::Words, 2), (Layout::Dwords, 4)] {
             let d = at(&per(w));
-            assert_eq!(flag_matches(&d, &pattern, layout, 0, d.len()), vec![(3, 0)], "{layout:?}");
+            // a wider number also matches a byte later (any non-zero byte counts), so only check that it is found
+            assert!(flag_matches(&d, &pattern, layout, 0, d.len()).contains(&(3, 0)), "{layout:?}");
         }
         // bits: 1011 0010 11 -> MSB first 0xb2 0xc0; LSB first 0x4d 0x03
         let d = at(&[0xb2, 0xc0]);
@@ -343,15 +379,19 @@ mod tests {
     }
 
     #[test]
-    fn the_set_flags_are_listed_until_the_data_stops_being_flags() {
-        assert_eq!(Layout::Bytes.set_flags(&[0, 1, 0, 1, 1, 9, 1], 7), vec![1, 3, 4]);
+    fn the_set_flags_are_listed_up_to_the_count() {
+        assert_eq!(Layout::Bytes.set_flags(&[0, 1, 0, 1, 1, 9, 1], 5), vec![1, 3, 4]);
         assert_eq!(Layout::BitsLsb.set_flags(&[0b0000_0110, 0b1000_0000], 16), vec![1, 2, 15]);
     }
 
     #[test]
-    fn a_flag_that_is_not_zero_or_one_is_not_a_flag_and_misses_are_counted() {
+    fn any_non_zero_value_is_a_set_flag_and_misses_are_counted() {
         let d = [0u8, 1, 1, 7, 0];
-        assert!(flag_matches(&d, &[false, true, true, true], Layout::Bytes, 0, d.len()).is_empty());
+        assert_eq!(
+            flag_matches(&d, &[false, true, true, true], Layout::Bytes, 0, d.len()),
+            vec![(0, 0)]
+        );
+        assert!(flag_matches(&d, &[false, true, true, false], Layout::Bytes, 0, d.len()).is_empty());
         let d = [0u8, 1, 1, 1, 0];
         assert_eq!(
             flag_matches(&d, &[false, true, false, true], Layout::Bytes, 1, d.len()),

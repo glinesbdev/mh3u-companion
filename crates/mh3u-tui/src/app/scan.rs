@@ -56,7 +56,19 @@ impl App {
             let patterns = self.flag_patterns(kind, given.then_some(&wanted));
             let flags = shopscan::scan_flags(&mem, &patterns, if given { 0 } else { FLAG_MISSES }, KEEP)?;
             let mut report = self.flag_report(&mem, base, &flags);
-            report += &self.scan_report(&mem, kind, &wanted, base, &found);
+            report += &self.scan_report(&mem, kind, &wanted, base, &found, false);
+            // the game may list the rows of the recipe table instead of the piece ids
+            let rows: HashSet<u16> = self
+                .game
+                .recipe_rows(kind)
+                .iter()
+                .enumerate()
+                .filter(|(_, id)| wanted.contains(id))
+                .map(|(row, _)| row as u16)
+                .collect();
+            let row_found = shopscan::scan(&mem, &rows, min_len, KEEP)?;
+            report += "\nROW NUMBERS (positions in the recipe table) instead of piece ids\n\n";
+            report += &self.scan_report(&mem, kind, &rows, base, &row_found, true);
             Ok((report, found.len()))
         });
         self.status = match result {
@@ -133,8 +145,23 @@ impl App {
         Ok(path)
     }
 
-    fn scan_report(&self, mem: &ProcMem, kind: u8, wanted: &HashSet<u16>, base: Option<u64>, found: &[shopscan::Found]) -> String {
-        let name = |id: u16| self.game.equipment_name(kind, id).unwrap_or("?");
+    fn scan_report(
+        &self,
+        mem: &ProcMem,
+        kind: u8,
+        wanted: &HashSet<u16>,
+        base: Option<u64>,
+        found: &[shopscan::Found],
+        rows: bool,
+    ) -> String {
+        let name = |n: u16| {
+            let id = if rows {
+                self.game.recipe_rows(kind).get(usize::from(n)).copied().unwrap_or(0)
+            } else {
+                n
+            };
+            self.game.equipment_name(kind, id).unwrap_or("?")
+        };
         let mut out = String::new();
         let mut expected: Vec<u16> = wanted.iter().copied().collect();
         expected.sort_unstable();
