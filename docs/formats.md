@@ -89,6 +89,9 @@ selects was not found:** the bars were searched for in the data section, the rea
 Nothing matched except coincidences. Byte `p+19` is different for every weapon of a type (an index of some kind, not the sharpness) and the element is
 not a function of any record bytes except that one, so the element lives in another table indexed by it (also not found: a table
 indexed by it holding the element value in 1, 2, 5 or 10 units does not exist at any stride up to 32).
+The live game was searched too (`find`, `docs/live.md`) with a late-game great sword equipped, once with its bar and once with Sharpness +1: no
+numbers in proportion to the bar exist anywhere in the game's 4 GB, in any layout (the same search finds plenty for a control). So the bar
+is not stored as a table of numbers in proportion to the database's, and the game may build it in code.
 
 ## Monster drops (`drops.rs`)
 
