@@ -45,6 +45,12 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     if let Some(g) = app.builds.settings.gender {
         pool += &format!(" · {}", g.label().to_lowercase());
     }
+    if app.builds.settings.craftable_only {
+        pool += " · make now";
+    }
+    if let Some(r) = app.builds.settings.max_rarity {
+        pool += &format!(" · rarity ≤ {r}");
+    }
     if let Some((kind, id)) = app.builds.settings.weapon {
         let class = mh3u_app::builds::weapon_class(kind).label().to_lowercase();
         pool += &format!(" · for {} ({class})", app.game.equipment_name(kind, id).unwrap_or("?"));

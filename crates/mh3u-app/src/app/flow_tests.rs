@@ -826,3 +826,34 @@ fn the_skill_picker_puts_the_skills_that_suit_the_weapon_first() {
     assert!(position(&app, "Reload Spd") < position(&app, "Sharpness"));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_builds_pool_honors_the_rarity_limit_and_make_now_filter() {
+    let dir = temp_dir("buildfilters");
+    let Some(mut app) = app_in(&dir) else { return };
+    app.builds.settings.pool = builds::Pool::All;
+    let all = app.build_pool();
+    assert!(all.iter().any(|c| c.stats.rarity > 3), "the whole game has higher rarities");
+    app.builds.settings.max_rarity = Some(3);
+    let capped = app.build_pool();
+    assert!(!capped.is_empty() && capped.iter().all(|c| c.stats.rarity <= 3));
+    app.builds.settings.max_rarity = None;
+    app.builds.settings.craftable_only = true;
+    let now = app.build_pool();
+    assert!(now.len() < all.len());
+    assert!(now.iter().all(|c| c.owned || app.can_make_now(c.kind, c.id)));
+    // owned pieces stay whatever the filter says
+    assert_eq!(now.iter().filter(|c| c.owned).count(), all.iter().filter(|c| c.owned).count());
+    // the keys cycle the limit: none, 1 .. 10, none
+    app.builds.settings.craftable_only = false;
+    app.tab = Tab::Builds;
+    for _ in 0..10 {
+        press(&mut app, "l");
+    }
+    assert_eq!(app.builds.settings.max_rarity, Some(10));
+    press(&mut app, "l");
+    assert_eq!(app.builds.settings.max_rarity, None);
+    press(&mut app, "u");
+    assert!(app.builds.settings.craftable_only);
+    let _ = std::fs::remove_dir_all(&dir);
+}

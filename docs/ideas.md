@@ -10,7 +10,6 @@ belong to.
 
 The Builds tab searches armor sets for wanted skills and keeps build templates (see the README). Left to do:
 
-- **More filters:** only pieces you can craft now, a rarity cap.
 - **More ways to rank** the sets: by resistances, by spare gem slots, "pieces I own first". Today it is by base defense, then by how
   many pieces you own.
 - **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).

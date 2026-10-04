@@ -127,12 +127,14 @@ impl App {
         let usable = |stats: &mh3u_core::armor::ArmorStats| {
             builds::usable(stats, self.builds.settings.gender, self.builds.settings.effective_class())
         };
+        let cap = self.builds.settings.max_rarity;
+        let under_cap = |stats: &mh3u_core::armor::ArmorStats| cap.is_none_or(|c| stats.rarity <= c);
         let mut pool: Vec<Candidate> = Vec::new();
         let mut seen: HashSet<(u8, u16)> = HashSet::new();
         for e in &self.save.equipment_box {
             if (1..=5).contains(&e.kind)
                 && self.game.piece_name(e.kind, e.id).is_some()
-                && let Some(stats) = self.game.armor_stats(e.kind, e.id).filter(|s| usable(s))
+                && let Some(stats) = self.game.armor_stats(e.kind, e.id).filter(|s| usable(s) && under_cap(s))
                 && seen.insert((e.kind, e.id))
             {
                 pool.push(Candidate {
@@ -169,9 +171,10 @@ impl App {
         if self.builds.settings.pool != builds::Pool::Owned {
             for kind in 1..=5u8 {
                 for id in self.game.piece_ids(kind) {
-                    if let Some(stats) = self.game.armor_stats(kind, id).filter(|s| usable(s))
+                    if let Some(stats) = self.game.armor_stats(kind, id).filter(|s| usable(s) && under_cap(s))
                         && !seen.contains(&(kind, id))
                         && (self.builds.settings.pool == builds::Pool::All || self.at_blacksmith(kind, id))
+                        && (!self.builds.settings.craftable_only || self.can_make_now(kind, id))
                     {
                         pool.push(Candidate {
                             kind,
@@ -314,6 +317,19 @@ impl App {
                 self.builds.settings.gender = match self.builds.settings.gender {
                     None => Some(Gender::Male),
                     Some(Gender::Male) => Some(Gender::Female),
+                    _ => None,
+                };
+                self.builds_changed();
+            }
+            Key::Char('u') => {
+                self.builds.settings.craftable_only = !self.builds.settings.craftable_only;
+                self.builds_changed();
+            }
+            Key::Char('l') => {
+                // no limit, then 1 to 10
+                self.builds.settings.max_rarity = match self.builds.settings.max_rarity {
+                    None => Some(1),
+                    Some(r) if r < 10 => Some(r + 1),
                     _ => None,
                 };
                 self.builds_changed();

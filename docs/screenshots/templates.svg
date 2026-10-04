@@ -390,13 +390,13 @@
 <text x="640.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">delete</text>
 <text x="716.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">o</text>
 <text x="736.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">pieces</text>
-<text x="812.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
-<text x="832.0" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">talisman</text>
-<text x="928.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
-<text x="947.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">gender</text>
-<text x="1024.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">c</text>
-<text x="1043.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">class</text>
-<text x="1110.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
-<text x="1129.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">hu</text>
+<text x="812.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">u</text>
+<text x="832.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">make</text>
+<text x="880.0" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">now</text>
+<text x="928.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">l</text>
+<text x="947.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">rarity</text>
+<text x="1024.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
+<text x="1043.2" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">talisman</text>
+<text x="1139.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
 </g>
 </svg>

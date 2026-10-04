@@ -298,6 +298,10 @@ pub struct Settings {
     pub class: Option<ArmorClass>,
     /// The weapon the set is for, as (equipment kind, id). It decides the class (see `weapon_class`) and goes into a saved template.
     pub weapon: Option<(u8, u16)>,
+    /// Of the pieces you do not own, only those you could make right now (see `App::can_make_now`).
+    pub craftable_only: bool,
+    /// No piece above this rarity (1 to 10; `None`: any).
+    pub max_rarity: Option<u8>,
 }
 
 /// The armor class a weapon type is worn with: bows and bowguns take gunner armor, everything else blademaster armor.
@@ -338,6 +342,8 @@ impl Default for Settings {
             gender: None,
             class: None,
             weapon: None,
+            craftable_only: false,
+            max_rarity: None,
         }
     }
 }
@@ -365,6 +371,8 @@ impl Settings {
                     }
                 }
                 (Some("talisman"), Some(v), _) => out.use_talisman = v != "0",
+                (Some("craftable"), Some(v), _) => out.craftable_only = v != "0",
+                (Some("rarity"), Some(v), _) => out.max_rarity = v.parse().ok().filter(|r| (1..=10).contains(r)),
                 (Some("gender"), Some(v), _) => {
                     out.gender = match v {
                         "male" => Some(Gender::Male),
@@ -407,6 +415,12 @@ impl Settings {
         };
         if let Some((kind, id)) = self.weapon {
             text += &format!("weapon {kind} {id}\n");
+        }
+        if self.craftable_only {
+            text += "craftable 1\n";
+        }
+        if let Some(r) = self.max_rarity {
+            text += &format!("rarity {r}\n");
         }
         text
     }
@@ -569,8 +583,12 @@ mod tests {
             gender: Some(Gender::Female),
             class: Some(ArmorClass::Gunner),
             weapon: Some((17, 34)),
+            craftable_only: true,
+            max_rarity: Some(6),
         };
         assert_eq!(Settings::parse(&s.format()), s);
+        assert_eq!(Settings::parse("rarity 0\nrarity 11\n").max_rarity, None, "out of range");
+        assert!(!Settings::parse("craftable 0\n").craftable_only);
         let parsed = Settings::parse("skill x 3\nskill 5 10\nskill 5 20\nnonsense\n");
         assert_eq!(
             parsed.targets,

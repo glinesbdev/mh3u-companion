@@ -143,7 +143,7 @@ pub(super) const SECTIONS: &[Section] = &[
             ("a", "add a skill (type to find it, Enter)"),
             ("+  -  x", "its points, remove"),
             ("f", "switch: skills, sets found, templates"),
-            ("o", "pieces: owned, plus on offer, or everything"),
+            ("o  u  l", "pieces: owned/on offer/all, only those makeable now, rarity limit"),
             ("m  e  c", "talisman, gender, blademaster or gunner"),
             ("p", "the weapon the set is for (its type sets the class)"),
             ("s  w", "save a set as a template, wish its missing pieces"),

@@ -273,7 +273,14 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                     BuildFocus::Sets => keys.extend([("s", "save as template"), ("w", "wish"), ("p", "weapon")]),
                     BuildFocus::Templates => keys.extend([("Enter", "swap piece"), ("n", "from worn"), ("w", "wish"), ("x", "delete")]),
                 }
-                keys.extend([("o", "pieces"), ("m", "talisman"), ("e", "gender"), ("c", "class")]);
+                keys.extend([
+                    ("o", "pieces"),
+                    ("u", "make now"),
+                    ("l", "rarity"),
+                    ("m", "talisman"),
+                    ("e", "gender"),
+                    ("c", "class"),
+                ]);
             }
         }
         keys.extend([("H", "hunter"), ("?", "help"), ("q", "quit")]);
