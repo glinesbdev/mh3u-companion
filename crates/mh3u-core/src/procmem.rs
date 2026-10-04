@@ -101,12 +101,18 @@ impl ProcMem {
     /// Call `f(address, bytes)` for every chunk of readable, writable memory. Chunks overlap by `overlap` bytes, so something up to that
     /// long that straddles a boundary is whole in one of them; `f` should only report things that start in the first
     /// `CHUNK_LEN` bytes of one. Unreadable chunks are skipped.
-    pub fn for_each_chunk(&self, overlap: usize, mut f: impl FnMut(u64, &[u8])) -> io::Result<()> {
+    pub fn for_each_chunk(&self, overlap: usize, f: impl FnMut(u64, &[u8])) -> io::Result<()> {
+        self.for_each_chunk_in(0..u64::MAX, overlap, f)
+    }
+
+    /// Like `for_each_chunk`, but only the parts of memory inside `within`.
+    pub fn for_each_chunk_in(&self, within: std::ops::Range<u64>, overlap: usize, mut f: impl FnMut(u64, &[u8])) -> io::Result<()> {
         let mut buf = vec![0u8; CHUNK_LEN + overlap];
         for region in self.regions()?.into_iter().filter(|r| r.readable && r.writable) {
-            let mut addr = region.start;
-            while addr < region.end {
-                let want = ((region.end - addr) as usize).min(CHUNK_LEN + overlap);
+            let (start, end) = (region.start.max(within.start), region.end.min(within.end));
+            let mut addr = start;
+            while addr < end {
+                let want = ((end - addr) as usize).min(CHUNK_LEN + overlap);
                 if self.file.read_exact_at(&mut buf[..want], addr).is_ok() {
                     f(addr, &buf[..want]);
                 }

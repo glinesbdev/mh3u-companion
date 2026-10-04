@@ -52,9 +52,11 @@ impl App {
         let result = ProcMem::open(live.child.id()).and_then(|mem| {
             let base = livemod::find_live_block(&mem, std::slice::from_ref(&self.save.hunter_name))?
                 .and_then(|block| mem.read(block, 0x30).ok().and_then(|head| livemod::validate_block(&head, block)));
-            let found = shopscan::scan(&mem, &wanted, min_len, KEEP)?;
+            // The game's own memory is the 4 GB after `base`; the rest is the emulator's.
+            let within = base.map_or(0..u64::MAX, |b| b..b + (1 << 32));
+            let found = shopscan::scan(&mem, within.clone(), &wanted, min_len, KEEP)?;
             let patterns = self.flag_patterns(kind, given.then_some(&wanted));
-            let flags = shopscan::scan_flags(&mem, &patterns, if given { 0 } else { FLAG_MISSES }, KEEP)?;
+            let flags = shopscan::scan_flags(&mem, within.clone(), &patterns, if given { 0 } else { FLAG_MISSES }, KEEP)?;
             let mut report = self.flag_report(&mem, base, &flags);
             report += &self.scan_report(&mem, kind, &wanted, base, &found, false);
             // the game may list the rows of the recipe table instead of the piece ids
@@ -66,7 +68,7 @@ impl App {
                 .filter(|(_, id)| wanted.contains(id))
                 .map(|(row, _)| row as u16)
                 .collect();
-            let row_found = shopscan::scan(&mem, &rows, min_len, KEEP)?;
+            let row_found = shopscan::scan(&mem, within.clone(), &rows, min_len, KEEP)?;
             report += "\nROW NUMBERS (positions in the recipe table) instead of piece ids\n\n";
             report += &self.scan_report(&mem, kind, &rows, base, &row_found, true);
             Ok((report, found.len()))

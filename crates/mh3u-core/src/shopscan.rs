@@ -5,7 +5,7 @@
 //! on offer), strictly increasing, at one fixed distance apart. The result shows where our idea of the list and the game's differ.
 
 use crate::procmem::{CHUNK_LEN, ProcMem};
-use std::{collections::HashSet, io};
+use std::{collections::HashSet, io, ops::Range};
 
 /// Distances between the ids to try, in bytes.
 pub const STRIDES: [usize; 8] = [2, 4, 6, 8, 12, 16, 20, 24];
@@ -104,9 +104,9 @@ pub struct Found {
 }
 
 /// Search all of the emulator's writable memory. The best `keep` finds, best first.
-pub fn scan(mem: &ProcMem, wanted: &HashSet<u16>, min_len: usize, keep: usize) -> io::Result<Vec<Found>> {
+pub fn scan(mem: &ProcMem, within: Range<u64>, wanted: &HashSet<u16>, min_len: usize, keep: usize) -> io::Result<Vec<Found>> {
     let mut found = Vec::new();
-    mem.for_each_chunk(4096, |addr, data| {
+    mem.for_each_chunk_in(within, 4096, |addr, data| {
         for (width, strides) in [(2, &STRIDES[..]), (1, &BYTE_STRIDES[..])] {
             for &stride in strides {
                 for order in [Order::Increasing, Order::Shuffled] {
@@ -211,12 +211,14 @@ pub fn flag_matches(data: &[u8], pattern: &[bool], layout: Layout, max_miss: usi
         Layout::Dwords => 4,
         _ => 1,
     };
+    // With no misses allowed, flags that are off must read zero too: a second test at the first such flag.
+    let zero_anchor = if max_miss == 0 { pattern.iter().position(|&f| !f) } else { None };
     for o in 0..data.len().min(start_below) {
         let plausible = match layout {
-            Layout::Bytes | Layout::Words | Layout::Dwords => anchor.is_none_or(|a| {
-                data.get(o + a * width..o + (a + 1) * width)
-                    .is_some_and(|c| c.iter().any(|&b| b != 0))
-            }),
+            Layout::Bytes | Layout::Words | Layout::Dwords => {
+                let cell = |a: usize| data.get(o + a * width..o + (a + 1) * width).map(|c| c.iter().any(|&b| b != 0));
+                anchor.is_none_or(|a| cell(a) == Some(true)) && zero_anchor.is_none_or(|z| cell(z) == Some(false))
+            }
             _ => first_byte.is_none_or(|(at, want)| data.get(o + at).is_some_and(|&b| ((b ^ want).count_ones() as usize) <= max_miss)),
         };
         if !plausible {
@@ -248,9 +250,9 @@ pub fn flag_matches(data: &[u8], pattern: &[bool], layout: Layout, max_miss: usi
 }
 
 /// Search the emulator's memory for any of the flag patterns in any layout. Best (fewest misses) first, at most `keep`.
-pub fn scan_flags(mem: &ProcMem, patterns: &[Vec<bool>], max_miss: usize, keep: usize) -> io::Result<Vec<FlagHit>> {
+pub fn scan_flags(mem: &ProcMem, within: Range<u64>, patterns: &[Vec<bool>], max_miss: usize, keep: usize) -> io::Result<Vec<FlagHit>> {
     let mut hits = Vec::new();
-    mem.for_each_chunk(4096, |addr, data| {
+    mem.for_each_chunk_in(within, 4096, |addr, data| {
         for (pattern, flags) in patterns.iter().enumerate() {
             for layout in LAYOUTS {
                 for (o, misses) in flag_matches(data, flags, layout, max_miss, CHUNK_LEN) {
