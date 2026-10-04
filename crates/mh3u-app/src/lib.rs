@@ -4,6 +4,7 @@
 
 pub mod app;
 pub mod builds;
+pub mod changes;
 pub mod commands;
 pub mod compare;
 pub mod families;

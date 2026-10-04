@@ -172,6 +172,45 @@ impl App {
         (need, unowned)
     }
 
+    /// The shopping list as plain text, to paste into a note: what is still missing, by name, then the fees.
+    pub fn shopping_text(&self) -> String {
+        let (need, pieces) = self.shopping_need();
+        let mut lines: Vec<(String, u32, u32, u32)> = need
+            .iter()
+            .filter_map(|&(item, total)| {
+                let have = self.save.item_count(item);
+                let missing = total.checked_sub(have).filter(|&m| m > 0)?;
+                Some((self.game.item_name(item).unwrap_or("?").to_string(), missing, have, total))
+            })
+            .collect();
+        lines.sort();
+        let mut out = format!("Shopping list for {}: {pieces} piece(s) still to make\n", self.save.hunter_name);
+        if lines.is_empty() {
+            out.push_str("Nothing is missing.\n");
+        }
+        for (name, missing, have, total) in &lines {
+            out.push_str(&format!("{name} x{missing} (have {have} of {total})\n"));
+        }
+        let (fees, unknown) = self.wishlist_cost();
+        out.push_str(&format!("Forging fees: {}z", group_digits(fees)));
+        if unknown > 0 {
+            out.push_str(&format!(" ({unknown} piece(s) with no known fee)"));
+        }
+        out.push('\n');
+        out
+    }
+
+    /// Write the shopping list to its file (see `Files::shopping`) and say where.
+    pub(super) fn export_shopping_list(&mut self) {
+        let Some(path) = self.files.as_ref().map(|f| f.shopping.clone()) else {
+            return self.status = "no data folder to write the shopping list to".into();
+        };
+        self.status = match crate::files::save(&path, &self.shopping_text(), "shopping list") {
+            Ok(()) => format!("shopping list written to {}", path.display()),
+            Err(e) => e,
+        };
+    }
+
     /// Total known forging cost of the wishlist's planned routes, and how many pieces have no known cost.
     pub fn wishlist_cost(&self) -> (u64, usize) {
         let (mut known, mut unknown) = (0u64, 0usize);

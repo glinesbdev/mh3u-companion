@@ -60,7 +60,7 @@ app/
   money.rs, sorting.rs   small shared types
 ```
 
-Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `gains` (the pickup log and its file format), `templates`
+Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `gains` (the pickup log and its file format), `changes` (what changed since the app last closed), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
 `unlocked` and `files` (what is kept on disk, and where).
 

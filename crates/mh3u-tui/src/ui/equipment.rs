@@ -28,9 +28,24 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             ]))
         })
         .collect();
-    let title = format!(" Equipment Box ({}/1000) · {} ", rows.len(), app.inv.equip_sort.label());
+    let query = app.inv.equip_search.trim();
+    let title = if query.is_empty() {
+        format!(" Equipment Box ({}/1000) · {} ", rows.len(), app.inv.equip_sort.label())
+    } else {
+        format!(
+            " Equipment · \"{query}\" ({}/{}) · {} ",
+            rows.len(),
+            app.save.equipment_box.len(),
+            app.inv.equip_sort.label()
+        )
+    };
     if rows.is_empty() {
-        empty_pane(f, left, title, true, vec![Line::styled("The equipment box is empty.", muted())]);
+        let text = if query.is_empty() {
+            "The equipment box is empty."
+        } else {
+            "No equipment matches."
+        };
+        empty_pane(f, left, title, true, vec![Line::styled(text, muted())]);
         f.render_widget(Paragraph::new(Vec::<Line>::new()).block(theme::pane(" Details ", false)), right);
         return;
     }

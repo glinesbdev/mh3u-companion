@@ -15,6 +15,8 @@ pub struct Inventory {
     pub equip_sort: EquipSort,
     /// Search text for the Items tab.
     pub item_search: String,
+    /// Search text for the Equipment tab (by name).
+    pub equip_search: String,
     /// The equipment box in display order: indexes into `save.equipment_box` (see `equip_sort`).
     pub equip_view: Vec<usize>,
     /// The item box in display order (see `box_sort`).
@@ -39,6 +41,7 @@ impl Default for Inventory {
             box_sort: BoxSort::BoxOrder,
             equip_sort: EquipSort::BoxOrder,
             item_search: String::new(),
+            equip_search: String::new(),
             equip_view: Vec::new(),
             box_view: Vec::new(),
             pouch_view: Vec::new(),
@@ -152,9 +155,20 @@ impl App {
         let boxed = &self.save.equipment_box;
         let name = |i: usize| self.game.equipment_name(boxed[i].kind, boxed[i].id).unwrap_or("?").to_lowercase();
         let rarity = |i: usize| self.game.equipment_rarity(boxed[i].kind, boxed[i].id).unwrap_or(0);
-        let mut view: Vec<usize> = (0..boxed.len()).collect();
+        let words: Vec<String> = self.inv.equip_search.split_whitespace().map(str::to_lowercase).collect();
+        // every word must find the name; the sum of the scores ranks the matches
+        let found = |i: usize| -> Option<u32> {
+            let n = name(i);
+            words.iter().try_fold(0u32, |sum, w| Some(sum + crate::search::score(w, &n)?))
+        };
+        let mut view: Vec<usize> = (0..boxed.len()).filter(|&i| found(i).is_some()).collect();
+        let attack = |i: usize| self.game.weapon_stats(boxed[i].kind, boxed[i].id).map_or(0, |w| w.attack);
+        let defense = |i: usize| self.game.armor_stats(boxed[i].kind, boxed[i].id).map_or(0, |a| a.defense);
         match self.inv.equip_sort {
+            EquipSort::BoxOrder if !words.is_empty() => view.sort_by_key(|&i| std::cmp::Reverse(found(i))),
             EquipSort::BoxOrder => {}
+            EquipSort::Attack => view.sort_by_key(|&i| (std::cmp::Reverse(attack(i)), std::cmp::Reverse(defense(i)), name(i))),
+            EquipSort::Defense => view.sort_by_key(|&i| (std::cmp::Reverse(defense(i)), std::cmp::Reverse(attack(i)), name(i))),
             EquipSort::Name => view.sort_by_key(|&i| (name(i), kind_rank(boxed[i].kind))),
             EquipSort::Rarity => view.sort_by_key(|&i| (std::cmp::Reverse(rarity(i)), kind_rank(boxed[i].kind), name(i))),
             EquipSort::Type => view.sort_by_key(|&i| (kind_rank(boxed[i].kind), name(i))),

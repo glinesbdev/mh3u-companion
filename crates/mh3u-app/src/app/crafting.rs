@@ -332,6 +332,8 @@ impl App {
     pub fn active_search(&self) -> &str {
         match self.tab {
             Tab::Items => &self.inv.item_search,
+            Tab::Equipment => &self.inv.equip_search,
+            Tab::Monsters => &self.monsters.search,
             Tab::Families => &self.families.search,
             Tab::Quests => &self.quests.search,
             Tab::Skills => &self.skills.search,
@@ -342,6 +344,8 @@ impl App {
     pub(super) fn apply_search(&mut self) {
         match self.tab {
             Tab::Items => self.refresh_box(),
+            Tab::Equipment => self.refresh_equipment(),
+            Tab::Monsters => self.monsters.scroll = 0,
             Tab::Families => self.refresh_families(),
             Tab::Quests => self.refresh_quests(),
             Tab::Skills => self.refresh_skills(),

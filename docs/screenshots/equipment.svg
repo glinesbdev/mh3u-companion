@@ -303,26 +303,25 @@
 <text x="54.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">tab</text>
 <text x="102.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">↑/↓</text>
 <text x="140.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">move</text>
-<text x="198.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
-<text x="217.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
-<text x="275.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
-<text x="294.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
-<text x="352.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
-<text x="371.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
-<text x="457.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">i</text>
-<text x="476.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">skill</text>
-<text x="534.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">info</text>
-<text x="592.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
-<text x="611.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
-<text x="688.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="707.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="764.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="784.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
-<text x="851.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
-<text x="928.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
-<text x="995.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
-<text x="1052.8" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">to</text>
-<text x="1081.6" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
-<text x="1120.0" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">com</text>
+<text x="198.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">/</text>
+<text x="217.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">search</text>
+<text x="294.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
+<text x="313.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
+<text x="371.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
+<text x="390.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
+<text x="448.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
+<text x="467.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
+<text x="553.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">i</text>
+<text x="572.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">skill</text>
+<text x="630.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">info</text>
+<text x="688.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
+<text x="707.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
+<text x="784.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="803.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="860.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="880.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="947.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
+<text x="1024.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
+<text x="1091.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
 </g>
 </svg>

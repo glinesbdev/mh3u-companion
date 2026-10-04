@@ -17,9 +17,19 @@ pub(super) fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
             ListItem::new(Line::from(spans))
         })
         .collect();
-    let title = format!(" Monsters ({}) · {} ", rows.len(), app.monsters.sort.label());
+    let query = app.monsters.search.trim();
+    let title = if query.is_empty() {
+        format!(" Monsters ({}) · {} ", rows.len(), app.monsters.sort.label())
+    } else {
+        format!(" Monsters · \"{query}\" ({}) · {} ", rows.len(), app.monsters.sort.label())
+    };
     if rows.is_empty() {
-        empty_pane(f, left, title, true, vec![Line::styled("No monster drop data.", muted())]);
+        let text = if query.is_empty() {
+            "No monster drop data."
+        } else {
+            "No monster matches."
+        };
+        empty_pane(f, left, title, true, vec![Line::styled(text, muted())]);
         return;
     }
     let len = rows.len();

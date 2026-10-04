@@ -35,6 +35,30 @@ fn now() -> u64 {
 }
 
 impl App {
+    /// Say in the status line what changed since the app last closed with this hunter (see `changes`).
+    pub(super) fn report_changes(&mut self) {
+        let Some(path) = self.files.as_ref().map(|f| f.last_seen.clone()) else {
+            return;
+        };
+        let Some(before) = std::fs::read_to_string(path).ok().and_then(|t| crate::changes::Seen::parse(&t)) else {
+            return;
+        };
+        let now = crate::changes::Seen::of(&self.save);
+        let item = |id| self.game.item_name(id).unwrap_or("?").to_string();
+        let piece = |kind, id| self.game.equipment_name(kind, id).unwrap_or("?").to_string();
+        if let Some(text) = crate::changes::summary(&before, &now, item, piece) {
+            self.status = text;
+        }
+    }
+
+    /// Remember what the hunter holds, for the next start's "since last time". Called when the app closes.
+    pub fn finish(&self) {
+        if let Some(path) = self.files.as_ref().map(|f| &f.last_seen) {
+            // a failure here is not worth interrupting the exit for
+            let _ = crate::files::save(path, &crate::changes::Seen::of(&self.save).format(), "last-seen file");
+        }
+    }
+
     /// The next live update is a new starting point (the game connected, dropped the hunter or loaded another).
     pub(super) fn forget_gain_baseline(&mut self) {
         self.gains.baseline = None;

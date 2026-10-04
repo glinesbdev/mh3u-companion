@@ -23,6 +23,10 @@ pub struct Files {
     pub tracker_log: PathBuf,
     /// The items picked up while playing live; one file per hunter, like the lists, but in the data folder.
     pub gains: PathBuf,
+    /// The wishlist's shopping list, written out as text by the Wishlist tab's `e`; one per hunter, in the data folder.
+    pub shopping: PathBuf,
+    /// What the hunter held when the app last closed (see `changes`); one per hunter, in the data folder.
+    pub last_seen: PathBuf,
     /// Where `--debug-edit` copies the saves before changing the game.
     pub backups: PathBuf,
 }
@@ -60,6 +64,16 @@ impl Files {
                 "gains.tsv".to_string()
             } else {
                 format!("gains-{slot}.tsv")
+            }),
+            shopping: data.join(if slot == 1 {
+                "shopping-list.txt".to_string()
+            } else {
+                format!("shopping-list-{slot}.txt")
+            }),
+            last_seen: data.join(if slot == 1 {
+                "last-seen.txt".to_string()
+            } else {
+                format!("last-seen-{slot}.txt")
             }),
             backups: data.join("backups"),
         }
@@ -99,6 +113,8 @@ mod tests {
         assert_eq!(two.templates, Path::new("/c/app/templates-2.txt"));
         assert_eq!(one.gains, Path::new("/d/app/gains.tsv"));
         assert_eq!(two.gains, Path::new("/d/app/gains-2.tsv"));
+        assert_eq!(one.shopping, Path::new("/d/app/shopping-list.txt"));
+        assert_eq!(two.shopping, Path::new("/d/app/shopping-list-2.txt"));
         assert_eq!(one.prices, two.prices, "the ledger is shared");
         assert_eq!(one.unlocked, Path::new("/d/app/unlocked.tsv"));
     }

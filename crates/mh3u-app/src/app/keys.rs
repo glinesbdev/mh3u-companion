@@ -168,6 +168,10 @@ impl App {
 
     fn wishlist_key(&mut self, code: Key) -> bool {
         match code {
+            Key::Char('e') => {
+                self.export_shopping_list();
+                true
+            }
             Key::Char('w' | 'x') | Key::Delete => {
                 if let Some(&(kind, id)) = self.wish.state.selected().and_then(|i| self.wish.items.get(i)) {
                     self.toggle_wish(kind, id);
@@ -180,6 +184,14 @@ impl App {
 
     fn equipment_key(&mut self, code: Key) -> bool {
         match code {
+            Key::Char('/') => {
+                self.searching = true;
+                true
+            }
+            Key::Char('x') => {
+                self.clear_search();
+                true
+            }
             Key::Char('s') => {
                 self.inv.equip_sort = self.inv.equip_sort.next();
                 self.refresh_equipment();
@@ -192,6 +204,8 @@ impl App {
     /// On the Monsters tab the page keys scroll the drops, since the list is moved with the arrows and Home/End.
     fn monsters_key(&mut self, code: Key) -> bool {
         match code {
+            Key::Char('/') => self.searching = true,
+            Key::Char('x') => self.clear_search(),
             Key::Char('s') => self.monsters.sort = self.monsters.sort.next(),
             Key::PageDown => self.monsters.scroll = self.monsters.scroll.saturating_add(10),
             Key::PageUp => self.monsters.scroll = self.monsters.scroll.saturating_sub(10),
@@ -245,6 +259,8 @@ impl App {
     fn search_text_mut(&mut self) -> &mut String {
         match self.tab {
             Tab::Items => &mut self.inv.item_search,
+            Tab::Equipment => &mut self.inv.equip_search,
+            Tab::Monsters => &mut self.monsters.search,
             Tab::Families => &mut self.families.search,
             Tab::Quests => &mut self.quests.search,
             Tab::Skills => &mut self.skills.search,

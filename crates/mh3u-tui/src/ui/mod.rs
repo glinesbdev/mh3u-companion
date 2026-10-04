@@ -219,10 +219,28 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.push(("s", "sort"));
             }
-            Tab::Wishlist => keys.extend([("↑/↓", "move"), ("w", "remove"), ("t", "tree"), ("v", "compare")]),
-            Tab::Equipment => keys.extend([("↑/↓", "move"), ("s", "sort"), ("t", "tree"), ("v", "compare"), ("i", "skill info")]),
+            Tab::Wishlist => keys.extend([
+                ("↑/↓", "move"),
+                ("w", "remove"),
+                ("e", "export list"),
+                ("t", "tree"),
+                ("v", "compare"),
+            ]),
+            Tab::Equipment => {
+                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                if clear {
+                    keys.push(("x", "clear"));
+                }
+                keys.extend([("s", "sort"), ("t", "tree"), ("v", "compare"), ("i", "skill info")]);
+            }
             Tab::Worn => keys.push(("i", "skill info")),
-            Tab::Monsters => keys.extend([("↑/↓", "move"), ("PgUp/PgDn", "scroll drops"), ("s", "sort")]),
+            Tab::Monsters => {
+                keys.extend([("↑/↓", "move"), ("/", "search")]);
+                if clear {
+                    keys.push(("x", "clear"));
+                }
+                keys.extend([("PgUp/PgDn", "scroll drops"), ("s", "sort")]);
+            }
             Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
             Tab::Quests => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);

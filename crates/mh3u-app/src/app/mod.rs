@@ -258,6 +258,7 @@ impl App {
         app.refresh_families();
         app.refresh_equipment();
         app.refresh_pieces();
+        app.report_changes();
         Ok(app)
     }
 

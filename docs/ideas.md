@@ -53,13 +53,8 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Quality of life
 
-- Search on the Equipment, Monsters and Worn tabs; `/` for monsters by name or by drop.
-- More Equipment sorts: by attack, by defense, by skill points.
 - Show a weapon's sharpness as the colored bar the game uses, once the data is found (and add sharpness and element to the weapon comparison).
-- Wishlist sorting and a way to mark a piece "done" without owning it.
-- Export the shopping list as text to paste into a note.
-- A "what changed since last time" summary on startup (items gained, zenny change, new equipment), from a saved copy of the last save
-  the app saw.
+- More Equipment sorts (by skill points) and search on the Worn tab (it has no list). Wishlist sorting and a way to mark a piece "done" without owning it.
 - Config file for colors and icons (the anvil, the muted gray) beside the wishlist.
 - Mouse support for the lists.
 - The zenny cost of upgrading armor, if the game has one (not found).

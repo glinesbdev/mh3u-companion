@@ -680,3 +680,120 @@ fn a_wishlisted_piece_is_announced_when_its_materials_arrive() {
     assert!(app.newly_craftable(&app.craftable_wishes()).is_none(), "only what is new");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_equipment_tab_searches_by_name_and_sorts_by_attack_and_defense() {
+    let dir = temp_dir("equip");
+    let Some(mut app) = app_in(&dir) else { return };
+    key(&mut app, Key::Right);
+    key(&mut app, Key::Right);
+    key(&mut app, Key::Left);
+    assert_eq!(app.tab, Tab::Equipment);
+    let all = app.inv.equip_view.len();
+    assert!(all > 3);
+    // search for the first word of the name of the last piece in the box
+    let last = app.save.equipment_box.last().unwrap();
+    let word = app
+        .game
+        .equipment_name(last.kind, last.id)
+        .unwrap()
+        .split_whitespace()
+        .next()
+        .unwrap()
+        .to_lowercase();
+    press(&mut app, "/");
+    assert!(app.searching);
+    press(&mut app, &word);
+    key(&mut app, Key::Enter);
+    let found = app.inv.equip_view.len();
+    assert!(found > 0 && found <= all, "{found} of {all} for {word}");
+    for &i in &app.inv.equip_view {
+        let e = &app.save.equipment_box[i];
+        assert!(app.game.equipment_name(e.kind, e.id).unwrap().to_lowercase().contains(&word));
+    }
+    press(&mut app, "x");
+    assert_eq!(app.inv.equip_view.len(), all, "x clears the search");
+    // attack puts weapons first, the strongest first
+    while app.inv.equip_sort.label() != "attack" {
+        press(&mut app, "s");
+    }
+    let attack = |app: &App, n: usize| {
+        let e = &app.save.equipment_box[app.inv.equip_view[n]];
+        app.game.weapon_stats(e.kind, e.id).map_or(0, |w| w.attack)
+    };
+    assert!(attack(&app, 0) >= attack(&app, 1));
+    press(&mut app, "s");
+    assert_eq!(app.inv.equip_sort.label(), "defense");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_monsters_tab_searches_by_name_or_by_what_a_monster_drops() {
+    let dir = temp_dir("monsearch");
+    let Some(mut app) = app_in(&dir) else { return };
+    for _ in 0..5 {
+        key(&mut app, Key::Right);
+    }
+    assert_eq!(app.tab, Tab::Monsters);
+    let all = app.monster_view().len();
+    press(&mut app, "/");
+    press(&mut app, "rathalos");
+    key(&mut app, Key::Enter);
+    let names: Vec<&str> = app.monster_view().iter().map(|&(m, _)| app.game.monster_name(m).unwrap()).collect();
+    assert!(names.contains(&"Rathalos") && names.len() < all, "{names:?}");
+    press(&mut app, "x");
+    // by a drop: nothing but the monsters that give Jaggi Hide
+    press(&mut app, "/");
+    press(&mut app, "jaggi hide");
+    key(&mut app, Key::Enter);
+    let names: Vec<&str> = app.monster_view().iter().map(|&(m, _)| app.game.monster_name(m).unwrap()).collect();
+    assert!(names.contains(&"Jaggi") && !names.contains(&"Rathian"), "{names:?}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn the_shopping_list_is_written_as_text_and_what_changed_is_told_at_the_next_start() {
+    let dir = temp_dir("shopping");
+    let Some(mut app) = app_in(&dir) else { return };
+    // wish for a piece the hunter does not have
+    let piece = app
+        .game
+        .piece_ids(5)
+        .find(|&id| !app.save.owns_equipment(5, id) && app.game.recipe(5, id).is_some())
+        .unwrap();
+    app.toggle_wish(5, piece);
+    for _ in 0..4 {
+        key(&mut app, Key::Right);
+    }
+    assert_eq!(app.tab, Tab::Wishlist);
+    press(&mut app, "e");
+    let path = app.files.as_ref().unwrap().shopping.clone();
+    assert!(app.status.contains("written"), "{}", app.status);
+    let text = std::fs::read_to_string(&path).unwrap();
+    assert!(text.starts_with("Shopping list for "), "{text}");
+    assert!(text.contains(" x") && text.contains("Forging fees: "), "{text}");
+
+    // what changed: remember a state with less money and one item fewer, then start again on the same save
+    let mut before = crate::changes::Seen::of(&app.save);
+    before.zenny -= 500;
+    let some_item = *before.items.keys().next().unwrap();
+    before.items.remove(&some_item);
+    std::fs::write(&app.files.as_ref().unwrap().last_seen, before.format()).unwrap();
+    let again = App::new(
+        GameData::load(&crate::guess_game_dir().unwrap()).unwrap(),
+        app.save_path.clone(),
+        app.files.clone(),
+    )
+    .unwrap();
+    assert!(again.status.starts_with("since last time: zenny +500"), "{}", again.status);
+    // closing writes the state, so the next start has nothing to say
+    again.finish();
+    let third = App::new(
+        GameData::load(&crate::guess_game_dir().unwrap()).unwrap(),
+        app.save_path.clone(),
+        app.files.clone(),
+    )
+    .unwrap();
+    assert!(!third.status.contains("since last time"), "{}", third.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}

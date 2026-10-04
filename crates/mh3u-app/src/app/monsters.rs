@@ -6,6 +6,8 @@ use super::*;
 #[derive(Default)]
 pub struct MonsterTab {
     pub sort: MonsterSort,
+    /// Search text: every word must be in the monster's name or in the name of something it drops.
+    pub search: String,
     /// The highlighted monster (by id, so the highlight stays on it when the order changes).
     pub selected: Option<u16>,
     /// First visible line of the highlighted monster's drops; the drawing code keeps it inside the text.
@@ -17,11 +19,26 @@ impl App {
     pub fn monster_view(&self) -> Vec<(u16, usize)> {
         let missing = self.missing_for_wishlist();
         let drops = self.game.drops();
+        let words: Vec<String> = self.monsters.search.split_whitespace().map(str::to_lowercase).collect();
+        let matches = |m: u16| {
+            words.is_empty() || {
+                let name = self.game.monster_name(m).unwrap_or("").to_lowercase();
+                let dropped: Vec<String> = drops
+                    .lists_for(m)
+                    .flat_map(|(_, _, list)| list.iter())
+                    .filter_map(|d| self.game.item_name(d.item))
+                    .map(str::to_lowercase)
+                    .collect();
+                words
+                    .iter()
+                    .all(|w| crate::search::score(w, &name).is_some() || dropped.iter().any(|d| crate::search::score(w, d).is_some()))
+            }
+        };
         let mut view: Vec<(u16, usize)> = drops
             .monsters()
             .iter()
             .copied()
-            .filter(|&m| self.game.monster_name(m).is_some())
+            .filter(|&m| self.game.monster_name(m).is_some() && matches(m))
             .map(|m| {
                 let wanted: HashSet<u16> = drops
                     .lists_for(m)

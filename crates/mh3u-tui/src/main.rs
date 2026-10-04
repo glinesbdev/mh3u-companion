@@ -125,6 +125,7 @@ fn main() -> Result<()> {
     let mut terminal = ratatui::init();
     let result = run(&mut app, &mut terminal);
     ratatui::restore();
+    app.finish();
     result
 }
 

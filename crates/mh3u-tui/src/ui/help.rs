@@ -40,7 +40,7 @@ pub(super) const SECTIONS: &[Section] = &[
     Section {
         title: "Equipment, Worn",
         rows: &[
-            ("s", "sort the equipment box"),
+            ("/ x s", "search by name, clear, sort"),
             ("v", "put a weapon in the comparison"),
             ("Worn", "totals for what you wear"),
         ],
@@ -66,6 +66,7 @@ pub(super) const SECTIONS: &[Section] = &[
         title: "Wishlist",
         rows: &[
             ("w  x", "remove a piece and the parents added for it"),
+            ("e", "write the shopping list to a text file"),
             (
                 "",
                 "The right side shows what the piece needs and one shopping list for everything.",
@@ -75,7 +76,7 @@ pub(super) const SECTIONS: &[Section] = &[
     Section {
         title: "Monsters",
         rows: &[
-            ("s", "sort"),
+            ("/ x s", "search by name or drop, clear, sort"),
             ("PgUp PgDn", "scroll the drops"),
             ("★", "the wishlist still needs it"),
         ],

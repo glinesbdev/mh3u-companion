@@ -93,6 +93,10 @@ pub enum EquipSort {
     BoxOrder,
     Name,
     Rarity,
+    /// Weapons first, the highest attack first.
+    Attack,
+    /// Armor first, the highest base defense first.
+    Defense,
     Type,
     WornFirst,
 }
@@ -102,7 +106,9 @@ impl EquipSort {
         match self {
             EquipSort::BoxOrder => EquipSort::Name,
             EquipSort::Name => EquipSort::Rarity,
-            EquipSort::Rarity => EquipSort::Type,
+            EquipSort::Rarity => EquipSort::Attack,
+            EquipSort::Attack => EquipSort::Defense,
+            EquipSort::Defense => EquipSort::Type,
             EquipSort::Type => EquipSort::WornFirst,
             EquipSort::WornFirst => EquipSort::BoxOrder,
         }
@@ -113,6 +119,8 @@ impl EquipSort {
             EquipSort::BoxOrder => "box order",
             EquipSort::Name => "name",
             EquipSort::Rarity => "rarity",
+            EquipSort::Attack => "attack",
+            EquipSort::Defense => "defense",
             EquipSort::Type => "type",
             EquipSort::WornFirst => "worn first",
         }
