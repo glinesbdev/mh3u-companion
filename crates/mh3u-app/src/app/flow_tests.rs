@@ -955,3 +955,48 @@ fn a_wishlist_piece_can_be_marked_done_and_the_list_sorted() {
     assert_eq!(app.wish.at(1), Some((9, b)));
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_swap_list_puts_pieces_from_the_found_sets_first() {
+    let dir = temp_dir("swapfound");
+    let Some(mut app) = app_in(&dir) else { return };
+    app.builds.settings.pool = builds::Pool::OnOffer;
+    let attack = app.game.skill_ids().find(|&id| app.game.skill_name(id) == Some("Attack")).unwrap();
+    app.builds.settings.targets = vec![builds::Target { skill: attack, points: 5 }];
+    app.refresh_builds();
+    assert!(!app.builds.results.is_empty());
+    let in_sets: HashSet<(u8, u16)> = app
+        .builds
+        .results
+        .iter()
+        .flat_map(|s| s.pieces.iter().map(|&i| (app.builds.pool[i].kind, app.builds.pool[i].id)))
+        .collect();
+    let choices = app.piece_choices(templates::Slot::Head, "");
+    let starred: Vec<_> = choices.iter().filter(|c| c.detail.starts_with('★')).collect();
+    assert!(!starred.is_empty());
+    assert!(
+        starred
+            .iter()
+            .all(|c| c.piece.as_ref().is_some_and(|p| in_sets.contains(&(p.kind, p.id))))
+    );
+    // they are the first real choices (after "empty this slot")
+    let first_plain = choices
+        .iter()
+        .position(|c| c.piece.is_some() && !c.detail.starts_with('★'))
+        .unwrap();
+    assert!(
+        choices[..first_plain]
+            .iter()
+            .filter(|c| c.piece.is_some())
+            .all(|c| c.detail.starts_with('★'))
+    );
+    assert_eq!(choices.iter().filter(|c| c.detail.starts_with('★')).count(), starred.len());
+    // without a search nothing is starred
+    app.builds.results.clear();
+    assert!(
+        app.piece_choices(templates::Slot::Head, "")
+            .iter()
+            .all(|c| !c.detail.starts_with('★'))
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}

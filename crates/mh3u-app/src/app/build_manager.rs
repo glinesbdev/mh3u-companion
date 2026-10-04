@@ -549,12 +549,20 @@ impl App {
         }
     }
 
-    /// The pieces that can go in the slot of `kind`, matching what was typed: empty the slot, then the ones you own, the ones the
-    /// blacksmith offers and the rest.
+    /// The pieces that can go in the slot of `kind`, matching what was typed: empty the slot, then the ones that are in the sets the
+    /// Builds search found (marked ★), the ones you own, the ones the blacksmith offers and the rest.
     pub(super) fn piece_choices(&self, slot: templates::Slot, typed: &str) -> Vec<Choice> {
         let words: Vec<String> = typed.split_whitespace().map(str::to_lowercase).collect();
+        let found: HashSet<(u8, u16)> = self
+            .builds
+            .results
+            .iter()
+            .flat_map(|set| set.pieces.iter().map(|&i| (self.builds.pool[i].kind, self.builds.pool[i].id)))
+            .collect();
         let mut scored: Vec<(u32, Choice)> = Vec::new();
         let mut consider = |name: String, detail: String, availability: Availability, piece: templates::Piece| {
+            let in_found = found.contains(&(piece.kind, piece.id)) && slot != templates::Slot::Talisman;
+            let detail = if in_found { format!("★ {detail}") } else { detail };
             let lower = format!("{} {}", name.to_lowercase(), detail.to_lowercase());
             let mut total = 0;
             for w in &words {
@@ -567,7 +575,7 @@ impl App {
                 Availability::Unavailable => 0,
             };
             scored.push((
-                total + order,
+                total + order + if in_found { 3000 } else { 0 },
                 Choice {
                     piece: Some(piece),
                     name,

@@ -6,12 +6,6 @@ Keep this file honest: when an idea is built, **delete it from here** in the sam
 `formats.md` or `architecture.md`). When part of an idea is built, cut the idea down to what is left. New ideas go in the group they
 belong to.
 
-## Build manager
-
-The Builds tab searches armor sets for wanted skills and keeps build templates (see the README). Left to do:
-
-- **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
-
 ## Where to get things
 
 - **Smarter hunt plans.** The Hunt plan estimates runs, but the rolls per run (3 body carves, 2 capture rolls, 3 rolls of a quest's main
