@@ -88,7 +88,10 @@ pub(super) const SECTIONS: &[Section] = &[
                 "",
                 "The monsters to hunt and quests to do for the materials the wishlist lacks, best first, with about how many runs each takes.",
             ),
-            ("r", "one rank only (a quest counts for its own rank, when known)"),
+            (
+                "r  g",
+                "one rank only (a quest counts for its own rank); goal: fewest steps or runs",
+            ),
             ("Enter", "that monster's drops, or that quest"),
         ],
     },

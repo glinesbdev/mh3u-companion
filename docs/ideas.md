@@ -9,7 +9,7 @@ belong to.
 ## Where to get things
 
 - **Smarter hunt plans.** The Hunt plan estimates runs, but the rolls per run (3 body carves, 2 capture rolls, 3 rolls of a quest's main
-  box...) are assumptions to check in play, and it does not yet pick between a quick plan and a short one (fewest steps vs fewest runs). It
+  box...) are assumptions to check in play (the plan can aim for the fewest steps or the fewest runs). It
   also cannot limit itself to the ranks the hunter has reached (**Needs:** the save's hunter rank found, and a quest's rank, which is not
   decoded).
 - **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards, and whether it is a village or a

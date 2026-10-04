@@ -47,9 +47,12 @@
 <text x="188.8" y="90.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">all</text>
 <text x="227.2" y="90.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">ranks</text>
 <text x="284.8" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">·</text>
-<text x="304.0" y="90.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">~70</text>
-<text x="342.4" y="90.4" textLength="38.4" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">runs</text>
-<text x="390.4" y="90.4" textLength="192.0" lengthAdjust="spacing" fill="#0db9d7">───────────────────╮</text>
+<text x="304.0" y="90.4" textLength="57.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">fewest</text>
+<text x="371.2" y="90.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">steps</text>
+<text x="428.8" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">·</text>
+<text x="448.0" y="90.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">~70</text>
+<text x="486.4" y="90.4" textLength="38.4" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">runs</text>
+<text x="534.4" y="90.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7">────╮</text>
 <text x="582.4" y="90.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">╭</text>
 <text x="601.6" y="90.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">The</text>
 <text x="640.0" y="90.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">hunt</text>
@@ -395,23 +398,23 @@
 <text x="140.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">move</text>
 <text x="198.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">r</text>
 <text x="217.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">rank</text>
-<text x="275.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Enter</text>
-<text x="332.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">drops</text>
-<text x="400.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
-<text x="419.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
-<text x="496.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="515.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="572.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="592.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
-<text x="659.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
-<text x="736.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
-<text x="803.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
-<text x="860.8" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">to</text>
-<text x="889.6" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
-<text x="928.0" y="690.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">comparison</text>
-<text x="1033.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">(2</text>
-<text x="1062.4" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">of</text>
-<text x="1091.2" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">4;</text>
-<text x="1120.0" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">see</text>
+<text x="275.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">g</text>
+<text x="294.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">goal</text>
+<text x="352.0" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">Enter</text>
+<text x="409.6" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">drops</text>
+<text x="476.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
+<text x="496.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
+<text x="572.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="592.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="649.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="668.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="736.0" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
+<text x="812.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
+<text x="880.0" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
+<text x="937.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">to</text>
+<text x="966.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
+<text x="1004.8" y="690.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">comparison</text>
+<text x="1110.4" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">(2</text>
+<text x="1139.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">o</text>
 </g>
 </svg>

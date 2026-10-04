@@ -245,7 +245,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([("PgUp/PgDn", "scroll drops"), ("s", "sort")]);
             }
-            Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("Enter", "drops")]),
+            Tab::Hunts => keys.extend([("↑/↓", "move"), ("r", "rank"), ("g", "goal"), ("Enter", "drops")]),
             Tab::Quests => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {

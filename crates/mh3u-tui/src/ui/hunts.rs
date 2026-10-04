@@ -6,7 +6,12 @@ use mh3u_app::hunts::{How, Origin};
 /// The hunts that cover what the wishlist is still short of, best first, and the highlighted one in full.
 pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 50);
-    let mut title = format!(" Hunt plan ({}) · {} ", app.hunts.plan.steps.len(), app.hunts.filter.label());
+    let mut title = format!(
+        " Hunt plan ({}) · {} · {} ",
+        app.hunts.plan.steps.len(),
+        app.hunts.filter.label(),
+        app.hunts.goal.label()
+    );
     if !app.hunts.plan.steps.is_empty() {
         title.push_str(&format!("· ~{} runs ", app.hunts.plan.total_runs()));
     }

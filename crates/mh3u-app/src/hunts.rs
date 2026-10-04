@@ -1,8 +1,10 @@
 //! The hunt plan: which monsters to hunt, in which rank, to get the materials the wishlist is still short of.
 //!
-//! Hunts are chosen one at a time, each time the monster and rank that cover the most of what is still missing (then the one that
-//! needs the fewest runs), until nothing more can be covered. So the first step is the best single hunt, and later steps pick up what
-//! it left. Each material also gets an estimate of how many runs it takes (see [`expected_runs`]).
+//! Hunts are chosen one at a time, until nothing more can be covered. With the goal of **fewest steps** each time it is the monster and rank
+//! that cover the most of what is still missing (then the one that needs the fewest runs), so the first step is the best single hunt and later
+//! steps pick up what it left. With the goal of **fewest runs** it is the hunt that gives the most per run: a hunt takes only the materials
+//! it gives quickly, and leaves a rare one to a hunt that gives it better. Each material also gets an estimate of how many runs it takes (see
+//! [`expected_runs`]).
 
 use mh3u_core::drops::{Method, Rank, Source};
 
@@ -34,6 +36,32 @@ impl RankFilter {
         match self {
             RankFilter::All => true,
             RankFilter::Only(only) => only == rank,
+        }
+    }
+}
+
+/// What the plan tries to keep small.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Goal {
+    /// The fewest hunts and quests: each step is the one covering the most that is still missing.
+    #[default]
+    FewestSteps,
+    /// The fewest runs in all: each step is the one that gives the most per run, even when it covers little.
+    FewestRuns,
+}
+
+impl Goal {
+    pub fn next(self) -> Goal {
+        match self {
+            Goal::FewestSteps => Goal::FewestRuns,
+            Goal::FewestRuns => Goal::FewestSteps,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Goal::FewestSteps => "fewest steps",
+            Goal::FewestRuns => "fewest runs",
         }
     }
 }
@@ -172,6 +200,7 @@ pub fn plan<'a>(
     sources: impl Fn(u16) -> &'a [Source],
     quests: &[QuestOffer],
     allowed: RankFilter,
+    goal: Goal,
     hunt_worthy: impl Fn(u16) -> bool,
 ) -> Plan {
     let mut options: Vec<(Origin, Vec<Cover>)> = Vec::new();
@@ -236,16 +265,41 @@ pub fn plan<'a>(
     let mut steps = Vec::new();
     let mut left: Vec<u16> = missing.iter().map(|&(item, _)| item).filter(|i| !unsourced.contains(i)).collect();
     while !left.is_empty() {
-        // the option covering the most of what is left, then the one that needs the fewest runs, then the first in order
-        let best = options
-            .iter()
-            .map(|(origin, covers)| {
-                let useful: Vec<Cover> = covers.iter().copied().filter(|c| left.contains(&c.item)).collect();
-                let runs = runs_of(&useful);
-                (*origin, useful, runs)
-            })
-            .filter(|(_, useful, _)| !useful.is_empty())
-            .max_by_key(|(origin, useful, runs)| (useful.len(), std::cmp::Reverse(*runs), std::cmp::Reverse(*origin)));
+        let useful_of = |covers: &[Cover]| -> Vec<Cover> { covers.iter().copied().filter(|c| left.contains(&c.item)).collect() };
+        let best = match goal {
+            // the option covering the most of what is left, then the one that needs the fewest runs, then the first in order
+            Goal::FewestSteps => options
+                .iter()
+                .map(|(origin, covers)| {
+                    let useful = useful_of(covers);
+                    let runs = runs_of(&useful);
+                    (*origin, useful, runs)
+                })
+                .filter(|(_, useful, _)| !useful.is_empty())
+                .max_by_key(|(origin, useful, runs)| (useful.len(), std::cmp::Reverse(*runs), std::cmp::Reverse(*origin))),
+            // the cheapest per material: for each option, its quickest k materials cost the runs of the slowest of them
+            Goal::FewestRuns => options
+                .iter()
+                .filter_map(|(origin, covers)| {
+                    let mut useful = useful_of(covers);
+                    useful.sort_by_key(|c| (c.runs.unwrap_or(0), c.item));
+                    (1..=useful.len())
+                        .map(|k| {
+                            let taken = useful[..k].to_vec();
+                            let runs = runs_of(&taken);
+                            (*origin, taken, runs)
+                        })
+                        // cost per material as a fraction (runs / k): compare by cross-multiplying, then more materials, then order
+                        .min_by(|a, b| {
+                            let (ka, kb) = (a.1.len() as u32, b.1.len() as u32);
+                            (a.2 * kb).cmp(&(b.2 * ka)).then(kb.cmp(&ka)).then(a.0.cmp(&b.0))
+                        })
+                })
+                .min_by(|a, b| {
+                    let (ka, kb) = (a.1.len() as u32, b.1.len() as u32);
+                    (a.2 * kb).cmp(&(b.2 * ka)).then(kb.cmp(&ka)).then(a.0.cmp(&b.0))
+                }),
+        };
         let Some((origin, mut covers, _)) = best else { break };
         covers.sort_by_key(|c| (std::cmp::Reverse(c.chance()), c.item));
         left.retain(|item| !covers.iter().any(|c| c.item == *item));
@@ -269,7 +323,14 @@ mod tests {
     }
 
     fn run(table: &HashMap<u16, Vec<Source>>, missing: &[(u16, u32)], allowed: RankFilter) -> Plan {
-        plan(missing, |item| table.get(&item).map_or(&[], Vec::as_slice), &[], allowed, |_| true)
+        plan(
+            missing,
+            |item| table.get(&item).map_or(&[], Vec::as_slice),
+            &[],
+            allowed,
+            Goal::FewestSteps,
+            |_| true,
+        )
     }
 
     /// Item 1 and 2 drop from monster 10 (low rank); item 2 and 3 from monster 20; item 4 only from monster 30 in high rank.
@@ -307,6 +368,73 @@ mod tests {
         assert_eq!(steps[2], ((20, Rank::Low), vec![3]));
         assert!(plan.unsourced.is_empty());
         assert_eq!(plan.total_runs(), 5 + 5 + 20);
+    }
+
+    #[test]
+    fn the_fewest_runs_goal_leaves_a_rare_material_to_a_hunt_that_gives_it_better() {
+        // monster 10 gives item 1 (30%, 2 runs for 2) and item 2 only as a 5% shiny (20 runs); monster 20 gives item 2 at 50% (1 run)
+        let t: HashMap<u16, Vec<Source>> = HashMap::from([
+            (1, vec![src(10, Rank::Low, Method::BodyCarve, 30)]),
+            (
+                2,
+                vec![src(10, Rank::Low, Method::Shiny, 5), src(20, Rank::Low, Method::BodyCarve, 50)],
+            ),
+        ]);
+        let go = |goal| {
+            plan(
+                &[(1, 2), (2, 1)],
+                |i| t.get(&i).map_or(&[], Vec::as_slice),
+                &[],
+                RankFilter::All,
+                goal,
+                |_| true,
+            )
+        };
+        // fewest steps: item 2 has a better way (monster 20), but monster 10 covers both items, so it is one step... of 20 runs
+        // (the cover for item 2 at monster 10 is kept as the best of that option)
+        let steps = go(Goal::FewestSteps);
+        assert_eq!(steps.steps.len(), 1);
+        assert_eq!(steps.total_runs(), 20);
+        // fewest runs: monster 10 for item 1 (3 runs) and monster 20 for item 2 (1 run)
+        let runs = go(Goal::FewestRuns);
+        assert_eq!(runs.steps.len(), 2);
+        assert!(
+            runs.total_runs() < steps.total_runs(),
+            "{} < {}",
+            runs.total_runs(),
+            steps.total_runs()
+        );
+        let items: Vec<(Origin, Vec<u16>)> = runs
+            .steps
+            .iter()
+            .map(|s| (s.origin, s.covers.iter().map(|c| c.item).collect()))
+            .collect();
+        assert!(items.contains(&(
+            Origin::Monster {
+                monster: 10,
+                rank: Rank::Low
+            },
+            vec![1]
+        )));
+        assert!(items.contains(&(
+            Origin::Monster {
+                monster: 20,
+                rank: Rank::Low
+            },
+            vec![2]
+        )));
+        // with nothing to split the two goals agree
+        let one = |goal| {
+            plan(
+                &[(1, 2)],
+                |i| t.get(&i).map_or(&[], Vec::as_slice),
+                &[],
+                RankFilter::All,
+                goal,
+                |_| true,
+            )
+        };
+        assert_eq!(one(Goal::FewestSteps), one(Goal::FewestRuns));
     }
 
     #[test]
@@ -374,6 +502,7 @@ mod tests {
             |i| t.get(&i).map_or(&[], Vec::as_slice),
             &[],
             RankFilter::All,
+            Goal::FewestSteps,
             |m| m != 10,
         );
         assert!(plan.steps.is_empty());
@@ -390,7 +519,14 @@ mod tests {
 
     fn with_quests(missing: &[(u16, u32)], quests: &[QuestOffer], allowed: RankFilter) -> Plan {
         let t = table();
-        plan(missing, |i| t.get(&i).map_or(&[], Vec::as_slice), quests, allowed, |_| true)
+        plan(
+            missing,
+            |i| t.get(&i).map_or(&[], Vec::as_slice),
+            quests,
+            allowed,
+            Goal::FewestSteps,
+            |_| true,
+        )
     }
 
     #[test]

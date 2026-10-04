@@ -1,11 +1,13 @@
 //! The Hunt plan tab: which monsters to hunt for the materials the wishlist is short of.
 
 use super::*;
-use crate::hunts::{self, Origin, Plan, QuestOffer, RankFilter};
+use crate::hunts::{self, Goal, Origin, Plan, QuestOffer, RankFilter};
 
 /// The Hunt plan tab: the plan, the ranks it may use, and the highlighted hunt.
 pub struct HuntTab {
     pub filter: RankFilter,
+    /// What the plan keeps small: the number of steps or the number of runs.
+    pub goal: Goal,
     pub plan: Plan,
     pub state: ListState,
     /// The wishlist or the save changed since the plan was made; it is made again when the tab is next shown.
@@ -16,6 +18,7 @@ impl Default for HuntTab {
     fn default() -> HuntTab {
         HuntTab {
             filter: RankFilter::All,
+            goal: Goal::FewestSteps,
             plan: Plan::default(),
             state: ListState::default().with_selected(Some(0)),
             stale: true,
@@ -36,6 +39,7 @@ impl App {
             |item| drops.sources(item),
             &quests,
             self.hunts.filter,
+            self.hunts.goal,
             |m| self.game.monster_name(m).is_some(),
         );
         let len = self.hunts.plan.steps.len();
@@ -67,6 +71,11 @@ impl App {
             Key::Char('r') => {
                 self.hunts.filter = self.hunts.filter.next();
                 self.refresh_hunts();
+            }
+            Key::Char('g') => {
+                self.hunts.goal = self.hunts.goal.next();
+                self.refresh_hunts();
+                self.status = format!("hunt plan: {}", self.hunts.goal.label());
             }
             // show the step's monster on the Monsters tab, or its quest on the Quests tab
             Key::Enter => {

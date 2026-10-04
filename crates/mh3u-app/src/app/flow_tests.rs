@@ -1000,3 +1000,34 @@ fn the_swap_list_puts_pieces_from_the_found_sets_first() {
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn g_switches_the_hunt_plan_between_the_fewest_steps_and_the_fewest_runs() {
+    let dir = temp_dir("huntgoal");
+    let Some(mut app) = app_in(&dir) else { return };
+    // a wishlist with several pieces, so the plan has something to choose between
+    let pieces: Vec<u16> = app
+        .game
+        .piece_ids(7)
+        .filter(|&id| app.plan(7, id).is_some())
+        .skip(10)
+        .take(6)
+        .collect();
+    app.wish.items = pieces.iter().map(|&id| (7, id)).collect();
+    app.after_wishlist_change();
+    app.tab = Tab::Hunts;
+    app.refresh_hunts();
+    let steps_plan = (app.hunts.plan.steps.len(), app.hunts.plan.total_runs());
+    press(&mut app, "g");
+    assert_eq!(app.hunts.goal, crate::hunts::Goal::FewestRuns);
+    let runs_plan = (app.hunts.plan.steps.len(), app.hunts.plan.total_runs());
+    assert!(
+        runs_plan.1 <= steps_plan.1,
+        "fewest runs takes no more runs here: {runs_plan:?} vs {steps_plan:?}"
+    );
+    assert!(runs_plan.0 >= steps_plan.0 || runs_plan.1 < steps_plan.1);
+    press(&mut app, "g");
+    assert_eq!(app.hunts.goal, crate::hunts::Goal::FewestSteps);
+    assert_eq!((app.hunts.plan.steps.len(), app.hunts.plan.total_runs()), steps_plan);
+    let _ = std::fs::remove_dir_all(&dir);
+}
