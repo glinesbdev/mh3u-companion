@@ -40,7 +40,9 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - Which body part each **part-break** list is.
 - Skill **effect names and higher tiers**.
 - Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
-- Palico (Felyne) equipment and the guild card, quest progress and play time in the save.
+- Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (not found: it is not one of the bytes that changed with the
+  first guild quest), weapon usage (the count for the great sword shows 11; not found as a plain count), the village quest count (a byte
+  at 0x7568 reads one more than the card, unexplained) and the title.
 - **Item values:** sell and buy price, rarity and carry limit of each item (a published list has them; the game's table is not found).
 - **Hunter's Notes** (the monster descriptions in the text archive): show them on the Monsters tab. **Needs:** the mapping from a note to
   a monster, which is not the monster id order.

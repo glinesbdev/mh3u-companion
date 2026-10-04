@@ -596,10 +596,11 @@ fn h_lists_the_hunters_in_the_save_slots_and_shows_the_one_picked() {
 
     press(&mut app, "H");
     let choice = app.hunter_choice.as_ref().expect("the list of hunters");
-    assert_eq!(
-        choice.slots,
-        [(1, name1.clone()), (2, name2.clone())],
-        "an empty slot is not listed"
+    let listed: Vec<(u8, String)> = choice.slots.iter().map(|(slot, name, _)| (*slot, name.clone())).collect();
+    assert_eq!(listed, [(1, name1.clone()), (2, name2.clone())], "an empty slot is not listed");
+    assert!(
+        choice.slots.iter().all(|(.., played)| played.contains(" h ")),
+        "the play time is shown"
     );
     key(&mut app, KeyCode::Esc);
     assert!(app.hunter_choice.is_none());

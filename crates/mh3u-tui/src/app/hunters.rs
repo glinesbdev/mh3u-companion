@@ -4,8 +4,8 @@ use super::*;
 
 /// The popup that lists the save slots that hold a hunter.
 pub struct HunterChoice {
-    /// (save slot, hunter name).
-    pub slots: Vec<(u8, String)>,
+    /// (save slot, hunter name, play time).
+    pub slots: Vec<(u8, String, String)>,
     pub state: ListState,
 }
 
@@ -17,18 +17,20 @@ impl App {
             return;
         }
         let Some(dir) = self.save_path.parent() else { return };
-        let slots: Vec<(u8, String)> = (1..=3u8)
+        let slots: Vec<(u8, String, String)> = (1..=3u8)
             .filter_map(|slot| {
                 let bytes = std::fs::read(dir.join(format!("user{slot}"))).ok()?;
-                Some((slot, Save::parse(&bytes).ok()?.hunter_name))
+                let save = Save::parse(&bytes).ok()?;
+                let played = save.play_time();
+                Some((slot, save.hunter_name, played))
             })
-            .filter(|(_, name)| !name.is_empty())
+            .filter(|(_, name, _)| !name.is_empty())
             .collect();
         if slots.is_empty() {
             self.status = "no save slot holds a hunter".to_string();
             return;
         }
-        let at = slots.iter().position(|(slot, _)| Some(*slot) == self.slot).unwrap_or(0);
+        let at = slots.iter().position(|(slot, ..)| Some(*slot) == self.slot).unwrap_or(0);
         self.hunter_choice = Some(HunterChoice {
             slots,
             state: ListState::default().with_selected(Some(at)),
@@ -68,7 +70,7 @@ impl App {
             KeyCode::Down | KeyCode::Char('j') => choice.state.select(Some((at + 1).min(last))),
             KeyCode::Up | KeyCode::Char('k') => choice.state.select(Some(at.saturating_sub(1))),
             KeyCode::Enter => {
-                let slot = choice.slots.get(at).map(|(slot, _)| *slot);
+                let slot = choice.slots.get(at).map(|(slot, ..)| *slot);
                 self.hunter_choice = None;
                 if let Some(slot) = slot {
                     self.pick_hunter(slot);

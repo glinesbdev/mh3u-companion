@@ -17,6 +17,11 @@ const WORN_WEAPON_OFFSET: usize = 0xc0;
 const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
+/// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
+/// byte each). Found by comparing the saves of two hunters with the numbers on their guild cards (docs/formats.md).
+const PLAY_SECONDS_OFFSET: usize = 0x4c;
+const VILLAGE_QUESTS_OFFSET: usize = 0x7568;
+const GUILD_QUESTS_OFFSET: usize = 0x7569;
 const HUNTED_OFFSET: usize = 0x57a0;
 const HUNTED_FIRST_MONSTER: u16 = 6;
 const HUNTED_COUNT: usize = 90;
@@ -62,6 +67,11 @@ impl Equipment {
 pub struct Save {
     pub hunter_name: String,
     pub zenny: u32,
+    /// Time played, in seconds.
+    pub play_seconds: u32,
+    /// Quests done in the village, and in the guild hall (the guild card's two counts).
+    pub village_quests: u8,
+    pub guild_quests: u8,
     pub pouch: Vec<ItemStack>,
     pub item_box: Vec<ItemStack>,
     pub equipment_box: Vec<Equipment>,
@@ -139,6 +149,12 @@ impl Save {
     }
 
     /// Parse the contents of the `user1` save file.
+    /// The play time as the guild card shows it: `1 h 54 min`.
+    pub fn play_time(&self) -> String {
+        let minutes = self.play_seconds / 60;
+        format!("{} h {:02} min", minutes / 60, minutes % 60)
+    }
+
     pub fn parse(d: &[u8]) -> Result<Save> {
         if d.len() != SAVE_LEN {
             bail!("unexpected save size {} (expected {SAVE_LEN})", d.len());
@@ -148,6 +164,14 @@ impl Save {
         Ok(Save {
             hunter_name: String::from_utf8_lossy(&name_bytes[..end]).into_owned(),
             zenny: u32::from_be_bytes([0, d[ZENNY_OFFSET], d[ZENNY_OFFSET + 1], d[ZENNY_OFFSET + 2]]),
+            play_seconds: u32::from_be_bytes([
+                d[PLAY_SECONDS_OFFSET],
+                d[PLAY_SECONDS_OFFSET + 1],
+                d[PLAY_SECONDS_OFFSET + 2],
+                d[PLAY_SECONDS_OFFSET + 3],
+            ]),
+            village_quests: d[VILLAGE_QUESTS_OFFSET],
+            guild_quests: d[GUILD_QUESTS_OFFSET],
             pouch: read_stacks(d, POUCH_OFFSET, POUCH_SLOTS),
             item_box: read_stacks(d, BOX_OFFSET, BOX_SLOTS),
             equipment_box: read_equipment(d),
@@ -173,12 +197,40 @@ mod tests {
         Save {
             hunter_name: String::new(),
             zenny: 0,
+            play_seconds: 0,
+            village_quests: 0,
+            guild_quests: 0,
             pouch,
             item_box,
             equipment_box: Vec::new(),
             hunted: Vec::new(),
             worn_slots: Vec::new(),
         }
+    }
+
+    #[test]
+    fn the_guild_card_fields_are_read_from_their_places() {
+        let mut d = vec![0u8; SAVE_LEN];
+        d[PLAY_SECONDS_OFFSET..PLAY_SECONDS_OFFSET + 4].copy_from_slice(&6863u32.to_be_bytes());
+        d[VILLAGE_QUESTS_OFFSET] = 6;
+        d[GUILD_QUESTS_OFFSET] = 1;
+        let s = Save::parse(&d).unwrap();
+        assert_eq!((s.play_seconds, s.village_quests, s.guild_quests), (6863, 6, 1));
+        assert_eq!(s.play_time(), "1 h 54 min");
+        assert_eq!(Save { play_seconds: 59, ..s }.play_time(), "0 h 00 min");
+    }
+
+    /// Two real saves: the play time of one hunter was read off its guild card (2 h 10 min, no quests); the other hunter's card was read a
+    /// few minutes after this snapshot was taken, so only the counts it held then are checked.
+    #[test]
+    fn the_guild_card_numbers_of_real_saves_are_where_they_should_be() {
+        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/09-hr1-worntester/");
+        let (Ok(a), Ok(b)) = (std::fs::read(format!("{dir}user2")), std::fs::read(format!("{dir}user1"))) else {
+            return;
+        };
+        let (a, b) = (Save::parse(&a).unwrap(), Save::parse(&b).unwrap());
+        assert_eq!((b.play_time().as_str(), b.village_quests, b.guild_quests), ("2 h 10 min", 0, 0));
+        assert_eq!((a.play_time().as_str(), a.village_quests, a.guild_quests), ("1 h 49 min", 6, 1));
     }
 
     #[test]

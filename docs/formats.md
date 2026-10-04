@@ -128,6 +128,15 @@ hunters. The hunt rule below also fails on one case seen later: a hunter whose s
 Helm or Cap, which the rule says it should be, while another with Kelbi x4, Altaroth x6, Ludroth x7, Epioth x4 and Bnahabra x1 is. His menu
 was exactly the starting gear (the rows with flag 1).
 
+## Guild card
+
+Read by comparing the saves of two hunters with the numbers on their guild cards in the game. The **play time** is a u32 in seconds at
+0x4c, straight after the zenny (checked on two hunters to the second: 6863 s was 1 h 54 min and 7820 s was 2 h 10 min). A byte at 0x7569 is
+**1** for a hunter with one guild-hall quest done and 0 for one with none, and a byte at 0x7568 counts village quests (4, 4, 5, 6, 7 over
+five snapshots of one hunter, 0 for the other). On the card, though, that hunter showed 6 village quests while the byte held 7 at the same
+save, so the counts are not confirmed. **Hunter rank** is not found: the bytes that went from 0 to 1 with the first guild quest are mostly
+the hunted-monster counter and other counters. The weapon usage list (great sword 11) is not found either.
+
 ## Monster hit zones
 
 Each monster's archive `arc/enemy/emNNN.arc` (NNN = the monster's id in the name table) holds `enemy\emNNN\em_status00`, a "SME" block.

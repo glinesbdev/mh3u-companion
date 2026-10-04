@@ -9,16 +9,17 @@ pub(super) fn draw_hunter_choice(f: &mut Frame, app: &mut App) {
     let rows: Vec<ListItem> = choice
         .slots
         .iter()
-        .map(|(slot, name)| {
+        .map(|(slot, name, played)| {
             let current = Some(*slot) == app.slot_shown();
             ListItem::new(Line::from(vec![
                 Span::styled(format!("slot {slot}  "), muted()),
-                Span::styled(name.clone(), if current { good() } else { Style::new() }),
-                Span::styled(if current { "  (shown)" } else { "" }, muted()),
+                Span::styled(format!("{name:<14}"), if current { good() } else { Style::new() }),
+                Span::styled(format!("{played}  "), muted()),
+                Span::styled(if current { "(shown)" } else { "" }, muted()),
             ]))
         })
         .collect();
-    let (w, h) = (40.min(area.width), (rows.len() as u16 + 2).min(area.height));
+    let (w, h) = (52.min(area.width), (rows.len() as u16 + 2).min(area.height));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
     f.render_widget(Clear, popup);
     f.render_stateful_widget(
