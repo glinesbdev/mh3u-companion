@@ -117,12 +117,38 @@ pub(super) fn weapon_lines(app: &App, kind: u8, id: u16, w: &mh3u_core::weapons:
             }
             lines.push(Line::from(spans));
         }
+        if let Some(line) = part_line(&e.part) {
+            lines.push(line);
+        }
+        lines.push(Line::raw(""));
         lines.push(sharpness_line("Sharpness", &e.sharpness));
         if e.plus != e.sharpness {
-            lines.push(sharpness_line("+1", &e.plus));
+            // a gap, so the two bars do not read as one
+            lines.push(Line::raw(""));
+            lines.push(sharpness_line("With +1", &e.plus));
         }
     }
     lines
+}
+
+/// A gunlance's shells, a switch axe's phial or a horn's notes, as one line.
+pub(super) fn part_line(part: &mh3u_core::weapon_extras::Part) -> Option<Line<'static>> {
+    use mh3u_core::weapon_extras::Part;
+    let (label, body): (&str, Vec<Span<'static>>) = match part {
+        Part::None => return None,
+        Part::Shell { kind, level } => ("Shells", vec![Span::raw(format!("{kind} Lv {level}"))]),
+        Part::Phial(kind) => ("Phial", vec![Span::raw(kind.clone())]),
+        Part::Notes(colors) => (
+            "Notes",
+            colors
+                .iter()
+                .map(|c| Span::styled("♪ ", Style::new().fg(theme::note_color(c))))
+                .collect(),
+        ),
+    };
+    let mut spans = vec![Span::styled(format!("{label:<9}"), muted())];
+    spans.extend(body);
+    Some(Line::from(spans))
 }
 
 /// Points of sharpness shown by one cell of the bar.

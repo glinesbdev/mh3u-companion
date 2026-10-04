@@ -117,7 +117,8 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
     };
     let row =
         |label: &'static str, cells: Vec<Cell<'static>>| Row::new(std::iter::once(Cell::from(Span::styled(label, muted()))).chain(cells));
-    let table_rows = vec![
+    let row_gapped = |label: &'static str, cells: Vec<Cell<'static>>| row(label, cells).bottom_margin(1);
+    let mut table_rows = vec![
         row("Type", cols.iter().map(|c| Cell::from(c.kind_label)).collect()),
         row(
             "Rarity",
@@ -157,7 +158,7 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
                 })
                 .collect(),
         ),
-        row(
+        row_gapped(
             "Sharpness",
             cols.iter()
                 .zip(&sharp)
@@ -212,6 +213,21 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
                 .collect(),
         ),
     ];
+    // gunlance shells, switch axe phials and horn notes: a row only when someone in the comparison has them
+    if cols
+        .iter()
+        .any(|c| c.extras.as_ref().is_some_and(|e| e.part != mh3u_core::weapon_extras::Part::None))
+    {
+        let cells = cols
+            .iter()
+            .map(|c| match c.extras.as_ref().and_then(|e| super::pieces::part_line(&e.part)) {
+                // the label is the line's first span
+                Some(line) => Cell::from(Line::from(line.spans.into_iter().skip(1).collect::<Vec<_>>())),
+                None => Cell::from(Span::styled("none", muted())),
+            })
+            .collect();
+        table_rows.insert(5, row("Special part", cells));
+    }
     let header = Row::new(std::iter::once(Cell::from("")).chain(cols.iter().map(|c| Cell::from(Span::styled(fit(&c.name, 22), bold())))));
     let mut widths = vec![Constraint::Length(14)];
     widths.extend(cols.iter().map(|_| Constraint::Fill(1)));

@@ -69,6 +69,10 @@
 <text x="102.4" y="130.4" textLength="67.2" lengthAdjust="spacing" fill="#f7768e">███████</text>
 <text x="169.6" y="130.4" textLength="28.8" lengthAdjust="spacing" fill="#ff8700">███</text>
 <text x="198.4" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">█</text>
+<text x="227.2" y="130.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Ice</text>
+<text x="265.6" y="130.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">50</text>
+<text x="294.4" y="130.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">(needs</text>
+<text x="361.6" y="130.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Awaken)</text>
 <text x="515.2" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="130.4" textLength="38.4" lengthAdjust="spacing" fill="#f7768e">Fire</text>

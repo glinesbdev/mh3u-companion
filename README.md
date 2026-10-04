@@ -100,7 +100,7 @@ dark theme; your terminal's own palette applies when you run it.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
 
-Sharpness and element of the melee weapons are not in the game's files the program can read, so they come from Kiranico's Monster Hunter 3 Ultimate database (`crates/mh3u-core/data/weapon_extras.tsv`, joined to the game's weapons by name). They are shown in the weapon details, on the Worn tab and in the comparison. Bows and bowguns have none. See `docs/formats.md`.
+Sharpness and element of the melee weapons are not in the game's files the program can read, so they come from Kiranico's Monster Hunter 3 Ultimate database (`crates/mh3u-core/data/weapon_extras.tsv`, joined to the game's weapons by name). The same file holds a gunlance's shell type and level, a switch axe's phial and a horn's notes. They are shown in the weapon details, on the Worn tab and in the comparison. A hidden element or status (greyed in the game) is labelled as needing Awaken; the Worn tab shows it as active once your armor, charm and jewels add up to the Awaken skill (`FreeElemnt`; the database starts it at 10 points). Bows and bowguns have none. See `docs/formats.md`.
 
 ## Live mode
 

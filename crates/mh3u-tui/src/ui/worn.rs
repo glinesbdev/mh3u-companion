@@ -87,10 +87,41 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
     lines
 }
 
+/// What the worn armor and charm (with their jewels) add up to.
+fn worn_summary(
+    app: &App,
+    armor: &[(u8, &mh3u_core::save::Equipment)],
+    talisman: Option<&mh3u_core::save::Equipment>,
+) -> mh3u_app::worn::Summary {
+    let stats: Vec<(u8, &mh3u_core::armor::ArmorStats)> = armor
+        .iter()
+        .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
+        .collect();
+    let charm = talisman.map(|t| {
+        let mut skills = t.talisman_skills();
+        skills.extend(app.game.decoration_points(&t.talisman_decorations()));
+        mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
+    });
+    // jewels in armor are counted apart from the piece, so Torso Up does not double them
+    let armor_jewels = mh3u_core::armor::ArmorStats::talisman(
+        app.game
+            .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>()),
+        0,
+    );
+    let mut counted = stats;
+    counted.push((JEWELS, &armor_jewels));
+    if let Some(c) = &charm {
+        counted.push((6, c));
+    }
+    mh3u_app::worn::summarize(&counted)
+}
+
 /// The worn gear and what it adds up to.
 pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
     let armor = app.worn_armor();
+    let talisman = app.worn_talisman();
+    let summary = worn_summary(app, &armor, talisman);
 
     // Left: what is worn, slot by slot.
     let mut gear: Vec<Line> = Vec::new();
@@ -108,8 +139,13 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         if let Some(e) = app.game.weapon_extras(w.kind, w.id) {
             let mut bar = vec![Span::raw(format!("{:<8}", ""))];
             bar.extend(super::pieces::sharpness_spans(&e.sharpness, 3));
-            for s in e.specials.iter().filter(|s| !s.hidden) {
-                bar.push(Span::styled(format!("  {} {}", s.name, s.value), theme::element_style(&s.name)));
+            for s in &e.specials {
+                let (note, style) = match (s.hidden, summary.awakened()) {
+                    (false, _) => ("", theme::element_style(&s.name)),
+                    (true, true) => (" (Awaken)", theme::element_style(&s.name)),
+                    (true, false) => (" (needs Awaken)", muted()),
+                };
+                bar.push(Span::styled(format!("  {} {}{note}", s.name, s.value), style));
             }
             gear.push(Line::from(bar));
         }
@@ -148,7 +184,6 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         }
         gear.push(Line::from(spans));
     }
-    let talisman = app.worn_talisman();
     let mut spans = vec![Span::styled(format!("{:<8}", "Charm"), muted())];
     match talisman {
         Some(t) => {
@@ -179,27 +214,6 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     );
 
     // Right: the totals.
-    let stats: Vec<(u8, &mh3u_core::armor::ArmorStats)> = armor
-        .iter()
-        .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
-        .collect();
-    let charm = talisman.map(|t| {
-        let mut skills = t.talisman_skills();
-        skills.extend(app.game.decoration_points(&t.talisman_decorations()));
-        mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
-    });
-    // jewels in armor are counted apart from the piece, so Torso Up does not double them
-    let armor_jewels = mh3u_core::armor::ArmorStats::talisman(
-        app.game
-            .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>()),
-        0,
-    );
-    let mut counted = stats;
-    counted.push((JEWELS, &armor_jewels));
-    if let Some(c) = &charm {
-        counted.push((6, c));
-    }
-    let summary = mh3u_app::worn::summarize(&counted);
     let mut lines = totals_lines(app, &summary, &[]);
     lines.push(Line::raw(""));
     lines.push(Line::styled(

@@ -94,7 +94,7 @@ numbers in proportion to the bar exist anywhere in the game's 4 GB, in any layou
 is not stored as a table of numbers in proportion to the database's, and the game may build it in code.
 
 **What the program uses instead:** `crates/mh3u-core/data/weapon_extras.tsv`, taken from Kiranico's database (sharpness with and without Sharpness +1,
-elements and statuses, and whether an element is hidden until Awaken). The database's ids are not the game's, so the 1,111 lines (of 1,119
+elements and statuses, whether an element is hidden until Awaken, and a gunlance's shell type and level, a switch axe's phial or a horn's three notes). The database's ids are not the game's, so the 1,111 lines (of 1,119
 melee weapons; the 8 left are DLC weapons the game's text does not name) were joined by name, in id order where a name is used twice. The join
 was checked with the attack stored in the game's record: it equals the database's for 1,087 of the 1,092 weapons the tables cover (the rest are
 the few attack disagreements already noted above). A line is dropped on load if its name is not the game's name for that kind and id.

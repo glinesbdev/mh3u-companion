@@ -1,4 +1,4 @@
-//! Sharpness and element (or status) of the melee weapons.
+//! Sharpness, element (or status) and the special part (gunlance shells, switch axe phials, horn notes) of the melee weapons.
 //!
 //! The game keeps neither where this program can read it (see `docs/formats.md`: the two record bytes that select a bar are known, the
 //! bars are not), so this is data taken from Kiranico's Monster Hunter 3 Ultimate database: `data/weapon_extras.tsv`, one line per weapon
@@ -26,6 +26,19 @@ pub struct Special {
     pub hidden: bool,
 }
 
+/// What is particular to a gunlance, a switch axe or a hunting horn.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum Part {
+    #[default]
+    None,
+    /// A gunlance's shells: the type (Normal, Long, Wide) and the level.
+    Shell { kind: String, level: u8 },
+    /// A switch axe's phial: Power, Element, Exhaust, Paralysis, Poison or Dragon.
+    Phial(String),
+    /// A hunting horn's notes, as colors.
+    Notes(Vec<String>),
+}
+
 /// What is known of one weapon.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Extras {
@@ -33,6 +46,7 @@ pub struct Extras {
     /// The same bar with Sharpness +1.
     pub plus: Bar,
     pub specials: Vec<Special>,
+    pub part: Part,
 }
 
 /// The table as (kind, id) -> (name, extras).
@@ -54,8 +68,8 @@ fn parse_text(text: &str) -> Result<HashMap<(u8, u16), (String, Extras)>> {
     let mut out = HashMap::new();
     for line in text.lines().filter(|l| !l.starts_with('#') && !l.is_empty()) {
         let f: Vec<&str> = line.split('\t').collect();
-        if f.len() != 6 {
-            bail!("weapon_extras.tsv: a line has {} fields, not 6: {line}", f.len());
+        if f.len() != 7 {
+            bail!("weapon_extras.tsv: a line has {} fields, not 7: {line}", f.len());
         }
         let specials = f[5]
             .split(';')
@@ -72,6 +86,19 @@ fn parse_text(text: &str) -> Result<HashMap<(u8, u16), (String, Extras)>> {
                 }
             })
             .collect::<Result<Vec<_>>>()?;
+        let part = match f[6].split_once('=') {
+            None => Part::None,
+            Some(("shell", v)) => match v.split_once(':') {
+                Some((kind, level)) => Part::Shell {
+                    kind: kind.to_string(),
+                    level: level.parse()?,
+                },
+                None => bail!("weapon_extras.tsv: bad shell {v}"),
+            },
+            Some(("phial", v)) => Part::Phial(v.to_string()),
+            Some(("notes", v)) => Part::Notes(v.split(',').map(str::to_string).collect()),
+            Some((other, _)) => bail!("weapon_extras.tsv: unknown part {other}"),
+        };
         out.insert(
             (f[0].parse()?, f[1].parse()?),
             (
@@ -80,6 +107,7 @@ fn parse_text(text: &str) -> Result<HashMap<(u8, u16), (String, Extras)>> {
                     sharpness: bar(f[3])?,
                     plus: bar(f[4])?,
                     specials,
+                    part,
                 },
             ),
         );
@@ -117,7 +145,7 @@ mod tests {
 
     #[test]
     fn a_bad_line_is_an_error() {
-        assert!(parse_text("7\t1\tx\t1,2,3\t1,2,3,0,0,0,0\t").is_err(), "a bar needs 7 numbers");
+        assert!(parse_text("7\t1\tx\t1,2,3\t1,2,3,0,0,0,0\t\t").is_err(), "a bar needs 7 numbers");
         assert!(parse_text("7\t1\tx").is_err());
     }
 }

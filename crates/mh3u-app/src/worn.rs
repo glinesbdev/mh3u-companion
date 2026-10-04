@@ -4,6 +4,9 @@ use mh3u_core::armor::ArmorStats;
 
 /// The skill tree id of Torso Up, which doubles the skill points of the body piece.
 pub const TORSO_UP: u8 = 1;
+/// The skill tree ("FreeElemnt") whose effect Awaken releases the hidden elements and statuses of weapons, and that effect's id.
+const AWAKEN_TREE: u8 = 114;
+const AWAKEN_EFFECT: u16 = 203;
 /// Equipment kind of body armor.
 const BODY: u8 = 1;
 /// Points at which a skill's first effect starts, and where its penalty starts.
@@ -48,6 +51,13 @@ pub struct Summary {
     pub skills: Vec<SkillTotal>,
     /// Torso Up is active, so the body piece counts double.
     pub torso_doubled: bool,
+}
+
+impl Summary {
+    /// The Awaken effect is on, so weapons show their hidden element or status.
+    pub fn awakened(&self) -> bool {
+        self.skills.iter().any(|t| t.id == AWAKEN_TREE && t.effect() == Some(AWAKEN_EFFECT))
+    }
 }
 
 /// Add up armor pieces given as (equipment kind, stats). With Torso Up active (10 or more points), the body piece's points count
@@ -125,6 +135,15 @@ mod tests {
         let s = summarize(&[(1, &body), (0, &jewels)]);
         assert_eq!(s.skills[0].points, 16);
         assert_eq!(s.skills[0].parts, vec![(1, 1), (0, 15)]);
+    }
+
+    #[test]
+    fn awaken_is_on_at_its_first_tier() {
+        let below = piece(0, 0, [0; 5], &[(AWAKEN_TREE, 9)]);
+        let on = piece(0, 0, [0; 5], &[(AWAKEN_TREE, 10)]);
+        assert!(!summarize(&[(5, &below)]).awakened());
+        assert!(summarize(&[(5, &on)]).awakened());
+        assert!(!summarize(&[]).awakened());
     }
 
     #[test]

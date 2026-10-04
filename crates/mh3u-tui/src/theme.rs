@@ -186,6 +186,20 @@ pub fn element_style(name: &str) -> Style {
     fg(color)
 }
 
+/// The color of a hunting horn note, by the name the table gives it.
+pub fn note_color(name: &str) -> Color {
+    match name {
+        "red" => Color::Red,
+        "orange" => Color::Indexed(208),
+        "yellow" => Color::Yellow,
+        "green" => Color::Green,
+        "blue" => Color::Blue,
+        "sky" => Color::LightCyan,
+        "purple" => Color::Magenta,
+        _ => Color::White,
+    }
+}
+
 /// The colors of a sharpness bar, red first.
 pub fn sharpness_color(index: usize) -> Color {
     [
