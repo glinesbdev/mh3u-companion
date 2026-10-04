@@ -379,6 +379,10 @@ mod tests {
         let armor = Save::parse(&fixture!("17-armor-jewel/user2")).unwrap();
         let head = armor.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!((head.kind, head.id, head.decorations()), (5, 1, vec![0x91]));
+        let hood = Save::parse(&fixture!("19-armor3/user2")).unwrap();
+        let worn_head = hood.equipment_box.iter().find(|e| e.slot == 20).unwrap();
+        assert_eq!((worn_head.kind, worn_head.decorations()), (5, vec![0x91, 0x91, 0x91]));
+        assert!(hood.is_worn(worn_head));
         let three = Save::parse(&fixture!("16-jewel3/user2")).unwrap();
         let full = three.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(full.talisman_decorations(), vec![0x91, 0x15, 0x97]);
