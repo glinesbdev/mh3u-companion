@@ -62,8 +62,11 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Live mode
 
-- Find where the game keeps the blacksmith's list (`:scan` looks for runs of piece ids in memory; its results are not in yet), then show the game's own
-  list instead of the app's rule. If the list is rebuilt from the hunted counters each time, record each visit's list to check the rule.
+- Find where the game keeps the blacksmith's list. `:scan` (see `docs/live.md`) searched the game's memory for it in four rounds (piece ids
+  in and out of order, flags per piece or per recipe row, bytes to dwords and packed bits) with the real menus of two hunters, and found no flag
+  array that follows the menu. The list may be rebuilt from other data each time. A clean test would settle what unlocks a piece: a fresh
+  hunter, one action at a time (a Kelbi, a quest, a large monster) and a look at the menu after each. The rule is wrong for one case: a
+  hunter with Kelbi x6 and Altaroth x3 does not get Bone Helm, while another with similar small hunts plus Ludroth, Epioth and Bnahabra does.
 - Tell when a quest ends, so that pickups can be grouped by quest instead of by pauses of 20 seconds (no quest state is known in the live
   block), and log the quest's name and the zenny it paid.
 - Search for sets off the UI thread, if a very large pool ever makes the Builds tab slow (it takes a few milliseconds today).

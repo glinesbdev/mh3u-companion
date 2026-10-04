@@ -123,7 +123,10 @@ The menu lists the pieces on offer in the order of the executable's recipe table
 menu of one hunter it showed Leather Headgear (1), Piscine Mask (2), Chainmail Headgear (3), Hunter's Helm (4) and Cap (5), Alloy
 Helm (8) and Cap (9), Bone Helm (6) and Cap (7), Jaggi Helm (10) and Cap (11), Arzuros Helm (56) and Cap (57). The table has rows
 1, 66, 2, 3, 4, 5, 8, 9, 6, 7, 12-15, 10, 11, 56, 57..., so the menu is the table with the rows that are not on offer left out. Where the
-game records which rows are on offer is not found yet (`:scan`, see `docs/live.md`).
+game records which rows are on offer is not found: `:scan` (see `docs/live.md`) found no flag array or id list that follows the menu for two
+hunters. The hunt rule below also fails on one case seen later: a hunter whose save counts Kelbi x6 and Altaroth x3 is not offered Bone
+Helm or Cap, which the rule says it should be, while another with Kelbi x4, Altaroth x6, Ludroth x7, Epioth x4 and Bnahabra x1 is. His menu
+was exactly the starting gear (the rows with flag 1).
 
 ## Monster hit zones
 
