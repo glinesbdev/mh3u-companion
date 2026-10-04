@@ -203,7 +203,7 @@ fn make_first_lines(app: &App) -> Vec<Line<'static>> {
         .filter(|&(kind, id)| !app.save.owns_equipment(kind, id))
         .collect();
     let fees: Vec<Option<u32>> = pieces.iter().map(|&(kind, id)| app.fee(kind, id)).collect();
-    let plan = crate::zenny::plan(&fees, u64::from(app.save.zenny));
+    let plan = mh3u_app::zenny::plan(&fees, u64::from(app.save.zenny));
     if plan.order.is_empty() {
         return Vec::new();
     }

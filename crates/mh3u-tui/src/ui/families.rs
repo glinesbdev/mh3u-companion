@@ -1,7 +1,7 @@
 //! The Sets tab.
 
 use super::*;
-use crate::families::SLOT_ORDER;
+use mh3u_app::families::SLOT_ORDER;
 
 /// Armor families on the left; on the right the highlighted family as a table of variants by slot.
 pub(super) fn draw_families(f: &mut Frame, app: &mut App, area: Rect) {
@@ -77,7 +77,7 @@ fn family_lines(app: &App) -> Vec<Line<'static>> {
     ];
     let mut head = vec![Span::styled(format!("{:<8}", "variant"), muted())];
     for kind in SLOT_ORDER {
-        head.push(Span::styled(format!("{:<9}", crate::templates::slot_label(kind)), muted()));
+        head.push(Span::styled(format!("{:<9}", mh3u_app::templates::slot_label(kind)), muted()));
     }
     lines.push(Line::from(head));
     for variant in family.variants() {
@@ -115,7 +115,7 @@ fn family_lines(app: &App) -> Vec<Line<'static>> {
                 .max();
             let text = top.map_or("none".to_string(), |v| v.label().to_string());
             [
-                Span::styled(format!("{} ", crate::templates::slot_label(kind)), muted()),
+                Span::styled(format!("{} ", mh3u_app::templates::slot_label(kind)), muted()),
                 Span::styled(format!("{text}   "), if top.is_some() { good() } else { muted() }),
             ]
         })

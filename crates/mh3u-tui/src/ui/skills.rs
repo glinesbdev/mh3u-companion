@@ -1,7 +1,7 @@
 //! The Skills tab.
 
 use super::*;
-use crate::app::WithSkill;
+use mh3u_app::app::WithSkill;
 
 /// Skills on the left; on the right every armor piece that has the highlighted skill, the most points first.
 pub(super) fn draw_skills(f: &mut Frame, app: &mut App, area: Rect) {
@@ -93,7 +93,7 @@ fn piece_lines(app: &App, skill: u8) -> Vec<Line<'static>> {
             mark,
             Span::raw(format!(" {:<26}", fit(app.game.equipment_name(kind, id).unwrap_or("?"), 26))),
             rarity,
-            Span::styled(format!(" {}", crate::templates::slot_label(kind)), muted()),
+            Span::styled(format!(" {}", mh3u_app::templates::slot_label(kind)), muted()),
         ]));
     }
     lines

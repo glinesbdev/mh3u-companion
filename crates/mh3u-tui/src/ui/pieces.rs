@@ -239,7 +239,7 @@ pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable:
 /// The cheapest way to get a weapon you do not own: each step with its fee, then the materials for all of them. Nothing for armor, a
 /// weapon you own, or when the route is just making it (the "Create from scratch" section says that).
 fn cheapest_way_lines(app: &App, kind: u8, id: u16) -> Vec<Line<'static>> {
-    use crate::upgrade_path::How;
+    use mh3u_app::upgrade_path::How;
     if app.save.owns_equipment(kind, id) {
         return Vec::new();
     }

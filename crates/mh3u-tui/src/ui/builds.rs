@@ -4,7 +4,7 @@ use super::*;
 
 /// The build manager: the skills you want, the sets that reach them, the saved templates, and the highlighted set in full.
 pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
-    use crate::app::BuildFocus;
+    use mh3u_app::app::BuildFocus;
     let [left, right] = theme::split(area, 42);
     let wanted = app.builds.settings.targets.len();
     let targets_height = (wanted as u16 + 2).clamp(4, 9);
@@ -46,7 +46,7 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         pool += &format!(" · {}", g.label().to_lowercase());
     }
     if let Some((kind, id)) = app.builds.settings.weapon {
-        let class = crate::builds::weapon_class(kind).label().to_lowercase();
+        let class = mh3u_app::builds::weapon_class(kind).label().to_lowercase();
         pool += &format!(" · for {} ({class})", app.game.equipment_name(kind, id).unwrap_or("?"));
     } else if let Some(c) = app.builds.settings.class {
         pool += &format!(" · {}", c.label().to_lowercase());
@@ -126,7 +126,7 @@ pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 7], cursor: Option<us
     let zenny = app.save.zenny;
     let mut lines: Vec<Line> = Vec::new();
     let mut parts: Vec<(u8, &mh3u_core::armor::ArmorStats)> = Vec::new();
-    for (n, (slot, shown)) in crate::templates::Slot::ALL.iter().zip(slots).enumerate() {
+    for (n, (slot, shown)) in mh3u_app::templates::Slot::ALL.iter().zip(slots).enumerate() {
         let marker = if cursor == Some(n) {
             Span::styled("▶ ", accent())
         } else {
@@ -170,7 +170,7 @@ pub(super) fn set_lines(app: &App, slots: &[Option<Shown>; 7], cursor: Option<us
         lines.push(Line::from(spans));
     }
     lines.push(Line::raw(""));
-    let summary = crate::worn::summarize(&parts);
+    let summary = mh3u_app::worn::summarize(&parts);
     lines.extend(totals_lines(app, &summary, &app.builds.settings.targets));
     lines
 }
@@ -206,7 +206,7 @@ pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
     };
     let mut slots: [Option<Shown>; 7] = Default::default();
     for c in found.pieces.iter().map(|&i| &app.builds.pool[i]) {
-        if let Some(slot) = crate::templates::Slot::of_kind(c.kind) {
+        if let Some(slot) = mh3u_app::templates::Slot::of_kind(c.kind) {
             slots[slot.index()] = Some(Shown {
                 kind: c.kind,
                 id: c.id,
@@ -216,7 +216,7 @@ pub(super) fn build_details(app: &App) -> Vec<Line<'static>> {
     }
     // the weapon the set is for
     if let Some((kind, id)) = app.builds.settings.weapon {
-        slots[crate::templates::Slot::Weapon.index()] = Some(Shown { kind, id, stats: None });
+        slots[mh3u_app::templates::Slot::Weapon.index()] = Some(Shown { kind, id, stats: None });
     }
     let mut lines = set_lines(app, &slots, None);
     lines.push(Line::raw(""));
@@ -244,7 +244,7 @@ pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
     };
     let mut slots: [Option<Shown>; 7] = Default::default();
     for p in &t.pieces {
-        if let Some(slot) = crate::templates::Slot::of_kind(p.kind) {
+        if let Some(slot) = mh3u_app::templates::Slot::of_kind(p.kind) {
             slots[slot.index()] = Some(Shown {
                 kind: p.kind,
                 id: p.id,
@@ -267,7 +267,7 @@ pub(super) fn template_details(app: &App) -> (String, Vec<Line<'static>>) {
 
 /// A one-line text prompt in the middle of the screen.
 pub(super) fn draw_name_prompt(f: &mut Frame, app: &App) {
-    use crate::app::NameAction;
+    use mh3u_app::app::NameAction;
     let Some(prompt) = &app.builds.name_prompt else { return };
     let area = f.area();
     let (w, h) = (50.min(area.width), 3.min(area.height));

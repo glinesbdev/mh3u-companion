@@ -1,13 +1,10 @@
 [package]
-name = "mh3u-tui"
+name = "mh3u-app"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
-clap.workspace = true
 dirs.workspace = true
-mh3u-app.workspace = true
 mh3u-core.workspace = true
-ratatui = "0.30.2"

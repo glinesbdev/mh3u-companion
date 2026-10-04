@@ -5,8 +5,10 @@ changing them. When a rule here stops being true, change the rule in the same co
 
 ## The few rules that matter most
 
-1. **`mh3u-core` never draws; `mh3u-tui` never knows a byte offset.** Anything that reads a file or the game's memory belongs in
-   core and comes out as a typed value (`ArmorStats`, `Source`, `Unlock`). The app asks `GameData`; it does not parse.
+1. **`mh3u-core` never draws; `mh3u-app` never knows a screen; a screen never knows a byte offset.** Anything that reads a file or the
+   game's memory belongs in core and comes out as a typed value (`ArmorStats`, `Source`, `Unlock`). The app asks `GameData`; it does
+   not parse. `mh3u-app` must not depend on ratatui or crossterm (check with `cargo tree -p mh3u-app`): it has its own `Key` and
+   `ListState`, and what the screen needs it reads from `App`'s public fields.
 2. **Pure logic first, screen second.** A rule (the blacksmith unlock, the build search, a sort, a file format) is a function that
    takes plain values and returns plain values, with tests. `App` calls it and `ui` shows the result. If you are writing an `if` in
    a draw function that decides something about the game, it belongs in a function that is not a draw function.
@@ -25,7 +27,7 @@ changing them. When a rule here stops being true, change the rule in the same co
 | Reading a new table from the executable | `mh3u-core/src/<table>.rs`, loaded in `GameData::load`, offsets checked there |
 | A game rule | `mh3u-core` (see `blacksmith.rs`), with a test on a real save if one exists |
 | A new tab | see "Adding a tab" in `architecture.md` |
-| A key | the tab's `*_key` method in `app/keys.rs`; popups get keys before tabs do |
+| A key | the tab's `*_key` method in `mh3u-app/src/app/keys.rs`; popups get keys before tabs do |
 | Something kept between sessions | a path in `files::Files`, saved with `files::save`; a small text format with `parse` and `format` and a round-trip test |
 | A colour, symbol or shared widget | `theme.rs`, so the screen keeps one visual language |
 | A command-line option | the `Cli` struct (clap); an explorer command goes in `mh3u-tools` |
@@ -80,7 +82,7 @@ These are limits to notice, not to game. If you hit one, split by meaning, not b
 ## Dependencies
 
 Add a crate when it replaces code we would otherwise have to keep correct (argument parsing, platform folders), not for convenience.
-Say why in the commit. Currently: `anyhow`, `clap`, `dirs`, `flate2`, `memchr`, `ratatui`.
+Say why in the commit. Currently: `anyhow`, `clap`, `dirs`, `flate2`, `memchr`, `ratatui` (only in `mh3u-tui`).
 
 ## Docs are part of the change
 

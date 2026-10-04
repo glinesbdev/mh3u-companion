@@ -1,30 +1,6 @@
-//! Keys as the app understands them, whatever the screen that sends them.
+//! The terminal's keys as the app understands them.
 
-/// A key press. The terminal and any other screen translate their own key events into these.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Key {
-    Char(char),
-    Enter,
-    Esc,
-    Backspace,
-    Delete,
-    Tab,
-    BackTab,
-    Up,
-    Down,
-    Left,
-    Right,
-    PageUp,
-    PageDown,
-    Home,
-    End,
-}
-
-/// Modifier keys held with a key.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct Mods {
-    pub ctrl: bool,
-}
+use mh3u_app::input::Key;
 
 /// The key the terminal sent, if the app has a use for it.
 pub fn from_terminal(code: ratatui::crossterm::event::KeyCode) -> Option<Key> {

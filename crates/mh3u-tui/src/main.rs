@@ -1,33 +1,15 @@
-mod app;
-mod builds;
-mod commands;
-mod compare;
-mod families;
-mod files;
-mod gains;
-mod hunts;
-mod input;
-mod search;
-mod select;
-mod surplus;
-mod templates;
+mod keymap;
 mod theme;
-mod tree;
 mod ui;
-mod unlocked;
-mod upgrade_path;
-mod worn;
-mod zenny;
 
 use anyhow::{Context, Result, bail};
-use app::App;
-use app::Live;
 use clap::Parser;
-use files::{Files, slot_of};
+use mh3u_app::app::{App, Live};
+use mh3u_app::files::{Files, slot_of};
+use mh3u_app::{TITLE_ID, guess_game_dir};
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
 use std::path::PathBuf;
 
-const TITLE_ID: &str = "0005000010118300";
 /// A companion for Monster Hunter 3 Ultimate on Cemu: read a save and see what you hold, can make and need.
 #[derive(Parser)]
 #[command(version)]
@@ -54,16 +36,6 @@ struct Cli {
 
 fn home() -> Result<PathBuf> {
     dirs::home_dir().context("no home folder")
-}
-
-/// Look for a `... [Game] [0005000010118300]` folder under ~/games/wiiu.
-fn guess_game_dir() -> Option<PathBuf> {
-    let dir = home().ok()?.join("games/wiiu");
-    std::fs::read_dir(dir).ok()?.filter_map(|e| e.ok().map(|e| e.path())).find(|p| {
-        p.file_name()
-            .and_then(|n| n.to_str())
-            .is_some_and(|n| n.contains(TITLE_ID) && n.contains("[Game]"))
-    })
 }
 
 /// Start Cemu on the game and read its memory. Only a process we started may be read (see `docs/live.md`).
@@ -164,11 +136,11 @@ fn run(app: &mut App, terminal: &mut ratatui::DefaultTerminal) -> Result<()> {
         if event::poll(std::time::Duration::from_millis(250))?
             && let Event::Key(key) = event::read()?
             && key.kind == KeyEventKind::Press
-            && let Some(code) = input::from_terminal(key.code)
+            && let Some(code) = keymap::from_terminal(key.code)
         {
             app.on_key(
                 code,
-                input::Mods {
+                mh3u_app::input::Mods {
                     ctrl: key.modifiers.contains(event::KeyModifiers::CONTROL),
                 },
             );

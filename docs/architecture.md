@@ -2,8 +2,19 @@
 
 (How to *change* it cleanly is in `code-guidelines.md`.)
 
-Three crates in one workspace. The rule that keeps it tidy: **`mh3u-core` knows nothing about the screen, and the screen knows
-nothing about byte offsets.**
+Four crates in one workspace, in layers. The rule that keeps it tidy: **`mh3u-core` knows nothing about the screen, `mh3u-app` knows
+nothing about a particular screen, and a screen knows nothing about byte offsets.**
+
+```
+mh3u-core   the game's data: files, memory, tables       (no screen)
+mh3u-app    what the app shows and does with keys, time  (no screen, no terminal)
+mh3u-tui    a terminal screen for mh3u-app               (ratatui, crossterm, clap)
+mh3u-tools  developer commands                           (explore the formats)
+```
+
+Another screen (a window, say) would be one more crate beside `mh3u-tui`, depending on `mh3u-app` the same way. `mh3u-app` has no
+ratatui or crossterm in it, and the tests below keep it that way: its list selection (`select::ListState`) and keys (`input::Key`)
+are its own types, and the screen translates to and from them.
 
 ## `mh3u-core`: the game's data
 
@@ -21,10 +32,10 @@ Everything that reads a file or the running game. No terminal code.
 | `prices` | The forging-cost ledger and the tracker that learns costs from play. |
 | `live`, `livesave`, `procmem`, `edit` | Live mode: find the save in Cemu's memory, follow it, and (debug only) write to it. |
 
-## `mh3u-tui`: the app
+## `mh3u-app`: the app without a screen
 
-`main.rs` parses arguments (clap), opens the files and starts the loop. `App` (in `app/`) holds all state; `ui/` draws it. Neither
-knows how the other works beyond `App`'s public fields and methods.
+`App` (in `app/`) holds all the state. A screen calls `App::on_key(key, mods)` for each key and `App::tick()` about four times a
+second, asks `App::wants_quit()`, and draws what it finds in `App`'s public fields. The same crate holds the logic `App` uses.
 
 ```
 app/
@@ -47,25 +58,33 @@ app/
   live.rs           following the running game, reloading the save, the debug command line
   price_watch.rs    watching for forging costs
   money.rs, sorting.rs   small shared types
-ui/
-  mod.rs            the frame (tabs, footer) and helpers every tab shares
-  one file per tab, plus pieces.rs (what is said about a piece), help.rs, tree.rs
 ```
 
 Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `gains` (the pickup log and its file format), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
 `unlocked` and `files` (what is kept on disk, and where).
 
+## `mh3u-tui`: the terminal screen
+
+`main.rs` parses arguments (clap), opens the files, makes the `App` and runs the loop: draw, wait a moment for a key, `on_key`, `tick`.
+`keymap.rs` turns the terminal's keys into `input::Key`. `theme.rs` is the colours and shared widgets.
+
+```
+ui/
+  mod.rs            the frame (tabs, footer) and helpers every tab shares (render_list draws a list from the app's own selection)
+  one file per tab, plus pieces.rs (what is said about a piece), help.rs, tree.rs
+```
+
 ### Adding a tab
 
-1. Add a variant to `Tab` (`app/mod.rs`) and to `Tab::ALL` and `title`.
+1. Add a variant to `Tab` (`mh3u-app/src/app/mod.rs`) and to `Tab::ALL` and `title`.
 2. Put its state in a struct and its methods in `app/<name>.rs` (`impl App { ... }`); add `mod <name>;` in `app/mod.rs` and a field of the struct on `App`.
 3. Its keys go in a `<name>_key` method that `tab_key` in `app/keys.rs` calls.
 4. Its drawing goes in `ui/<name>.rs`; add the arm in `ui::draw`, key hints in `draw_footer`, and a line in `ui/help.rs`.
 
 ### Adding something that is kept between sessions
 
-Add the path to `files::Files` (so every file is named in one place, per hunter if it should be), and save with `files::save`,
+Add the path to `files::Files` (in `mh3u-app`) (so every file is named in one place, per hunter if it should be), and save with `files::save`,
 which creates the folder and words the error for the status line.
 
 ## `mh3u-tools`: developer commands

@@ -3,7 +3,7 @@
 use super::*;
 
 /// Defense, gem slots, resistances and the skill points of a set of armor. Skills in `targets` show whether their goal is reached.
-pub(super) fn totals_lines(app: &App, summary: &crate::worn::Summary, targets: &[crate::builds::Target]) -> Vec<Line<'static>> {
+pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets: &[mh3u_app::builds::Target]) -> Vec<Line<'static>> {
     let mut lines: Vec<Line> = Vec::new();
     lines.push(Line::from(vec![
         Span::styled("Defense ", muted()),
@@ -38,7 +38,7 @@ pub(super) fn totals_lines(app: &App, summary: &crate::worn::Summary, targets: &
         } else if t.penalty() {
             ("▼ penalty", bad())
         } else if t.points > 0 {
-            (&*format!("{} more to activate", crate::worn::ACTIVE_AT - t.points), muted())
+            (&*format!("{} more to activate", mh3u_app::worn::ACTIVE_AT - t.points), muted())
         } else {
             ("", muted())
         };
@@ -130,7 +130,7 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
         .collect();
-    let summary = crate::worn::summarize(&stats);
+    let summary = mh3u_app::worn::summarize(&stats);
     let mut lines = totals_lines(app, &summary, &[]);
     lines.push(Line::raw(""));
     lines.push(Line::styled(

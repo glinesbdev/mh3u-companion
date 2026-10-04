@@ -1,7 +1,7 @@
 //! The Compare tab: a few weapons side by side.
 
 use super::*;
-use crate::compare::best_marks;
+use mh3u_app::compare::best_marks;
 use ratatui::widgets::{Cell, Row, Table};
 
 /// What the table shows about one weapon.
@@ -61,7 +61,7 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
             ]))
         })
         .collect();
-    let title = format!(" Weapons ({}/{}) ", rows.len(), crate::app::MAX_COMPARED);
+    let title = format!(" Weapons ({}/{}) ", rows.len(), mh3u_app::app::MAX_COMPARED);
     if rows.is_empty() {
         empty_pane(
             f,

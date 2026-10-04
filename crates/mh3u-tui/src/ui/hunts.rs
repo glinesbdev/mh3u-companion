@@ -1,7 +1,7 @@
 //! The Hunt plan tab.
 
 use super::*;
-use crate::hunts::{How, Origin};
+use mh3u_app::hunts::{How, Origin};
 
 /// The hunts that cover what the wishlist is still short of, best first, and the highlighted one in full.
 pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {

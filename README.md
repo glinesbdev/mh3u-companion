@@ -139,7 +139,8 @@ wrong data.
 ## Layout
 
 - `crates/mh3u-core`: parsers (save, `.arc` archives, `.gmd` text, `.rpx` executable, recipes, armor and weapon stats, drops) and `GameData`.
-- `crates/mh3u-tui`: the terminal app (`app/` holds the state and keys by feature, `ui/` the drawing).
+- `crates/mh3u-app`: the app without a screen: its state and what it does with keys and time (`app/`, one file per feature), and the logic behind it (build search, hunt plan, cheapest route, templates, the files it keeps).
+- `crates/mh3u-tui`: the terminal screen for it (`ui/` the drawing, `keymap.rs` the keys, `theme.rs` the colours).
 - `crates/mh3u-tools`: developer commands used to reverse-engineer the formats: `savediff`, `items`, `recipe`, `arcls`, `arcx`,
   `gmd`, `arcsearch`, `prices-add`, `prices-hint`, `armor-todo`, `weapon-names`, `unlock-guess`, `unlock-monsters`, `drops`, `ansi2svg`, `cemu-host` (starts Cemu and answers memory queries from a file; used to find where the data lives).
 - `scripts/check.sh`: the checks CI runs (format, clippy, tests); run it before every commit.

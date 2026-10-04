@@ -213,7 +213,7 @@ pub(super) fn wrap_items(label: &str, items: Vec<Vec<Span<'static>>>, width: usi
 
 /// How many of an item can go, and what the rest is kept for.
 fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
-    use crate::surplus::Why;
+    use mh3u_app::surplus::Why;
     let Some(p) = app.inv.spare.get(&id) else { return Vec::new() };
     let have = app.save.item_count(id);
     let (count, style) = if p.spare > 0 {

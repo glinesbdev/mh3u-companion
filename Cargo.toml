@@ -9,6 +9,7 @@ license = "Unlicense"
 
 [workspace.dependencies]
 anyhow = "1"
+mh3u-app = { path = "crates/mh3u-app" }
 mh3u-core = { path = "crates/mh3u-core" }
 flate2 = "1"
 clap = { version = "4", features = ["derive", "env"] }

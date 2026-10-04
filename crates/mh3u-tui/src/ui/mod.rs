@@ -1,6 +1,6 @@
-use crate::app::{App, Availability, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
-use crate::select::ListState;
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
+use mh3u_app::app::{App, Availability, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
+use mh3u_app::select::ListState;
 use mh3u_core::prices::{Route, Source};
 use ratatui::{
     Frame,
@@ -248,7 +248,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 keys.extend([("o", "owned"), ("Enter", "craft")]);
             }
             Tab::Builds => {
-                use crate::app::BuildFocus;
+                use mh3u_app::app::BuildFocus;
                 keys.push(("f", "switch list"));
                 match app.builds.focus {
                     BuildFocus::Skills => keys.extend([("a", "add skill"), ("+/-", "points"), ("x", "remove"), ("p", "weapon")]),

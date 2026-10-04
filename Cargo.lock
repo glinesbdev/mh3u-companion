@@ -791,6 +791,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "mh3u-app"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dirs",
+ "mh3u-core",
+]
+
+[[package]]
 name = "mh3u-core"
 version = "0.1.0"
 dependencies = [
@@ -816,6 +825,7 @@ dependencies = [
  "anyhow",
  "clap",
  "dirs",
+ "mh3u-app",
  "mh3u-core",
  "ratatui",
 ]
