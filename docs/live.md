@@ -95,7 +95,7 @@ runs of the piece ids the app expects on offer: big-endian u16 values, 2 to 24 b
 ids it lacks, and the bytes around it. It also searches for one flag per piece (by row of the game's recipe table, or by piece id) stored as
 bytes, words, dwords or packed bits, with up to two flags different from the app's idea, and lists those first (as `F1`, `F2`...). The
 blacksmith's menu lists pieces in the order of the recipe table (checked on a head menu: Alloy comes before Bone because the table has
-them in that order), so a list of ids in id order is not what to expect. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
+them in that order), so a list of ids in id order is not what to expect. If the app's idea of the list is wrong, give the menu's real contents after the kind, as game names separated by commas (`:scan head Leather Headgear, Piscine Mask, ...`): the search then wants every flag to match exactly. It only reads, but the screen stands still for a few seconds. Runs of consecutive ids are counting
 tables and score low. Compare a good run with what the menu really shows; a piece the run has and the app does not expect (or the
 other way round) is a place where the unlock rule is wrong.
 

@@ -18,12 +18,33 @@ const FLAG_SPAN: usize = 64;
 const FLAG_READ: usize = 400;
 
 impl App {
-    pub(super) fn run_scan(&mut self, kind: u8) {
+    pub(super) fn run_scan(&mut self, kind: u8, shown: &[String]) {
         if !self.live_connected() {
             return self.status = "scan needs a hunter loaded in the game".into();
         }
         let Some(live) = &self.live else { return };
-        let wanted: HashSet<u16> = self.game.piece_ids(kind).filter(|&id| self.at_blacksmith(kind, id)).collect();
+        let wanted: HashSet<u16> = if shown.is_empty() {
+            self.game.piece_ids(kind).filter(|&id| self.at_blacksmith(kind, id)).collect()
+        } else {
+            let mut ids = HashSet::new();
+            for name in shown {
+                let found = self
+                    .game
+                    .piece_ids(kind)
+                    .find(|&id| self.game.equipment_name(kind, id).is_some_and(|n| n.eq_ignore_ascii_case(name)));
+                match found {
+                    Some(id) => ids.insert(id),
+                    None => {
+                        return self.status = format!(
+                            "no {} piece is called '{name}'",
+                            self.game.equipment_kind_label(kind).unwrap_or("armor")
+                        );
+                    }
+                };
+            }
+            ids
+        };
+        let given = !shown.is_empty();
         if wanted.len() < 4 {
             return self.status = "too few pieces expected on offer to look for a list".into();
         }
@@ -32,8 +53,8 @@ impl App {
             let base = livemod::find_live_block(&mem, std::slice::from_ref(&self.save.hunter_name))?
                 .and_then(|block| mem.read(block, 0x30).ok().and_then(|head| livemod::validate_block(&head, block)));
             let found = shopscan::scan(&mem, &wanted, min_len, KEEP)?;
-            let patterns = self.flag_patterns(kind);
-            let flags = shopscan::scan_flags(&mem, &patterns, FLAG_MISSES, KEEP)?;
+            let patterns = self.flag_patterns(kind, given.then_some(&wanted));
+            let flags = shopscan::scan_flags(&mem, &patterns, if given { 0 } else { FLAG_MISSES }, KEEP)?;
             let mut report = self.flag_report(&mem, base, &flags);
             report += &self.scan_report(&mem, kind, &wanted, base, &found);
             Ok((report, found.len()))
@@ -53,15 +74,10 @@ impl App {
 
     /// What the app thinks is on offer as one flag per piece: by row of the game's recipe table (the order of the blacksmith's menu) and
     /// by piece id.
-    fn flag_patterns(&self, kind: u8) -> Vec<Vec<bool>> {
-        let by_row = self
-            .game
-            .recipe_rows(kind)
-            .iter()
-            .take(FLAG_SPAN)
-            .map(|&id| self.at_blacksmith(kind, id))
-            .collect();
-        let by_id = (0..FLAG_SPAN as u16).map(|id| id != 0 && self.at_blacksmith(kind, id)).collect();
+    fn flag_patterns(&self, kind: u8, shown: Option<&HashSet<u16>>) -> Vec<Vec<bool>> {
+        let on = |id: u16| shown.map_or_else(|| self.at_blacksmith(kind, id), |s| s.contains(&id));
+        let by_row = self.game.recipe_rows(kind).iter().take(FLAG_SPAN).map(|&id| on(id)).collect();
+        let by_id = (0..FLAG_SPAN as u16).map(|id| id != 0 && on(id)).collect();
         vec![by_row, by_id]
     }
 

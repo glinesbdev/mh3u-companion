@@ -99,8 +99,8 @@ impl App {
             Ok(c) => c,
             Err(e) => return self.status = e,
         };
-        if let commands::Command::Scan { kind } = command {
-            return self.run_scan(kind);
+        if let commands::Command::Scan { kind, names } = command {
+            return self.run_scan(kind, &names);
         }
         let connected = self.live_connected();
         let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {

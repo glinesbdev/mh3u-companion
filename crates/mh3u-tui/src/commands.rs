@@ -6,6 +6,7 @@
 //! set honey 5       set exactly 5 (0 removes the item)
 //! stock             make sure the item pouch and box hold everything the wishlist needs
 //! scan head         look for the blacksmith's list in the game's memory (read-only; also body, arms, waist, legs)
+//! scan head A, B    the same, for a menu that really shows pieces A and B (names as in the game, comma separated)
 //! stock all         the same, also for wishlisted pieces you already own (to craft another copy)
 //! ```
 
@@ -37,6 +38,8 @@ pub enum Command {
     /// Look for the blacksmith's list of this kind of armor in the game's memory (read-only).
     Scan {
         kind: u8,
+        /// The pieces the menu really shows (comma separated names), when the app's idea of the list should not be trusted.
+        names: Vec<String>,
     },
 }
 
@@ -96,7 +99,13 @@ pub fn parse(text: &str) -> Result<Command, String> {
                 Some("legs") => 4,
                 _ => return Err("scan head, body, arms, waist or legs".into()),
             };
-            Ok(Command::Scan { kind })
+            let names = args[args.len().min(1)..]
+                .join(" ")
+                .split(',')
+                .map(|n| n.trim().to_string())
+                .filter(|n| !n.is_empty())
+                .collect();
+            Ok(Command::Scan { kind, names })
         }
         other => Err(format!("unknown command '{other}': zenny, give, set, stock or scan")),
     }
@@ -224,8 +233,15 @@ mod tests {
 
     #[test]
     fn scan_takes_a_kind_of_armor_and_defaults_to_the_head() {
-        assert_eq!(parse("scan"), Ok(Command::Scan { kind: 5 }));
-        assert_eq!(parse("scan Legs"), Ok(Command::Scan { kind: 4 }));
+        assert_eq!(parse("scan"), Ok(Command::Scan { kind: 5, names: vec![] }));
+        assert_eq!(parse("scan Legs"), Ok(Command::Scan { kind: 4, names: vec![] }));
+        assert_eq!(
+            parse("scan head Leather Headgear, Hunter's Helm"),
+            Ok(Command::Scan {
+                kind: 5,
+                names: vec!["Leather Headgear".into(), "Hunter's Helm".into()]
+            })
+        );
         assert!(parse("scan feet").is_err());
     }
 
