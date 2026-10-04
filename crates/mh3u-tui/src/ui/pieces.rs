@@ -44,6 +44,7 @@ pub(super) fn armor_lines(app: &App, a: &mh3u_core::armor::ArmorStats) -> Vec<Li
         Span::styled(theme::gems(a.slots), accent()),
         Span::styled(format!("  Defense {}", a.defense), bold()),
         Span::styled(" (base)", muted()),
+        Span::styled(a.max_defense.map_or(String::new(), |m| format!("  {m} fully upgraded")), muted()),
     ])];
     let class = match a.class {
         Some(mh3u_core::armor::ArmorClass::Both) => "Blademaster & Gunner",

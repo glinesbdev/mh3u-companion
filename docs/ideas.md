@@ -38,7 +38,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 ## Data not shown yet
 
 - Weapon **sharpness and element** (not found in the executable's data tables).
-- **Armor maximum defense** (six growth bytes decide it; no formula yet).
 - **Part-break names from the game.** `breakparts.rs` is a hand-made table for 43 monsters (see `docs/formats.md`); the rest, and a few whose
   high and G rank lists do not line up (Brachydios, Alatreon, Abyssal Lagiacrus, Glacial Agnaktor, Green and Lucent Nargacuga, Silver
   Rathalos), are numbered. The game's own source for the parts was searched for and not found: the monster archive's `em_status00` and
@@ -65,7 +64,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   the app saw.
 - Config file for colors and icons (the anvil, the muted gray) beside the wishlist.
 - Mouse support for the lists.
-- Show maximum defense next to base defense once it is decoded, and the zenny cost of upgrading armor if it turns out to have one.
+- The zenny cost of upgrading armor, if the game has one (not found).
 
 ## Live mode
 

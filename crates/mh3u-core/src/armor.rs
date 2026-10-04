@@ -17,7 +17,7 @@
 //!
 //! Prices live in a second set of tables, also indexed by piece id, of 32-byte rows: a big-endian u16 at byte 14 holds
 //! **half the zenny price** (a Jaggi piece costs 1,150 and stores 575). The same rows hold the upgrade-level data that
-//! decides maximum defense (not decoded). The price tables follow each other starting at [`PRICE_TABLES`]. This was found
+//! decides maximum defense (see [`max_defense`]). The price tables follow each other starting at [`PRICE_TABLES`]. This was found
 //! by matching 966 armor prices from a published list (942 agree) and all 39 prices seen in play (38 agree; the other is a
 //! hand-written note), see `docs/prices.md`.
 
@@ -39,8 +39,26 @@ const TABLES: &[(u8, usize, usize)] = &[
 const PRICE_TABLES: &[(u8, usize)] = &[(1, 0x22958), (2, 0x25918), (3, 0x28678), (4, 0x2b4d8), (5, 0x2e3f8)];
 const PRICE_ROW_LEN: usize = 32;
 const PRICE_AT: usize = 14;
+/// In a price row: byte 2 is 1 for the gunner version of a piece, and bytes 3 to 8 are six growth numbers.
+const GUNNER_AT: usize = 2;
+const GROWTH_AT: usize = 3;
 /// The most an armor piece plausibly costs; anything above means the table isn't where we think it is.
 const MAX_PRICE: u32 = 200_000;
+
+/// The defense a piece has fully upgraded, from its base defense and its price row (`row[2]` the gunner flag, `row[3..9]` the growth
+/// numbers g3 to g8). For a blademaster piece the gain over the base is `6*g7 + 2*g8 - g3 - g4 - g5 - 3*g6 - 2`, for a gunner piece
+/// `3*g7 + g8 - g4 - g6 - 2`. These were fitted to a published list of 969 pieces: the blademaster formula is exact on all 56 distinct rows
+/// of numbers, and the gunner formula on 51 of 53, and 950 of the 969 pieces agree (the other 19 are a few sets that are 1 or 2 away,
+/// and one earring). `None` if the result would not be a plausible defense.
+pub fn max_defense(base: u8, row: &[u8]) -> Option<u8> {
+    let g: Vec<i32> = row.get(GROWTH_AT..GROWTH_AT + 6)?.iter().map(|&b| i32::from(b)).collect();
+    let gain = if row.get(GUNNER_AT) == Some(&1) {
+        3 * g[4] + g[5] - g[1] - g[3] - 2
+    } else {
+        6 * g[4] + 2 * g[5] - g[0] - g[1] - g[2] - 3 * g[3] - 2
+    };
+    u8::try_from(i32::from(base) + gain).ok().filter(|&m| m >= base)
+}
 
 /// Which hunters can wear a piece.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -92,6 +110,8 @@ pub struct ArmorStats {
     pub skills: Vec<(u8, i8)>,
     /// What the forge charges to create the piece, in zenny. `None` when the table holds no price for it.
     pub price: Option<u32>,
+    /// The defense when fully upgraded (see [`max_defense`]); `None` for a talisman or when the table gives no sensible number.
+    pub max_defense: Option<u8>,
 }
 
 impl ArmorStats {
@@ -106,6 +126,7 @@ impl ArmorStats {
             resist: [0; 5],
             skills,
             price: None,
+            max_defense: None,
         }
     }
 }
@@ -136,6 +157,7 @@ fn parse_record(r: &[u8]) -> ArmorStats {
             .map(|p| (p[0], p[1] as i8))
             .collect(),
         price: None,
+        max_defense: None,
     }
 }
 
@@ -159,6 +181,9 @@ pub fn parse(data: &[u8]) -> Result<HashMap<(u8, u16), ArmorStats>> {
         };
         let (mut seen, mut odd) = (0usize, 0usize);
         for (id, row) in rows.as_chunks::<PRICE_ROW_LEN>().0.iter().enumerate() {
+            if let Some(stats) = out.get_mut(&(kind, id as u16)) {
+                stats.max_defense = max_defense(stats.defense, row);
+            }
             let price = u32::from(u16::from_be_bytes([row[PRICE_AT], row[PRICE_AT + 1]])) * 2;
             if price == 0 {
                 continue;
@@ -182,6 +207,23 @@ pub fn parse(data: &[u8]) -> Result<HashMap<(u8, u16), ArmorStats>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn maximum_defense_follows_the_growth_numbers_by_version() {
+        // A blademaster row (flag 0) and a gunner row (flag 1) with the same numbers as Hunter's Helm and Hunter's Cap, whose fully upgraded
+        // defense is 100 and 55 in the game's published lists.
+        let row = |gunner: u8, last: u8| {
+            let mut r = [0u8; 32];
+            r[2] = gunner;
+            r[3..9].copy_from_slice(&[3, 5, 8, 10, 14, last]);
+            r
+        };
+        assert_eq!(max_defense(6, &row(0, 0x1d)), Some(100));
+        assert_eq!(max_defense(3, &row(1, 0x1b)), Some(55));
+        assert_eq!(max_defense(1, &row(1, 27)), Some(53), "Leather Headgear");
+        assert_eq!(max_defense(5, &[0; 4]), None, "a row too short");
+        assert_eq!(max_defense(200, &row(0, 255)), None, "does not fit a byte");
+    }
 
     #[test]
     fn parses_dianthus_wealskirt_record() {

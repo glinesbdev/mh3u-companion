@@ -8,7 +8,8 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
     lines.push(Line::from(vec![
         Span::styled("Defense ", muted()),
         Span::styled(summary.defense.to_string(), bold()),
-        Span::styled(" (base, before upgrading)", muted()),
+        Span::styled(" (base)", muted()),
+        Span::styled(format!("  {} fully upgraded", summary.max_defense), muted()),
         Span::styled("   Gem slots ", muted()),
         Span::styled(summary.gem_slots.to_string(), bold()),
     ]));

@@ -419,6 +419,42 @@ mod tests {
         assert_eq!(unwrap_text(""), "");
     }
 
+    /// Maximum defense of real pieces, as a published list gives it (Leather Headgear 53, Hunter's Helm 100, Jaggi Cap 56), and every
+    /// armor piece with a recipe has one (skips without a dump).
+    #[test]
+    fn armor_maximum_defense_is_read_for_real_pieces() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        let max = |kind: u8, name: &str| {
+            let id = game
+                .find_equipment(name)
+                .into_iter()
+                .find(|&(k, _, n)| k == kind && n == name)
+                .map(|(_, id, _)| id)?;
+            game.armor_stats(kind, id)?.max_defense
+        };
+        assert_eq!(max(5, "Leather Headgear"), Some(53));
+        assert_eq!(max(5, "Hunter's Helm"), Some(100));
+        assert_eq!(max(5, "Jaggi Cap"), Some(56));
+        for kind in [1u8, 2, 3, 4, 5] {
+            let missing = game
+                .piece_ids(kind)
+                .filter(|&id| game.recipe(kind, id).is_some())
+                .filter(|&id| game.armor_stats(kind, id).is_none_or(|s| s.max_defense.is_none()))
+                .count();
+            assert!(missing <= 2, "kind {kind}: {missing} pieces with a recipe have no maximum defense");
+        }
+    }
+
     /// The part names fit the break lists of the dump: each monster in the table has as many break lists as parts in at least one rank
     /// (skips without a dump).
     #[test]

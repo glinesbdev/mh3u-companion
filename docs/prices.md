@@ -106,8 +106,8 @@ price; the game's own screens have not been checked for those, so the app shows 
 you saw in play overrides it.
 
 The same rows hold more: bytes 3 to 8 are upgrade-level data that decides maximum defense (below), byte 2 is 1 for the gunner
-version of a piece and 0 for the blademaster version, and byte 1 is some other id. Maximum defense is not decoded yet: it is
-determined by the six growth bytes (107 distinct rows, 5 conflicts against the published list), but no closed formula was found.
+version of a piece and 0 for the blademaster version, and byte 1 is some other id. Maximum defense is a fit on the six growth bytes
+(see "Armor maximum defense" in `formats.md`).
 
 Other things tried first, and why they failed: a table of the shown price indexed by piece id (the divisor was wrong), the armor stats
 record's bytes 1 to 5 (they identify the model, not the price), the recipe materials (one set shares a price across different

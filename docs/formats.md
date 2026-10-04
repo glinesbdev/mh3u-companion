@@ -55,7 +55,7 @@ more child ids (`recipes.rs`). Parents are found by inverting the child lists. T
 24-byte records, one table per slot, contiguous, indexed by piece id: byte 0 base defense, byte 6 flags (bits 0-1 gender: 1 male, 2 female, 3 both; bits 2-3 class: 1 blademaster, 2 gunner, 3 both), byte 7 rarity - 1, bytes 8-12 resistances
 (fire, water, thunder, ice, dragon, signed), byte 13 gem slots, bytes 14-23 five (skill id, signed points) pairs. Matches 895 of 968
 pieces on every field when compared with Kiranico, and 24 of 25 checks against in-game values (one skill value differs by 1).
-Bytes 1-5 (model ids, max defense data) are not decoded. The gender/class flags were checked against Kiranico on 964
+Bytes 1-5 are model ids and are not decoded (maximum defense comes from the price rows, see below). The gender/class flags were checked against Kiranico on 964
 pieces (no exceptions) and against five in-game values; all 1,605 non-dummy records in the five tables decode.
 
 ## Weapon stats
@@ -159,9 +159,19 @@ elsewhere, so `hitzones.rs` finds it by the row shape (starts non-zero, ends `0x
 normal state; later tables (other states) are not read. Compared with Kiranico on 49 monsters, 319 of the 432 zones it lists are in the
 first table. Nothing in the file names a zone, and nothing found says which zone each part-break list belongs to (the order of a monster's break lists is not the order of its zones: Gigginox breaks tail, head, stomach and its zones run head first).
 
+## Armor maximum defense
+
+Read from the 32-byte price rows (`docs/prices.md`): byte 2 is 1 for the gunner version of a piece, and bytes 3 to 8 are six numbers g3 to
+g8. The defense gained by fully upgrading is `6*g7 + 2*g8 - g3 - g4 - g5 - 3*g6 - 2` for a blademaster piece and `3*g7 + g8 - g4 - g6 - 2`
+for a gunner piece; the maximum is the base defense plus that. Found by fitting the 969 head, body and arm pieces that a published list
+gives a maximum for: the blademaster formula is exact on all 56 distinct rows of numbers, the gunner formula on 51 of 53, and 950 of the 969
+pieces agree. The other 19 are the Rathian S, Nargacuga X, Brachydios X, Damascus X and Miralis sets (1 or 2 away) and the Rhenoplos set
+(1 away), plus one earring: either those pieces carry one more rule or the list is wrong for them, which the game's screens would settle.
+The waist and legs tables have the same layout and use the same formulas, but no list was available to check them against. The weights
+are an empirical fit, not something read from the game's own text. `armor::max_defense`.
+
 ## Not found / not decoded
 
-- **Armor max defense.** The 32-byte price rows (`docs/prices.md`) hold six growth bytes that determine it, but no formula is known.
 - Weapon sharpness and element; talisman points, second skill, slots and what the talisman id decides (one sample); which body part each part-break list is, and the names of the hit zones.
 - How the game stores which pieces the blacksmith has unlocked, and what the high-rank (S, X...) sets need. The app uses the hunt rule.
 

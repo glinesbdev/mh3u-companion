@@ -157,12 +157,13 @@
 <text x="486.4" y="270.4" textLength="19.2" lengthAdjust="spacing" fill="#414868">█│</text>
 <text x="505.6" y="270.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Defense</text>
 <text x="582.4" y="270.4" textLength="19.2" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">30</text>
-<text x="611.2" y="270.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">(base,</text>
-<text x="678.4" y="270.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">before</text>
-<text x="745.6" y="270.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">upgrading)</text>
-<text x="870.4" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Gem</text>
-<text x="908.8" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">slots</text>
-<text x="966.4" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">4</text>
+<text x="611.2" y="270.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">(base)</text>
+<text x="688.0" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">500</text>
+<text x="726.4" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">fully</text>
+<text x="784.0" y="270.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">upgraded</text>
+<text x="889.6" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Gem</text>
+<text x="928.0" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">slots</text>
+<text x="985.6" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">4</text>
 <text x="1139.2" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">│</text>
 <text x="64.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">6</text>

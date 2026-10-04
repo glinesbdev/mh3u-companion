@@ -48,7 +48,7 @@ dark theme; your terminal's own palette applies when you run it.
 - **Items**: item pouch and item box, with names and quantities, and a details panel for the highlighted item: the game's description, how many you hold, what the wishlist needs of it, which armor and weapons are made with it, and which monsters drop it. The header shows your hunter name and zenny. `/` is a fuzzy
   search by item name over both lists (typos are fine: `hny` finds Honey).
 - **Monsters**: every monster with drop data, and what it drops when carved, by rank (low, high, G): body carve, tail carve, shiny drops, capture rewards and part-break rewards, with the chance of each item. A ★ marks items your wishlist still needs, and `s` can put the monsters that drop the most of them first. The Items tab shows the same thing from the other side: the highlighted item's "Dropped by" list. `p` on the Items tab moves the highlight between the pouch and the box.  Part breaks are named ("Head break", "Wing break") for the 43 monsters a small hand-made table covers (made by matching the lists against a published monster database, so a name can be off); the others are numbered in the game's order. PageUp/PageDown scroll the drops. The same pane lists the monster's **weak spots**: damage percentages (cut, impact, shot and the five elements) for each hit zone, soft ones in green, and the best element. Zones are numbered in the game's order, as its data names none. Which monster a capture or break list belongs to is inferred (see `docs/formats.md`).
-- **Worn**: what you are wearing, slot by slot, and what it adds up to: base defense, gem slots, resistances and the skill points of each skill with where they come from. A skill is active at 10 points or more and has its penalty at -10 or less (every skill's first effect starts at 10); Torso Up, when active, doubles the body piece's points. The talisman and decorations are not read yet. The higher tiers (15 and 20 points) and which effect each tier gives are not decoded, so they are not shown.
+- **Worn**: what you are wearing, slot by slot, and what it adds up to: base defense (and the defense fully upgraded), gem slots, resistances and the skill points of each skill with where they come from. A skill is active at 10 points or more and has its penalty at -10 or less (every skill's first effect starts at 10); Torso Up, when active, doubles the body piece's points. The talisman and decorations are not read yet. The higher tiers (15 and 20 points) and which effect each tier gives are not decoded, so they are not shown.
 - **Descriptions**: the details panels show the game's own description of the piece. `i` also shows what each skill does under it.
 - **Equipment**: your equipment box, with the same details panel as the Crafting tab (stats, recipes and costs, and what a weapon upgrades into). The weapon and armor you are wearing are marked `●`. `s` cycles the sort: box order, name, rarity, type, worn first.
 - **Crafting**: every armor piece and weapon that has a recipe, with have/need counts for each material (pouch and box together).
@@ -98,7 +98,7 @@ dark theme; your terminal's own palette applies when you run it.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.
 
-Not shown yet: sharpness and element for weapons, armor max defense. See `docs/formats.md`.
+Not shown yet: sharpness and element for weapons. See `docs/formats.md`.
 
 ## Live mode
 

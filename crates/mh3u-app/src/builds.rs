@@ -426,6 +426,7 @@ mod tests {
             resist: [0; 5],
             skills: skills.to_vec(),
             price: None,
+            max_defense: None,
         }
     }
 

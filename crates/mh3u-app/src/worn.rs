@@ -33,6 +33,8 @@ impl SkillTotal {
 pub struct Summary {
     /// Sum of the pieces' base defense (before any upgrading).
     pub defense: u32,
+    /// The same fully upgraded (a piece with no known maximum counts at its base defense).
+    pub max_defense: u32,
     /// Fire, water, thunder, ice, dragon.
     pub resist: [i32; 5],
     /// Gem slots on the armor, not counting what is gemmed into them.
@@ -49,6 +51,7 @@ pub fn summarize(pieces: &[(u8, &ArmorStats)]) -> Summary {
     let mut out = Summary::default();
     for &(_, a) in pieces {
         out.defense += u32::from(a.defense);
+        out.max_defense += u32::from(a.max_defense.unwrap_or(a.defense));
         out.gem_slots += u32::from(a.slots);
         for (total, &r) in out.resist.iter_mut().zip(&a.resist) {
             *total += i32::from(r);
@@ -102,6 +105,7 @@ mod tests {
             resist,
             skills: skills.to_vec(),
             price: None,
+            max_defense: Some(defense + 40),
         }
     }
 
@@ -111,6 +115,14 @@ mod tests {
         let legs = piece(12, 2, [0, 1, 0, -1, 0], &[(11, 7), (13, 3)]);
         let s = summarize(&[(5, &head), (4, &legs)]);
         assert_eq!((s.defense, s.gem_slots, s.resist), (22, 3, [1, -1, 0, -1, 3]));
+        assert_eq!(s.max_defense, 22 + 80, "each test piece gains 40");
+        let mut unknown = piece(5, 0, [0; 5], &[]);
+        unknown.max_defense = None;
+        assert_eq!(
+            summarize(&[(5, &unknown)]).max_defense,
+            5,
+            "a piece with no known maximum counts at its base"
+        );
         assert_eq!(
             s.skills[0],
             SkillTotal {
