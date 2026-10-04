@@ -39,4 +39,5 @@ pub mod rpx;
 pub mod save;
 pub mod shopscan;
 pub mod skilltiers;
+pub mod weapon_extras;
 pub mod weapons;

@@ -66,6 +66,9 @@
 <text x="995.2" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">1</text>
 <text x="1139.2" y="110.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
+<text x="102.4" y="130.4" textLength="67.2" lengthAdjust="spacing" fill="#f7768e">███████</text>
+<text x="169.6" y="130.4" textLength="28.8" lengthAdjust="spacing" fill="#ff8700">███</text>
+<text x="198.4" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#e0af68">█</text>
 <text x="515.2" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="130.4" textLength="38.4" lengthAdjust="spacing" fill="#f7768e">Fire</text>
@@ -76,23 +79,21 @@
 <text x="793.6" y="130.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">+0</text>
 <text x="832.0" y="130.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7">Ice</text>
 <text x="870.4" y="130.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">+0</text>
-<text x="908.8" y="130.4" textLength="57.6" lengthAdjust="spacing" fill="#ad8ee6">Dragon</text>
+<text x="908.8" y="130.4" textLength="57.6" lengthAdjust="spacing" fill="#bb9af7">Dragon</text>
 <text x="976.0" y="130.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a">+1</text>
 <text x="1139.2" y="130.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="150.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Head</text>
-<text x="102.4" y="150.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Leather</text>
-<text x="179.2" y="150.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Headgear</text>
-<text x="332.8" y="150.4" textLength="19.2" lengthAdjust="spacing" fill="#a9b1d6" font-weight="bold">R1</text>
-<text x="371.2" y="150.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7">◆◇◇</text>
-<text x="419.2" y="150.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Def</text>
-<text x="457.6" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">1</text>
 <text x="515.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="1139.2" y="150.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="170.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Body</text>
-<text x="102.4" y="170.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
+<text x="25.6" y="170.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Head</text>
+<text x="102.4" y="170.4" textLength="67.2" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Leather</text>
+<text x="179.2" y="170.4" textLength="76.8" lengthAdjust="spacing" fill="#c0caf5" font-weight="bold">Headgear</text>
+<text x="332.8" y="170.4" textLength="19.2" lengthAdjust="spacing" fill="#a9b1d6" font-weight="bold">R1</text>
+<text x="371.2" y="170.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7">◆◇◇</text>
+<text x="419.2" y="170.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Def</text>
+<text x="457.6" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">1</text>
 <text x="515.2" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="170.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5">Spd</text>
@@ -106,7 +107,7 @@
 <text x="1014.4" y="170.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">+2</text>
 <text x="1139.2" y="170.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Arms</text>
+<text x="25.6" y="190.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Body</text>
 <text x="102.4" y="190.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
 <text x="515.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
@@ -121,7 +122,7 @@
 <text x="1091.2" y="190.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">bug</text>
 <text x="1139.2" y="190.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="210.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Waist</text>
+<text x="25.6" y="210.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Arms</text>
 <text x="102.4" y="210.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
 <text x="515.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
@@ -130,7 +131,7 @@
 <text x="659.2" y="210.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">mining.</text>
 <text x="1139.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="230.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
+<text x="25.6" y="230.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Waist</text>
 <text x="102.4" y="230.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
 <text x="515.2" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
@@ -144,7 +145,7 @@
 <text x="1014.4" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">+2</text>
 <text x="1139.2" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
-<text x="25.6" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Charm</text>
+<text x="25.6" y="250.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Legs</text>
 <text x="102.4" y="250.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
 <text x="515.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
@@ -158,6 +159,8 @@
 <text x="995.2" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Nets,</text>
 <text x="1139.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
+<text x="25.6" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Charm</text>
+<text x="102.4" y="270.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">nothing</text>
 <text x="515.2" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="524.8" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="534.4" y="270.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">Boomerangs</text>

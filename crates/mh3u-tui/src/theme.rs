@@ -177,9 +177,26 @@ pub fn element_style(name: &str) -> Style {
         "Water" => Color::Blue,
         "Ice" => Color::LightCyan,
         "Thunder" => Color::Yellow,
+        "Dragon" => Color::LightMagenta,
+        "Para" => Color::LightYellow,
+        "Sleep" => Color::LightBlue,
+        "Slime" => Color::LightGreen,
         _ => Color::Magenta,
     };
     fg(color)
+}
+
+/// The colors of a sharpness bar, red first.
+pub fn sharpness_color(index: usize) -> Color {
+    [
+        Color::Red,
+        Color::Indexed(208),
+        Color::Yellow,
+        Color::Green,
+        Color::Blue,
+        Color::White,
+        Color::Magenta,
+    ][index.min(6)]
 }
 
 /// Green above zero, red below, gray at zero.

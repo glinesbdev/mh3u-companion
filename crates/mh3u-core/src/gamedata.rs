@@ -76,6 +76,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// Sharpness and element of the melee weapons, by (kind, id).
+    weapon_extras: HashMap<(u8, u16), crate::weapon_extras::Extras>,
     /// What each decoration does, indexed by the number a save keeps for it, minus one.
     decorations: Vec<crate::decorations::Decoration>,
     /// What a shop pays for each item, by item id.
@@ -161,7 +163,7 @@ impl GameData {
         let armor = armor::parse(&data_section)?;
         let weapons = crate::weapons::parse(&data_section)?;
         let drops = crate::drops::parse(&data_section, recipes::DATA_SECTION_ADDR)?;
-        Ok(GameData {
+        let mut game = GameData {
             items: names("Item00_eng")?,
             item_details: optional("ItemDetail_eng"),
             skill_details: optional("Skill_Type_Exp_eng"),
@@ -175,6 +177,7 @@ impl GameData {
             weapons,
             drops,
             decorations: crate::decorations::parse(&data_section)?,
+            weapon_extras: HashMap::new(),
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
@@ -182,7 +185,13 @@ impl GameData {
             equipment,
             game_dir: game_dir.to_path_buf(),
             zones: Default::default(),
-        })
+        };
+        game.weapon_extras = crate::weapon_extras::parse()?
+            .into_iter()
+            .filter(|((kind, id), (name, _))| game.piece_name(*kind, *id) == Some(name.as_str()))
+            .map(|(key, (_, extras))| (key, extras))
+            .collect();
+        Ok(game)
     }
 
     /// The hit zones of a monster's normal state, read from its archive on first use; empty when the dump has none for it.
@@ -245,6 +254,11 @@ impl GameData {
             out.extend(d.penalty);
         }
         out
+    }
+
+    /// A melee weapon's sharpness bars and elements, when the table has the weapon under this name.
+    pub fn weapon_extras(&self, kind: u8, id: u16) -> Option<&crate::weapon_extras::Extras> {
+        self.weapon_extras.get(&(kind, id))
     }
 
     /// What a shop pays for an item, in zenny; `None` for an item with no value (or an id past the table).
@@ -532,6 +546,13 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // sharpness and element joined by name: nearly every melee weapon has them, and Chrome Quietus is the example in the docs
+        assert!(game.weapon_extras.len() > 1090, "{}", game.weapon_extras.len());
+        let quietus = game
+            .piece_ids(7)
+            .find(|&i| game.piece_name(7, i) == Some("Chrome Quietus"))
+            .unwrap();
+        assert_eq!(game.weapon_extras(7, quietus).unwrap().sharpness, [22, 20, 15, 9, 15, 7, 0]);
         // the effect text lines up with the tier table
         let (_, effect) = crate::skilltiers::tiers(11).next().unwrap();
         assert_eq!(game.effect_name(effect), Some("Attack Up (L)"));

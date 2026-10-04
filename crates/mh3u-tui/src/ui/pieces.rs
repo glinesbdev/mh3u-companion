@@ -93,7 +93,7 @@ pub(super) fn armor_lines(app: &App, a: &mh3u_core::armor::ArmorStats) -> Vec<Li
 }
 
 /// A weapon's stats: rarity, gem slots, attack and affinity.
-pub(super) fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
+pub(super) fn weapon_lines(app: &App, kind: u8, id: u16, w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>> {
     let mut lines = vec![Line::from(vec![
         theme::rarity_badge(w.rarity),
         Span::raw(" "),
@@ -106,7 +106,52 @@ pub(super) fn weapon_lines(w: &mh3u_core::weapons::Weapon) -> Vec<Line<'static>>
             Span::styled(format!("{:+}%", w.affinity), theme::signed_style(i32::from(w.affinity))),
         ]));
     }
+    if let Some(e) = app.game.weapon_extras(kind, id) {
+        for s in &e.specials {
+            let mut spans = vec![
+                Span::styled(format!("{:<9}", if s.hidden { "Hidden" } else { "Element" }), muted()),
+                Span::styled(format!("{} {}", s.name, s.value), theme::element_style(&s.name)),
+            ];
+            if s.hidden {
+                spans.push(Span::styled("  (needs Awaken)", muted()));
+            }
+            lines.push(Line::from(spans));
+        }
+        lines.push(sharpness_line("Sharpness", &e.sharpness));
+        if e.plus != e.sharpness {
+            lines.push(sharpness_line("+1", &e.plus));
+        }
+    }
     lines
+}
+
+/// Points of sharpness shown by one cell of the bar.
+const POINTS_PER_CELL: u32 = 3;
+
+/// A sharpness bar drawn in the colors of the game's, one cell for every few points. Cells are rounded from the running total so the bar
+/// is as long as the whole.
+fn sharpness_line(label: &str, bar: &mh3u_core::weapon_extras::Bar) -> Line<'static> {
+    let mut spans = vec![Span::styled(format!("{label:<9}"), muted())];
+    spans.extend(sharpness_spans(bar, POINTS_PER_CELL));
+    Line::from(spans)
+}
+
+/// The bar's colored cells, one for every `per_cell` points.
+pub(super) fn sharpness_spans(bar: &mh3u_core::weapon_extras::Bar, per_cell: u32) -> Vec<Span<'static>> {
+    let mut spans = Vec::new();
+    let (mut total, mut drawn) = (0u32, 0u32);
+    for (color, &points) in bar.iter().enumerate() {
+        total += u32::from(points);
+        let upto = (total + per_cell / 2) / per_cell;
+        if upto > drawn {
+            spans.push(Span::styled(
+                "█".repeat((upto - drawn) as usize),
+                Style::new().fg(theme::sharpness_color(color)),
+            ));
+            drawn = upto;
+        }
+    }
+    spans
 }
 
 /// Whether the blacksmith offers a piece, by the rule in `mh3u_core::blacksmith` and from pieces seen on offer before.
@@ -162,7 +207,7 @@ pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable:
     if let Some(a) = app.game.armor_stats(kind, id) {
         lines.extend(armor_lines(app, a));
     } else if let Some(w) = app.game.weapon_stats(kind, id) {
-        lines.extend(weapon_lines(w));
+        lines.extend(weapon_lines(app, kind, id, w));
     }
     lines.extend(unlock_line(app, kind, id));
     lines.push(Line::raw(""));

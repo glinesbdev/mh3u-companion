@@ -16,6 +16,8 @@ struct Column {
     owned: bool,
     /// The blacksmith is offering it.
     offered: bool,
+    /// Sharpness bars and elements, when the table has the weapon.
+    extras: Option<mh3u_core::weapon_extras::Extras>,
     /// The fees of the cheapest way to get it (0 when owned); `None` when not all prices are known.
     zenny: Option<u32>,
 }
@@ -40,6 +42,7 @@ fn columns(app: &App) -> Vec<Column> {
                 attack: w.attack,
                 affinity: w.affinity,
                 slots: w.slots,
+                extras: app.game.weapon_extras(kind, id).cloned(),
                 owned,
                 offered: !owned && app.at_blacksmith(kind, id),
                 zenny,
@@ -98,6 +101,12 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
     };
     let affinity = mark(cols.iter().map(|c| Some(i64::from(c.affinity))).collect(), true);
     let slots = mark(cols.iter().map(|c| Some(i64::from(c.slots))).collect(), true);
+    let sharp_total = |c: &Column| {
+        c.extras
+            .as_ref()
+            .map(|e| i64::from(e.sharpness.iter().map(|&v| u32::from(v)).sum::<u32>()))
+    };
+    let sharp = mark(cols.iter().map(sharp_total).collect(), true);
     let cost = mark(cols.iter().map(|c| c.zenny.map(i64::from)).collect(), false);
     let cell = |text: String, best: bool| {
         if best {
@@ -123,6 +132,54 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
             cols.iter()
                 .zip(&affinity)
                 .map(|(c, &b)| cell(format!("{:+}%", c.affinity), b))
+                .collect(),
+        ),
+        row(
+            "Element",
+            cols.iter()
+                .map(|c| match c.extras.as_ref().filter(|e| !e.specials.is_empty()) {
+                    Some(e) => Cell::from(Line::from(
+                        e.specials
+                            .iter()
+                            .flat_map(|s| {
+                                let style = theme::element_style(&s.name);
+                                [
+                                    Span::styled(
+                                        format!("{} {}", s.name, s.value),
+                                        if s.hidden { style.add_modifier(Modifier::DIM) } else { style },
+                                    ),
+                                    Span::raw(" "),
+                                ]
+                            })
+                            .collect::<Vec<_>>(),
+                    )),
+                    None => Cell::from(Span::styled("none", muted())),
+                })
+                .collect(),
+        ),
+        row(
+            "Sharpness",
+            cols.iter()
+                .zip(&sharp)
+                .map(|(c, &best)| match &c.extras {
+                    Some(e) => {
+                        let mut spans = super::pieces::sharpness_spans(&e.sharpness, 5);
+                        if best {
+                            spans.push(Span::styled(" ✔", good().add_modifier(Modifier::BOLD)));
+                        }
+                        Cell::from(Line::from(spans))
+                    }
+                    None => Cell::from(Span::styled("?", muted())),
+                })
+                .collect(),
+        ),
+        row(
+            "With Sharp +1",
+            cols.iter()
+                .map(|c| match &c.extras {
+                    Some(e) => Cell::from(Line::from(super::pieces::sharpness_spans(&e.plus, 5))),
+                    None => Cell::from(Span::styled("?", muted())),
+                })
                 .collect(),
         ),
         row(
@@ -167,7 +224,7 @@ pub(super) fn draw_compare(f: &mut Frame, app: &mut App, area: Rect) {
         table_area,
     );
     let mut notes = vec![Line::styled(
-        "✔ marks the best in a row. Sharpness and element are not in the data yet.",
+        "✔ marks the best in a row. Sharpness, element and hidden element (dimmed) come from a public database, not the game.",
         muted(),
     )];
     if !same_type {

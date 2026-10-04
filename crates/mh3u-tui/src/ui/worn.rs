@@ -105,6 +105,14 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
             spans.push(Span::styled(format!(" Attack {}", stats.attack), muted()));
         }
         gear.push(Line::from(spans));
+        if let Some(e) = app.game.weapon_extras(w.kind, w.id) {
+            let mut bar = vec![Span::raw(format!("{:<8}", ""))];
+            bar.extend(super::pieces::sharpness_spans(&e.sharpness, 3));
+            for s in e.specials.iter().filter(|s| !s.hidden) {
+                bar.push(Span::styled(format!("  {} {}", s.name, s.value), theme::element_style(&s.name)));
+            }
+            gear.push(Line::from(bar));
+        }
     } else {
         gear.push(Line::from(vec![
             Span::styled(format!("{:<8}", "Weapon"), muted()),

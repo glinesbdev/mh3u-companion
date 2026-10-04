@@ -100,42 +100,69 @@
 <text x="16.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
-<text x="361.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Gem</text>
-<text x="400.0" y="210.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">slots</text>
-<text x="515.2" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5">◆◇◇</text>
-<text x="841.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5">◆◇◇</text>
+<text x="361.6" y="210.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Element</text>
+<text x="515.2" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" fill-opacity="0.6">Ice</text>
+<text x="553.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" fill-opacity="0.6">210</text>
+<text x="841.6" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" fill-opacity="0.6">Ice</text>
+<text x="880.0" y="210.4" textLength="28.8" lengthAdjust="spacing" fill="#0db9d7" fill-opacity="0.6">250</text>
 <text x="1139.2" y="210.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
-<text x="361.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">You</text>
-<text x="515.2" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
-<text x="553.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">yet</text>
-<text x="841.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
-<text x="880.0" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">yet</text>
+<text x="361.6" y="230.4" textLength="86.4" lengthAdjust="spacing" fill="#8a8a8a">Sharpness</text>
+<text x="515.2" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#f7768e">██</text>
+<text x="534.4" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#ff8700">██</text>
+<text x="553.6" y="230.4" textLength="48.0" lengthAdjust="spacing" fill="#e0af68">█████</text>
+<text x="601.6" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#9ece6a">██</text>
+<text x="841.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#f7768e">███</text>
+<text x="870.4" y="230.4" textLength="19.2" lengthAdjust="spacing" fill="#ff8700">██</text>
+<text x="889.6" y="230.4" textLength="48.0" lengthAdjust="spacing" fill="#e0af68">█████</text>
+<text x="937.6" y="230.4" textLength="28.8" lengthAdjust="spacing" fill="#9ece6a">███</text>
+<text x="976.0" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">✔︎</text>
 <text x="1139.2" y="230.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
-<text x="361.6" y="250.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">Cheapest</text>
-<text x="448.0" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">way</text>
-<text x="515.2" y="250.4" textLength="57.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">15,000</text>
-<text x="582.4" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">z</text>
-<text x="601.6" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">✔︎</text>
-<text x="841.6" y="250.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">35,000</text>
-<text x="908.8" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">z</text>
+<text x="361.6" y="250.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">With</text>
+<text x="409.6" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">Sharp</text>
+<text x="467.2" y="250.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">+1</text>
+<text x="515.2" y="250.4" textLength="19.2" lengthAdjust="spacing" fill="#f7768e">██</text>
+<text x="534.4" y="250.4" textLength="19.2" lengthAdjust="spacing" fill="#ff8700">██</text>
+<text x="553.6" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#e0af68">█████</text>
+<text x="601.6" y="250.4" textLength="38.4" lengthAdjust="spacing" fill="#9ece6a">████</text>
+<text x="841.6" y="250.4" textLength="28.8" lengthAdjust="spacing" fill="#f7768e">███</text>
+<text x="870.4" y="250.4" textLength="19.2" lengthAdjust="spacing" fill="#ff8700">██</text>
+<text x="889.6" y="250.4" textLength="48.0" lengthAdjust="spacing" fill="#e0af68">█████</text>
+<text x="937.6" y="250.4" textLength="38.4" lengthAdjust="spacing" fill="#9ece6a">████</text>
+<text x="976.0" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#7aa2f7">█</text>
 <text x="1139.2" y="250.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
+<text x="361.6" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">Gem</text>
+<text x="400.0" y="270.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">slots</text>
+<text x="515.2" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5">◆◇◇</text>
+<text x="841.6" y="270.4" textLength="28.8" lengthAdjust="spacing" fill="#c0caf5">◆◇◇</text>
 <text x="1139.2" y="270.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
+<text x="361.6" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">You</text>
+<text x="515.2" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
+<text x="553.6" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">yet</text>
+<text x="841.6" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
+<text x="880.0" y="290.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">yet</text>
 <text x="1139.2" y="290.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="352.0" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
+<text x="361.6" y="310.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">Cheapest</text>
+<text x="448.0" y="310.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">way</text>
+<text x="515.2" y="310.4" textLength="57.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">15,000</text>
+<text x="582.4" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">z</text>
+<text x="601.6" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#9ece6a" font-weight="bold">✔︎</text>
+<text x="841.6" y="310.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">35,000</text>
+<text x="908.8" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#c0caf5">z</text>
 <text x="1139.2" y="310.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
 <text x="16.0" y="330.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="330.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
@@ -201,17 +228,22 @@
 <text x="515.2" y="610.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">in</text>
 <text x="544.0" y="610.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">a</text>
 <text x="563.2" y="610.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">row.</text>
-<text x="611.2" y="610.4" textLength="86.4" lengthAdjust="spacing" fill="#8a8a8a">Sharpness</text>
-<text x="707.2" y="610.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">and</text>
-<text x="745.6" y="610.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">element</text>
-<text x="822.4" y="610.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">are</text>
-<text x="860.8" y="610.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
-<text x="899.2" y="610.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">in</text>
-<text x="928.0" y="610.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
-<text x="966.4" y="610.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">data</text>
-<text x="1014.4" y="610.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">yet.</text>
+<text x="611.2" y="610.4" textLength="96.0" lengthAdjust="spacing" fill="#8a8a8a">Sharpness,</text>
+<text x="716.8" y="610.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">element</text>
+<text x="793.6" y="610.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">and</text>
+<text x="832.0" y="610.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hidden</text>
+<text x="899.2" y="610.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">element</text>
+<text x="976.0" y="610.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">(dimmed)</text>
+<text x="1062.4" y="610.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">come</text>
+<text x="1110.4" y="610.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">from</text>
 <text x="16.0" y="630.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="630.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
+<text x="352.0" y="630.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">a</text>
+<text x="371.2" y="630.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">public</text>
+<text x="438.4" y="630.4" textLength="86.4" lengthAdjust="spacing" fill="#8a8a8a">database,</text>
+<text x="534.4" y="630.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">not</text>
+<text x="572.8" y="630.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
+<text x="611.2" y="630.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">game.</text>
 <text x="16.0" y="650.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="342.4" y="650.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="16.0" y="670.4" textLength="336.0" lengthAdjust="spacing" fill="#0db9d7">╰─────────────────────────────────╯</text>

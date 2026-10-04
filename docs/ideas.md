@@ -33,7 +33,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Data not shown yet
 
-- Weapon **sharpness and element**: not found in the executable's tables or in the running game's memory (`docs/formats.md` says what was searched). The record bytes that select a great sword's bar are known; the bars themselves would have to be a hand-made table.
 - **Part-break names from the game.** `breakparts.rs` is a hand-made table for 43 monsters (see `docs/formats.md`); the rest, and a few whose
   high and G rank lists do not line up (Brachydios, Alatreon, Abyssal Lagiacrus, Glacial Agnaktor, Green and Lucent Nargacuga, Silver
   Rathalos), are numbered. The game's own source for the parts was searched for and not found: the monster archive's `em_status00` and
@@ -48,7 +47,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Quality of life
 
-- Show a weapon's sharpness as the colored bar the game uses, once the data is found (and add sharpness and element to the weapon comparison).
 - More Equipment sorts (by skill points) and search on the Worn tab (it has no list). Wishlist sorting and a way to mark a piece "done" without owning it.
 - Config file for colors and icons (the anvil, the muted gray) beside the wishlist.
 - Mouse support for the lists.
