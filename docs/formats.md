@@ -135,8 +135,8 @@ Read by comparing the saves of two hunters with the numbers on their guild cards
 too, but not reliably: 0x7b61 follows the hall count, while 0x7568 (village) lags the card record by a quest in some snapshots and 0x792f (hall) stopped
 at 2 when the card went to 3, so they are something else. A byte at 0x7578 counts hall quests since the first (0, 0, 1, 2) and may be the progress
 towards the next rank. A byte at 0x7569 is 1 for the hunter with rank 1 and 0 for the one with rank 0 and did not change with hall quests, so it
-may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 is the **hunter rank points**: it grew with every
-quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
+may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 is a total of the quest points: it grew with every
+quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests, village ones included, so it is not the hall's hunter rank points alone. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
 byte or 16-bit number goes up by one with each quest, so it is stored in some other form or not in this file.
 
 ## Monster hit zones
@@ -182,7 +182,7 @@ belong to no named monster are left out. Earlier versions showed the later monst
 
 `QTDS`, a u32 version (5), then the texts, then a binary part. A text is five strings (English, French, German, Italian, Spanish),
 each a u32 length and the bytes (UTF-8, `\r\n` for line breaks). In order: the **title** (`Bear Trap`), the quest id (u16), the main
-**goal** (`Capture an Arzuros`), the star rank (u8) and one more byte, five empty strings, the time limit in minutes (u16), the
+**goal** (`Capture an Arzuros`), the star rank (u8) and the **map** (u8, see below), five empty strings, the time limit in minutes (u16), the
 failure condition, six bytes, the **client** and the **description**. All 413 files of the US dump read this way.
 
 The binary part (442 bytes for most quests, longer for 59 with extra data) starts right after the description. Found so far:
@@ -192,7 +192,7 @@ The binary part (442 bytes for most quests, longer for 59 with extra data) start
 | 2 | kind: 1 slay, 2 deliver, 4 capture, 5 hunt (others: special goals) | matches the goal text on every quest looked at |
 | 10 + 11 k (k < 5) | large monster records: the first byte is the monster's id in the name table, 0 for none | matches the goal text (including two-monster hunts) |
 | 71 + 4 k (k < 43) | rewards `[item u16, quantity, chance]`; even k is the main box (monster parts), odd k the second box (supplies); chance 0 = always | the boxes add up to 100 on 412 of 413 quests (quest 1707's main box adds up to 110); the Arzuros capture quest matches what a hunter received |
-| 327 + 4 k (k < 4) | four u32: the **fee**, the zenny **reward**, a third of the reward, and the **hunter rank points** the quest gives | fee and reward match the quest board on 3 quests (Bug Hunt 100 and 600, The Fisherman's Tale 400 and 4000, Rathian's Wrath 920 and 9200); the points matched the total in the save for 4 of 6 quests, and the sum for two; the other 2 gained less |
+| 327 + 4 k (k < 4) | four u32: the **fee**, the zenny **reward**, a third of the reward, and the **points** (hunter rank points in the hall; the game gives none for village quests, though the number is there) | fee and reward match the quest board on 3 quests (Bug Hunt 100 and 600, The Fisherman's Tale 400 and 4000, Rathian's Wrath 920 and 9200); the points matched the rise in the save's total at 0x5a46 for 4 of 6 quests (hall and village), and the sum for two; the other 2 gained less |
 | 1 | the **map** (a number) | named for three numbers by the quest board: 0x24 Deserted Island (Bug Hunt), 0x17 Flooded Forest (The Fisherman's Tale), 0x16 Sandy Plains (Rathian's Wrath). A map has several numbers (0x0a, 0x21 and 0x16 all seem to be Sandy Plains from the quest texts, 0x20 and 0x17 Flooded Forest), probably its versions; no table of them was found in the text archive |
 | 328 on | spawn lists | not decoded |
 

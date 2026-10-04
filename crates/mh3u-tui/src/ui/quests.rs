@@ -99,12 +99,19 @@ fn quest_lines(app: &App, q: &Quest) -> Vec<Line<'static>> {
         Span::styled("  Fee ", muted()),
         Span::raw(format!("{}z", group_digits(u64::from(q.fee)))),
     ];
-    if q.rank_points > 0 {
-        pay.push(Span::styled(format!("  {} rank points", q.rank_points), muted()));
+    if q.points > 0 && q.place == mh3u_core::quest::Place::Hall {
+        pay.push(Span::styled(format!("  {} rank points", q.points), muted()));
     }
     lines.push(Line::from(pay));
-    if let Some(map) = mh3u_core::quest::stage_name(q.stage) {
+    if let Some(map) = mh3u_core::quest::map_name(q.map) {
         lines.push(Line::from(vec![Span::styled("Map ", muted()), Span::raw(map)]));
+    }
+    let small: Vec<&str> = q.small_monsters.iter().filter_map(|&m| app.game.monster_name(m)).collect();
+    if !small.is_empty() {
+        lines.push(Line::from(vec![
+            Span::styled("Small monsters ", muted()),
+            Span::raw(small.join(", ")),
+        ]));
     }
     if !q.monsters.is_empty() {
         let names: Vec<&str> = q.monsters.iter().filter_map(|&m| app.game.monster_name(m)).collect();

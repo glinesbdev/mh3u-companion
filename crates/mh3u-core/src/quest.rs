@@ -65,16 +65,26 @@ impl Place {
     }
 }
 
-/// The name of a map by the number in the quest file, for the numbers a quest board reading has named. A hunter read these maps off
-/// three quests: Bug Hunt (0x24, Deserted Island), The Fisherman's Tale (0x17, Flooded Forest) and Rathian's Wrath (0x16, Sandy Plains).
-/// The other numbers (0x0a is the most common) are maps too, but which is not known.
-pub fn stage_name(stage: u8) -> Option<&'static str> {
-    match stage {
-        0x24 => Some("Deserted Island"),
-        0x17 => Some("Flooded Forest"),
-        0x16 => Some("Sandy Plains"),
-        _ => None,
-    }
+/// The name of a map by the number stored after the quest's star rank. Found by looking up the quests of a list of quest titles and
+/// their maps (a quest board reading for three of them, the rest from a published list of one quest per map): 1 Deserted Island, 2 Sandy
+/// Plains, 3 Flooded Forest, 4 Tundra, 5 Volcano, 6 Great Desert, 7 Underwater Ruins, 8 Land Arena, 11 Sacred Land, 12 Water Arena (every
+/// quest with it is about the sea), 13 Misty Peaks. 14 and 15 are Elder Dragon places that were not named. The number does not say day or
+/// night: day and night quests of one map share it.
+pub fn map_name(map: u8) -> Option<&'static str> {
+    Some(match map {
+        1 => "Deserted Island",
+        2 => "Sandy Plains",
+        3 => "Flooded Forest",
+        4 => "Tundra",
+        5 => "Volcano",
+        6 => "Great Desert",
+        7 => "Underwater Ruins",
+        8 => "Land Arena",
+        11 => "Sacred Land",
+        12 => "Water Arena",
+        13 => "Misty Peaks",
+        _ => return None,
+    })
 }
 
 /// One thing a quest can give: `percent` is the chance among its box; 0 means every time.
@@ -103,12 +113,14 @@ pub struct Quest {
     /// hall quests).
     pub reward: u32,
     pub fee: u32,
-    /// The hunter rank points it gives (the save's total at 0x5a46 grew by this for 4 of the 6 quests a hunter finished and by less for
-    /// the other 2).
-    pub rank_points: u32,
-    /// The map, as a number from the second byte of the binary part. One map has several numbers (its day and night versions, say), and
-    /// only three are named: see [`stage_name`].
-    pub stage: u8,
+    /// The points the quest gives: hunter rank points in the hall (the game gives none for village quests, whose number here is still
+    /// filled in). The save's total at 0x5a46 grew by this much after 4 of the 6 quests a hunter finished, hall and village.
+    pub points: u32,
+    /// The map, as the number stored after the star rank (see [`map_name`]).
+    pub map: u8,
+    /// The small monsters the quest puts on the map, as two ids in the monster name table (0 for none); they are the first two bytes of
+    /// the binary part.
+    pub small_monsters: Vec<u16>,
     /// Large monsters (ids in the monster name table), in the order the file lists them.
     pub monsters: Vec<u16>,
     /// The two reward boxes: the main one and the second.
@@ -175,7 +187,7 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
     let id = r.u16()?;
     let goal = r.texts()?;
     let stars = r.u8()?;
-    r.u8()?;
+    let map = r.u8()?;
     r.texts()?; // five empty strings in every quest seen
     let minutes = r.u16()?;
     r.texts()?; // the failure condition
@@ -229,8 +241,9 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
         place: Place::of_quest(id),
         fee: pay[0],
         reward: pay[1],
-        rank_points: pay[3],
-        stage: tail[1],
+        points: pay[3],
+        map,
+        small_monsters: tail[..2].iter().map(|&m| u16::from(m)).filter(|&m| m != 0).collect(),
         monsters,
         rewards,
     })
@@ -341,7 +354,7 @@ mod tests {
         {
             let q = parse(&std::fs::read(f.path()).unwrap()).unwrap();
             read += 1;
-            points.insert(q.id, q.rank_points);
+            points.insert(q.id, q.points);
             quests.push(q.clone());
             assert!(q.monsters.iter().all(|&m| m < 100), "{}: monster {:?}", q.title, q.monsters);
             for (box_, rewards) in q.rewards.iter().enumerate() {
@@ -363,8 +376,28 @@ mod tests {
             (11615, 9200, 920, "Sandy Plains"),
         ] {
             let q = quests.iter().find(|q| q.id == id).unwrap();
-            assert_eq!((q.reward, q.fee, stage_name(q.stage)), (reward, fee, Some(map)), "quest {id}");
+            assert_eq!((q.reward, q.fee, map_name(q.map)), (reward, fee, Some(map)), "quest {id}");
         }
+        // one quest of each map from a published list (day and night versions of a map share the number)
+        for (id, map) in [
+            (1101, "Deserted Island"),
+            (1306, "Sandy Plains"),
+            (11110, "Flooded Forest"),
+            (1509, "Tundra"),
+            (1508, "Volcano"),
+            (1712, "Great Desert"),
+            (1515, "Underwater Ruins"),
+            (2904, "Land Arena"),
+            (2905, "Sacred Land"),
+            (1607, "Misty Peaks"),
+        ] {
+            let q = quests.iter().find(|q| q.id == id).unwrap();
+            assert_eq!(map_name(q.map), Some(map), "quest {id}");
+        }
+        // two small monsters: Bug Hunt has Altaroth and Bnahabra, Farm Aid Jaggia and Jaggi
+        let small = |id| quests.iter().find(|q| q.id == id).unwrap().small_monsters.clone();
+        assert_eq!(small(1202), [33, 36]);
+        assert_eq!(small(1102), [11, 10]);
         assert!(off_by <= 3, "{off_by} boxes do not add up to 100");
     }
 }
