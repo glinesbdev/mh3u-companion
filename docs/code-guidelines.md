@@ -73,7 +73,8 @@ These are limits to notice, not to game. If you hit one, split by meaning, not b
 - Put a test beside the code it covers. A bug fix starts with a test that fails.
 - Test the rule, not the drawing: build the input by hand, assert on the output. Real-data tests are welcome for decoded tables, and
   they must **skip themselves** when the game dump or a personal save is missing (`fixture!`, or return early). CI has neither.
-- Whole-app behaviour (keys in, state out) goes in `app/flow_tests.rs`, with its files in a temporary folder.
+- Whole-app behaviour (keys in, state out) goes in `app/flow_tests.rs`, with its files in a temporary folder. What is drawn is checked in
+  `mh3u-tui/src/ui/screen_tests.rs`, which draws every tab into ratatui's test backend at several terminal sizes (a panic or a missing pane fails it).
 - A change that must not alter what is drawn is checked by running `scripts/screenshots.sh` and seeing that `docs/screenshots/*.svg`
   did not change (build release first).
 - No real hunter names, no personal save data and no copied third-party tables in the repository, in tests or in docs. `snapshots/`

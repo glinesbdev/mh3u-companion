@@ -23,6 +23,8 @@ mod items;
 mod monsters;
 mod pieces;
 mod quests;
+#[cfg(test)]
+mod screen_tests;
 mod skills;
 mod tree;
 mod wishlist;
