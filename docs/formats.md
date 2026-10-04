@@ -159,6 +159,14 @@ elsewhere, so `hitzones.rs` finds it by the row shape (starts non-zero, ends `0x
 normal state; later tables (other states) are not read. Compared with Kiranico on 49 monsters, 319 of the 432 zones it lists are in the
 first table. Nothing in the file names a zone, and nothing found says which zone each part-break list belongs to (the order of a monster's break lists is not the order of its zones: Gigginox breaks tail, head, stomach and its zones run head first).
 
+## Items: sell price
+
+The data section holds a run of 20-byte records indexed by item id (the name table's ids), from `0x1188` up to item 1532 (`items.rs`). A
+big-endian u32 at the start of a record is the **sell price** in zenny; the 681 items a published list gives a price for all agree.
+Byte 7 of a record looks like the carry limit (99 for most items, 10 or 1 for others) and agrees for 652 of those 681, so it is not
+used. The buying price is not in this table: items in shops are priced elsewhere (a few shop prices are 2 to 10 times the sell price).
+The other bytes are not decoded (byte 5 and 6 vary with the kind of item; the last four bytes hold a number that is not the price).
+
 ## Armor maximum defense
 
 Read from the 32-byte price rows (`docs/prices.md`): byte 2 is 1 for the gunner version of a piece, and bytes 3 to 8 are six numbers g3 to

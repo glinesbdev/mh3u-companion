@@ -25,7 +25,11 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     let item_box = rows(&app.inv.box_view);
     let query = app.inv.item_search.trim();
     let focus_pouch = app.items_on_pouch();
-    let only = if app.inv.spare_only { " · spare only" } else { "" };
+    let only = if app.inv.spare_only {
+        format!(" · spare only · worth {}z", group_digits(spare_worth(app)))
+    } else {
+        String::new()
+    };
     let pouch_title = if query.is_empty() {
         format!(" Item Pouch ({}/24){only} ", app.save.pouch.len())
     } else {
@@ -122,6 +126,13 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
     if let Some(text) = app.game.item_description(id) {
         lines.push(Line::raw(text.to_string()));
     }
+    if let Some(price) = app.game.sell_price(id) {
+        lines.push(Line::from(vec![
+            Span::styled("Sells for ", muted()),
+            Span::styled(format!("{}z", group_digits(u64::from(price))), good()),
+            Span::styled(" each", muted()),
+        ]));
+    }
     lines.extend(spare_lines(app, id));
     let (need, _) = app.shopping_need();
     if let Some(&(_, n)) = need.iter().find(|&&(item, _)| item == id) {
@@ -217,13 +228,25 @@ pub(super) fn wrap_items(label: &str, items: Vec<Vec<Span<'static>>>, width: usi
     lines
 }
 
+/// What the spare items would fetch from a shop: the spare count of each item (pouch and box together) times its sell price.
+fn spare_worth(app: &App) -> u64 {
+    app.inv
+        .spare
+        .iter()
+        .map(|(&id, p)| u64::from(p.spare) * u64::from(app.game.sell_price(id).unwrap_or(0)))
+        .sum()
+}
+
 /// How many of an item can go, and what the rest is kept for.
 fn spare_lines(app: &App, id: u16) -> Vec<Line<'static>> {
     use mh3u_app::surplus::Why;
     let Some(p) = app.inv.spare.get(&id) else { return Vec::new() };
     let have = app.save.item_count(id);
     let (count, style) = if p.spare > 0 {
-        (format!("{} of {have}, pouch and box together", p.spare), good())
+        let worth = app.game.sell_price(id).map_or(String::new(), |price| {
+            format!(", worth {}z", group_digits(u64::from(p.spare) * u64::from(price)))
+        });
+        (format!("{} of {have}, pouch and box together{worth}", p.spare), good())
     } else {
         (format!("none, keep all {have}"), warn())
     };

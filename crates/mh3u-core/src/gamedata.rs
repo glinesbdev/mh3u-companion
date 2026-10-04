@@ -71,6 +71,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// What a shop pays for each item, by item id.
+    sell_prices: Vec<u32>,
     /// Piece ids of each equipment kind's recipe table, in row order (the order of the blacksmith's menu).
     recipe_rows: HashMap<u8, Vec<u16>>,
     quests: Vec<crate::quest::Quest>,
@@ -162,6 +164,7 @@ impl GameData {
             armor,
             weapons,
             drops,
+            sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
             skills: names("Skill_Type_eng")?,
@@ -216,6 +219,11 @@ impl GameData {
             }
         }
         method.label()
+    }
+
+    /// What a shop pays for an item, in zenny; `None` for an item with no value (or an id past the table).
+    pub fn sell_price(&self, item: u16) -> Option<u32> {
+        self.sell_prices.get(usize::from(item)).copied().filter(|&p| p > 0)
     }
 
     /// The quests, by id.
@@ -417,6 +425,27 @@ mod tests {
             "Head armor made from Jaggi parts. Inexpensive."
         );
         assert_eq!(unwrap_text(""), "");
+    }
+
+    /// Sell prices of real items, as a published list gives them (Rathian Scale 490, Potion 5... checked by name), skips without a dump.
+    #[test]
+    fn items_have_their_sell_prices() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        let price = |name: &str| game.item_names().find(|&(_, n)| n == name).and_then(|(id, _)| game.sell_price(id));
+        assert_eq!(price("Rathian Scale"), Some(490));
+        assert_eq!(price("Rathian Spike"), Some(2000));
+        assert_eq!(price("Rathian Plate"), Some(4850));
+        assert_eq!(price("No such item"), None);
     }
 
     /// Maximum defense of real pieces, as a published list gives it (Leather Headgear 53, Hunter's Helm 100, Jaggi Cap 56), and every
