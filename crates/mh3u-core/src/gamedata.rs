@@ -509,6 +509,10 @@ mod tests {
         let d = game.decoration(0x91).expect("decoration 145");
         assert_eq!(game.item_name(d.item), Some("Tenderizer Jwl 1"));
         assert_eq!((d.slots, game.skill_name(d.skill), d.points), (1, Some("Tenderizer"), 1));
+        // three of them add up to what the game showed for a head piece with three: Tenderizer +3 (and -3 of the skill each costs)
+        let points = game.decoration_points(&[0x91, 0x91, 0x91]);
+        let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
+        assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
         assert_eq!(game.decoration(5000), None);
     }
