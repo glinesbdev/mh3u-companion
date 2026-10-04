@@ -342,7 +342,12 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
     f.render_widget(Clear, popup);
     let [input, list] = Layout::vertical([Constraint::Length(1), Constraint::Min(1)]).areas(popup.inner(Margin::new(1, 1)));
-    f.render_widget(theme::pane(" Add a skill · Enter add · Esc close ", true), popup);
+    let title = if app.builds.settings.weapon.is_some() {
+        " Add a skill · the weapon's first · Enter · Esc "
+    } else {
+        " Add a skill · Enter add · Esc close "
+    };
+    f.render_widget(theme::pane(title, true), popup);
     f.render_widget(
         Paragraph::new(Line::from(vec![
             Span::styled("skill: ", accent()),
@@ -356,6 +361,9 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
             let mut spans = vec![Span::raw(app.game.skill_name(id).unwrap_or("?").to_string())];
             if app.builds.settings.targets.iter().any(|t| t.skill == id) {
                 spans.push(Span::styled("  (already wanted)", muted()));
+            }
+            if !app.skill_fits_weapon(id) {
+                spans.push(Span::styled("  (not for this weapon)", muted()));
             }
             ListItem::new(Line::from(spans))
         })

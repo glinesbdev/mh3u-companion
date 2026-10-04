@@ -209,6 +209,14 @@ impl App {
         }
     }
 
+    /// Whether a skill is of use to the weapon the build is for (true when no weapon is chosen).
+    pub fn skill_fits_weapon(&self, skill: u8) -> bool {
+        self.builds
+            .settings
+            .weapon
+            .is_none_or(|(kind, _)| self.game.skill_suits_weapon(skill, kind))
+    }
+
     /// Skills whose name matches what was typed in the picker, best match first (all skills when nothing was typed).
     pub fn skill_matches(&self, typed: &str) -> Vec<u8> {
         let words: Vec<String> = typed.split_whitespace().map(str::to_lowercase).collect();
@@ -224,7 +232,10 @@ impl App {
                 Some((total, id))
             })
             .collect();
-        scored.sort_by_key(|&(score, id)| (std::cmp::Reverse(score), id));
+        // with a weapon chosen, the skills that suit it come first (by the same order within each group)
+        let weapon = self.builds.settings.weapon.map(|(kind, _)| kind);
+        let fits = |id: u8| weapon.is_none_or(|kind| self.game.skill_suits_weapon(id, kind));
+        scored.sort_by_key(|&(score, id)| (!fits(id), std::cmp::Reverse(score), id));
         scored.into_iter().map(|(_, id)| id).collect()
     }
 

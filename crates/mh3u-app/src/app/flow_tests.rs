@@ -797,3 +797,32 @@ fn the_shopping_list_is_written_as_text_and_what_changed_is_told_at_the_next_sta
     assert!(!third.status.contains("since last time"), "{}", third.status);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_skill_picker_puts_the_skills_that_suit_the_weapon_first() {
+    let dir = temp_dir("weaponskills");
+    let Some(mut app) = app_in(&dir) else { return };
+    let name_at = |app: &App, typed: &str, i: usize| {
+        app.skill_matches(typed)
+            .get(i)
+            .and_then(|&id| app.game.skill_name(id))
+            .map(str::to_string)
+    };
+    let position = |app: &App, skill: &str| {
+        let id = app.game.skill_ids().find(|&id| app.game.skill_name(id) == Some(skill)).unwrap();
+        app.skill_matches("").iter().position(|&s| s == id).unwrap()
+    };
+    // no weapon chosen: the game's order, nothing moves
+    assert_eq!(app.skill_matches("").first().copied(), app.game.skill_ids().next());
+    // a great sword: reload speed goes behind the skills that suit it, sharpness stays ahead
+    let sword = app.game.piece_ids(7).next().unwrap();
+    app.builds.settings.weapon = Some((7, sword));
+    assert!(position(&app, "Sharpness") < position(&app, "Reload Spd"));
+    assert!(app.skill_fits_weapon(app.game.skill_ids().find(|&i| app.game.skill_name(i) == Some("Sharpness")).unwrap()));
+    // a typed search still finds it, just later; with a bowgun it is the other way round
+    assert_eq!(name_at(&app, "reload", 0).as_deref(), Some("Reload Spd"));
+    let bowgun = app.game.piece_ids(13).next().unwrap();
+    app.builds.settings.weapon = Some((13, bowgun));
+    assert!(position(&app, "Reload Spd") < position(&app, "Sharpness"));
+    let _ = std::fs::remove_dir_all(&dir);
+}

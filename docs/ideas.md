@@ -13,9 +13,6 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 - **More filters:** only pieces you can craft now, a rarity cap.
 - **More ways to rank** the sets: by resistances, by spare gem slots, "pieces I own first". Today it is by base defense, then by how
   many pieces you own.
-- **Skills that suit a weapon.** The Builds tab takes a weapon and filters by its armor class, but does not suggest skills for it (a
-  sharpness skill for a sword, reload speed for a bowgun). **Needs:** which weapon type each skill effect suits (the effects and their tiers are read, but nothing says what they are for;
-  a hand-made list per effect would do).
 - **Swap a template's piece from the search results** (today the swap list is every piece of that slot, owned first).
 
 ## Where to get things

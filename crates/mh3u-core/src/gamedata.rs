@@ -469,6 +469,12 @@ impl GameData {
             .filter(|t| !t.is_empty() && *t != "DUMMY")
     }
 
+    /// Whether a skill is of use to a weapon kind (see `weaponskills`); true for the many skills that help every weapon.
+    pub fn skill_suits_weapon(&self, skill: u8, weapon_kind: u8) -> bool {
+        self.skill_name(skill)
+            .is_none_or(|name| crate::weaponskills::suits(name, weapon_kind))
+    }
+
     pub fn skill_name(&self, id: u8) -> Option<&str> {
         self.skills.get(id as usize).map(String::as_str)
     }
@@ -575,6 +581,10 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // every skill the weapon rules name exists in the game's text
+        for name in crate::weaponskills::listed() {
+            assert!(game.skills.iter().any(|s| s == name), "{name}");
+        }
         // carry limits and shop prices joined by name
         assert!(game.item_extras.len() > 1250, "{}", game.item_extras.len());
         let potion = game.item_names().find(|(_, n)| *n == "Potion").unwrap().0;
