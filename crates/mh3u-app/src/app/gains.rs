@@ -108,7 +108,7 @@ impl App {
             .items
             .iter()
             .copied()
-            .filter(|&(kind, id)| self.can_make_now(kind, id))
+            .filter(|&(kind, id)| !self.is_done(kind, id) && self.can_make_now(kind, id))
             .collect()
     }
 

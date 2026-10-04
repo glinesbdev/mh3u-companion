@@ -2,41 +2,99 @@
 
 use super::*;
 
-/// The wishlist: the pieces wanted, which of them were added only as a parent of another, and the highlighted row.
+/// How the wishlist is listed.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum WishSort {
+    /// The order the pieces were added (parents come before the piece that needs them).
+    #[default]
+    Added,
+    Name,
+    Type,
+    /// What is still to get first; the pieces you own or marked done last.
+    ToDo,
+}
+
+impl WishSort {
+    fn next(self) -> WishSort {
+        match self {
+            WishSort::Added => WishSort::Name,
+            WishSort::Name => WishSort::Type,
+            WishSort::Type => WishSort::ToDo,
+            WishSort::ToDo => WishSort::Added,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            WishSort::Added => "added",
+            WishSort::Name => "name",
+            WishSort::Type => "type",
+            WishSort::ToDo => "to do first",
+        }
+    }
+}
+
+/// The wishlist: the pieces wanted, which of them were added only as a parent of another, which are marked done, and the highlighted row.
 pub struct WishList {
     /// Wishlisted pieces as (equipment kind, piece id), in the order they were added.
     pub items: Vec<(u8, u16)>,
     /// Wishlisted pieces that were added automatically as a parent of another piece (see `remove_wish`).
     pub(super) auto_parents: HashSet<(u8, u16)>,
+    /// Pieces marked done without owning them (you made another, or no longer want to): left out of the shopping list and the costs.
+    pub(super) done: HashSet<(u8, u16)>,
+    pub sort: WishSort,
+    /// The rows shown, in order: indexes into `items`. The highlighted row is an index into this.
+    pub view: Vec<usize>,
     pub state: ListState,
 }
 
 impl WishList {
-    pub(super) fn new(items: Vec<(u8, u16)>, auto_parents: HashSet<(u8, u16)>) -> WishList {
+    pub(super) fn new(items: Vec<(u8, u16)>, auto_parents: HashSet<(u8, u16)>, done: HashSet<(u8, u16)>) -> WishList {
+        let view = (0..items.len()).collect();
         WishList {
             items,
             auto_parents,
+            done,
+            sort: WishSort::Added,
+            view,
             state: ListState::default().with_selected(Some(0)),
         }
     }
+
+    /// The piece on a row of the list.
+    pub fn at(&self, row: usize) -> Option<(u8, u16)> {
+        self.view.get(row).and_then(|&i| self.items.get(i)).copied()
+    }
+
+    /// The highlighted piece.
+    pub fn selected(&self) -> Option<(u8, u16)> {
+        self.state.selected().and_then(|row| self.at(row))
+    }
 }
 
-/// Parse the wishlist file: `kind id` per line, with an optional trailing `auto` for pieces added as a parent of another.
-/// Lines that don't parse are ignored.
-pub(super) fn parse_wishlist(text: &str) -> Vec<(u8, u16, bool)> {
+/// Parse the wishlist file: `kind id` per line, with optional trailing words: `auto` for pieces added as a parent of another and
+/// `done` for pieces marked done. Lines that don't parse are ignored.
+pub(super) fn parse_wishlist(text: &str) -> Vec<(u8, u16, bool, bool)> {
     text.lines()
         .filter_map(|l| {
             let mut parts = l.split_whitespace();
             let (kind, id) = (parts.next()?.parse().ok()?, parts.next()?.parse().ok()?);
-            Some((kind, id, parts.next() == Some("auto")))
+            let flags: Vec<&str> = parts.collect();
+            Some((kind, id, flags.contains(&"auto"), flags.contains(&"done")))
         })
         .collect()
 }
 
-pub(super) fn format_wishlist(wishlist: &[(u8, u16)], auto: &HashSet<(u8, u16)>) -> String {
+pub(super) fn format_wishlist(wishlist: &[(u8, u16)], auto: &HashSet<(u8, u16)>, done: &HashSet<(u8, u16)>) -> String {
     wishlist
         .iter()
-        .map(|&(kind, id)| format!("{kind} {id}{}\n", if auto.contains(&(kind, id)) { " auto" } else { "" }))
+        .map(|&(kind, id)| {
+            format!(
+                "{kind} {id}{}{}\n",
+                if auto.contains(&(kind, id)) { " auto" } else { "" },
+                if done.contains(&(kind, id)) { " done" } else { "" }
+            )
+        })
         .collect()
 }
 
@@ -51,6 +109,49 @@ impl App {
                 n.checked_sub(have).filter(|&short| short > 0).map(|short| (item, short))
             })
             .collect()
+    }
+
+    /// A wishlisted piece marked done.
+    pub fn is_done(&self, kind: u8, id: u16) -> bool {
+        self.wish.done.contains(&(kind, id))
+    }
+
+    /// Mark the highlighted piece done, or undo it.
+    pub(super) fn toggle_done(&mut self) {
+        let Some(piece) = self.wish.selected() else { return };
+        if !self.wish.done.remove(&piece) {
+            self.wish.done.insert(piece);
+        }
+        self.after_wishlist_change();
+    }
+
+    pub(super) fn cycle_wish_sort(&mut self) {
+        self.wish.sort = self.wish.sort.next();
+        self.refresh_wish_view();
+    }
+
+    /// Put the rows in order for the sort, keeping the same piece highlighted.
+    pub(super) fn refresh_wish_view(&mut self) {
+        let kept = self.wish.selected();
+        let name = |i: usize| {
+            let (kind, id) = self.wish.items[i];
+            self.game.equipment_name(kind, id).unwrap_or("?").to_lowercase()
+        };
+        let mut view: Vec<usize> = (0..self.wish.items.len()).collect();
+        match self.wish.sort {
+            WishSort::Added => {}
+            WishSort::Name => view.sort_by_key(|&i| (name(i), i)),
+            WishSort::Type => view.sort_by_key(|&i| (kind_rank(self.wish.items[i].0), name(i), i)),
+            WishSort::ToDo => view.sort_by_key(|&i| {
+                let (kind, id) = self.wish.items[i];
+                (self.save.owns_equipment(kind, id) || self.is_done(kind, id), i)
+            }),
+        }
+        self.wish.view = view;
+        let at = kept
+            .and_then(|k| self.wish.view.iter().position(|&i| self.wish.items[i] == k))
+            .unwrap_or_else(|| self.wish.state.selected().unwrap_or(0).min(self.wish.view.len().saturating_sub(1)));
+        self.wish.state.select((!self.wish.view.is_empty()).then_some(at));
     }
 
     pub fn is_wished(&self, kind: u8, id: u16) -> bool {
@@ -128,8 +229,8 @@ impl App {
     }
 
     pub(super) fn after_wishlist_change(&mut self) {
-        let sel = self.wish.state.selected().unwrap_or(0).min(self.wish.items.len().saturating_sub(1));
-        self.wish.state.select(Some(sel));
+        self.wish.done.retain(|p| self.wish.items.contains(p));
+        self.refresh_wish_view();
         self.save_wishlist();
         self.hunts.stale = true;
         self.refresh_box();
@@ -140,7 +241,11 @@ impl App {
         let Some(path) = self.files.as_ref().map(|f| &f.wishlist) else {
             return;
         };
-        if let Err(message) = crate::files::save(path, &format_wishlist(&self.wish.items, &self.wish.auto_parents), "wishlist") {
+        if let Err(message) = crate::files::save(
+            path,
+            &format_wishlist(&self.wish.items, &self.wish.auto_parents, &self.wish.done),
+            "wishlist",
+        ) {
             self.status = message;
         }
     }
@@ -156,7 +261,7 @@ impl App {
         let mut need: Vec<(u16, u32)> = Vec::new();
         let mut unowned = 0;
         for &(kind, id) in &self.wish.items {
-            if !include_owned && self.save.owns_equipment(kind, id) {
+            if self.is_done(kind, id) || (!include_owned && self.save.owns_equipment(kind, id)) {
                 continue;
             }
             unowned += 1;
@@ -215,7 +320,7 @@ impl App {
     pub fn wishlist_cost(&self) -> (u64, usize) {
         let (mut known, mut unknown) = (0u64, 0usize);
         for &(kind, id) in &self.wish.items {
-            if self.save.owns_equipment(kind, id) {
+            if self.save.owns_equipment(kind, id) || self.is_done(kind, id) {
                 continue;
             }
             let route = match self.plan(kind, id).map(|p| p.via) {
@@ -240,21 +345,25 @@ mod tests {
     fn wishlist_round_trips_with_auto_markers() {
         let list = vec![(7, 24), (5, 8), (7, 3)];
         let auto: HashSet<(u8, u16)> = [(7, 3)].into();
-        let text = format_wishlist(&list, &auto);
-        assert_eq!(text, "7 24\n5 8\n7 3 auto\n");
-        assert_eq!(parse_wishlist(&text), vec![(7, 24, false), (5, 8, false), (7, 3, true)]);
+        let done: HashSet<(u8, u16)> = [(5, 8), (7, 3)].into();
+        let text = format_wishlist(&list, &auto, &done);
+        assert_eq!(text, "7 24\n5 8 done\n7 3 auto done\n");
+        assert_eq!(
+            parse_wishlist(&text),
+            vec![(7, 24, false, false), (5, 8, false, true), (7, 3, true, true)]
+        );
     }
 
     #[test]
     fn wishlist_reads_the_older_two_column_format() {
-        assert_eq!(parse_wishlist("7 24\n5 8\n"), vec![(7, 24, false), (5, 8, false)]);
+        assert_eq!(parse_wishlist("7 24\n5 8\n"), vec![(7, 24, false, false), (5, 8, false, false)]);
     }
 
     #[test]
     fn wishlist_ignores_bad_lines() {
         assert_eq!(
-            parse_wishlist("7 24\nnonsense\n\n5\n300 1\n5 8 extra\n"),
-            vec![(7, 24, false), (5, 8, false)]
+            parse_wishlist("7 24\nnonsense\n\n5\n300 1\n5 8 extra\n5 9 done\n"),
+            vec![(7, 24, false, false), (5, 8, false, false), (5, 9, false, true)]
         );
     }
 }

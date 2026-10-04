@@ -904,3 +904,54 @@ fn the_equipment_skill_points_sort_puts_armor_with_skills_first() {
     assert_eq!(app.inv.equip_sort.label(), "box order", "the cycle comes back around");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn a_wishlist_piece_can_be_marked_done_and_the_list_sorted() {
+    let dir = temp_dir("wishdone");
+    let Some(mut app) = app_in(&dir) else { return };
+    // three weapons the hunter does not own, added in the order sword (7), hammer (9), great sword (7)
+    let pick = |app: &App, kind: u8, n: usize| {
+        app.game
+            .piece_ids(kind)
+            .filter(|&id| !app.save.owns_equipment(kind, id) && app.plan(kind, id).is_some())
+            .nth(n)
+            .unwrap()
+    };
+    let (a, b, c) = (pick(&app, 7, 2), pick(&app, 9, 2), pick(&app, 7, 3));
+    app.wish.items = vec![(7, a), (9, b), (7, c)];
+    app.after_wishlist_change();
+    app.tab = Tab::Wishlist;
+    let (before, pieces) = app.shopping_need();
+    assert_eq!(pieces, 3);
+    // done: the highlighted piece leaves the shopping list and the costs but stays listed
+    key(&mut app, Key::Down);
+    press(&mut app, "d");
+    assert!(app.is_done(9, b));
+    assert_eq!(app.wish.items.len(), 3);
+    let (after, pieces) = app.shopping_need();
+    assert_eq!(pieces, 2);
+    assert!(after.len() <= before.len());
+    press(&mut app, "d");
+    assert!(!app.is_done(9, b), "d again takes the mark off");
+    // the mark is kept in the file
+    press(&mut app, "d");
+    let text = std::fs::read_to_string(app.files.as_ref().unwrap().wishlist.clone()).unwrap();
+    assert!(text.contains(&format!("9 {b} done")), "{text}");
+    // sort: by type groups the two weapons of kind 7, and the same piece stays highlighted
+    let kept = app.wish.selected();
+    while app.wish.sort != WishSort::Type {
+        press(&mut app, "s");
+    }
+    let kinds: Vec<u8> = (0..3).map(|r| app.wish.at(r).unwrap().0).collect();
+    assert!(kinds == [7, 7, 9] || kinds == [9, 7, 7], "{kinds:?}");
+    assert_eq!(app.wish.selected(), kept);
+    // to do first: the done piece goes last
+    while app.wish.sort != WishSort::ToDo {
+        press(&mut app, "s");
+    }
+    assert_eq!(app.wish.at(2), Some((9, b)));
+    press(&mut app, "s");
+    assert_eq!(app.wish.sort, WishSort::Added);
+    assert_eq!(app.wish.at(1), Some((9, b)));
+    let _ = std::fs::remove_dir_all(&dir);
+}

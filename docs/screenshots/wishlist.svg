@@ -358,23 +358,24 @@
 <text x="140.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">move</text>
 <text x="198.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">w</text>
 <text x="217.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">remove</text>
-<text x="294.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
-<text x="313.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">export</text>
-<text x="380.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">list</text>
-<text x="438.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
-<text x="457.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
-<text x="515.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
-<text x="534.4" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
-<text x="620.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
-<text x="640.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
-<text x="716.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="736.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="793.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="812.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
-<text x="880.0" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
-<text x="956.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
-<text x="1024.0" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
-<text x="1081.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">to</text>
-<text x="1110.4" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
+<text x="294.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">d</text>
+<text x="313.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">done</text>
+<text x="371.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">s</text>
+<text x="390.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
+<text x="448.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
+<text x="467.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">export</text>
+<text x="534.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">list</text>
+<text x="592.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
+<text x="611.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tree</text>
+<text x="668.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">v</text>
+<text x="688.0" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">compare</text>
+<text x="774.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
+<text x="793.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
+<text x="870.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="889.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="947.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="966.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="1033.6" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
+<text x="1110.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">Blad</text>
 </g>
 </svg>

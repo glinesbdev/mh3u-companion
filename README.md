@@ -71,7 +71,7 @@ dark theme; your terminal's own palette applies when you run it.
   first to last, so the list holds every step. Armor never has parents. Removing a piece also removes the parents that were added
   automatically for it, unless another wishlisted piece still needs them; parents you added yourself are kept. The Wishlist tab lists your pieces, with an anvil on those the blacksmith is offering that you don't own yet. On the right,
   the highlighted piece shows what it needs by itself (have / need), and below it is one running shopping list for everything
-  on the wishlist (have / need / still missing). Pieces you already own are left out of the totals. For each
+  on the wishlist (have / need / still missing). Pieces you already own are left out of the totals, and so are pieces you mark done with `d` (for one you made another way, or no longer want; `d` again undoes it; the mark is kept in the wishlist file as `done`). `s` sorts the list: as added, by name, by type, or what is still to do first. For each
   piece it plans the step the cheapest way to it ends with: making it, or upgrading it from the weapon before it (which uses
   that weapon up, whether you own it or it is the previous step). Each save slot has its own wishlist (`--slot n`), saved in
   `~/.config/mh3u-companion/` (or under `$XDG_CONFIG_HOME`): `wishlist.txt` for slot 1, `wishlist-2.txt` and `wishlist-3.txt` for the others.

@@ -65,7 +65,7 @@ pub use price_watch::PriceBook;
 pub use quests::QuestTab;
 pub use skills::{SkillsTab, WithSkill};
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
-pub use wishlist::WishList;
+pub use wishlist::{WishList, WishSort};
 
 // the helpers the submodules share (their `use super::*` picks these up)
 use crafting::kind_rank;
@@ -305,7 +305,7 @@ impl App {
             Tab::Items => (&mut self.inv.box_state, self.inv.box_view.len()),
             Tab::Equipment => (&mut self.inv.equip_state, self.inv.equip_view.len()),
             Tab::Crafting => (&mut self.craft.state, self.craft.pieces.len()),
-            Tab::Wishlist => (&mut self.wish.state, self.wish.items.len()),
+            Tab::Wishlist => (&mut self.wish.state, self.wish.view.len()),
             Tab::Hunts => (&mut self.hunts.state, self.hunts.plan.steps.len()),
             Tab::Families => (&mut self.families.state, self.families.rows.len()),
             Tab::Skills => {
@@ -333,10 +333,11 @@ impl App {
 fn read_profile(files: Option<&Files>) -> (WishList, BuildManager) {
     let read = |path: Option<&PathBuf>| path.and_then(|p| std::fs::read_to_string(p).ok());
     let entries = read(files.map(|f| &f.wishlist)).map(|t| parse_wishlist(&t)).unwrap_or_default();
-    let items = entries.iter().map(|&(k, i, _)| (k, i)).collect();
-    let auto_parents = entries.iter().filter(|e| e.2).map(|&(k, i, _)| (k, i)).collect();
+    let items = entries.iter().map(|&(k, i, _, _)| (k, i)).collect();
+    let auto_parents = entries.iter().filter(|e| e.2).map(|&(k, i, _, _)| (k, i)).collect();
+    let done = entries.iter().filter(|e| e.3).map(|&(k, i, _, _)| (k, i)).collect();
     let builds = BuildManager::load(read(files.map(|f| &f.builds)), read(files.map(|f| &f.templates)));
-    (WishList::new(items, auto_parents), builds)
+    (WishList::new(items, auto_parents, done), builds)
 }
 
 fn stepped(current: Option<usize>, step: isize, len: usize) -> usize {

@@ -222,6 +222,8 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
             Tab::Wishlist => keys.extend([
                 ("↑/↓", "move"),
                 ("w", "remove"),
+                ("d", "done"),
+                ("s", "sort"),
                 ("e", "export list"),
                 ("t", "tree"),
                 ("v", "compare"),

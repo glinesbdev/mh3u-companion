@@ -173,9 +173,17 @@ impl App {
                 true
             }
             Key::Char('w' | 'x') | Key::Delete => {
-                if let Some(&(kind, id)) = self.wish.state.selected().and_then(|i| self.wish.items.get(i)) {
+                if let Some((kind, id)) = self.wish.selected() {
                     self.toggle_wish(kind, id);
                 }
+                true
+            }
+            Key::Char('d') => {
+                self.toggle_done();
+                true
+            }
+            Key::Char('s') => {
+                self.cycle_wish_sort();
                 true
             }
             _ => false,

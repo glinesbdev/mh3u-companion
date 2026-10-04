@@ -65,7 +65,7 @@ pub(super) const SECTIONS: &[Section] = &[
     Section {
         title: "Wishlist",
         rows: &[
-            ("w  x", "remove a piece and the parents added for it"),
+            ("w  x  d  s", "remove (and its added parents), mark done, sort"),
             ("e", "write the shopping list to a text file"),
             (
                 "",

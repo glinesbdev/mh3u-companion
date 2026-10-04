@@ -6,7 +6,11 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
 
     let rows = wish_rows(app);
-    let title = format!(" Wishlist ({}) ", rows.len());
+    let title = if app.wish.sort == mh3u_app::app::WishSort::Added {
+        format!(" Wishlist ({}) ", rows.len())
+    } else {
+        format!(" Wishlist ({}) · by {} ", rows.len(), app.wish.sort.label())
+    };
     let len = rows.len();
     if rows.is_empty() {
         empty_pane(f, left, title, true, vec![Line::styled("Nothing here yet.", muted())]);
@@ -34,7 +38,7 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Top right: what the highlighted piece needs on its own.
-    let selected = app.wish.state.selected().and_then(|i| app.wish.items.get(i)).copied();
+    let selected = app.wish.selected();
     let (piece_title, piece_lines) = match selected {
         Some((kind, id)) => (
             format!(" {} ", app.game.equipment_name(kind, id).unwrap_or("?")),
@@ -56,13 +60,16 @@ pub(super) fn draw_wishlist(f: &mut Frame, app: &mut App, area: Rect) {
 /// or can make it now.
 fn wish_rows(app: &App) -> Vec<ListItem<'static>> {
     app.wish
-        .items
+        .view
         .iter()
-        .map(|&(kind, id)| {
+        .map(|&i| app.wish.items[i])
+        .map(|(kind, id)| {
             let name = app.game.equipment_name(kind, id).unwrap_or("?");
             let label = app.game.equipment_kind_label(kind).unwrap_or("?");
             let owned = app.save.owns_equipment(kind, id);
-            let state = if owned {
+            let state = if app.is_done(kind, id) {
+                Span::styled("✔ done", good())
+            } else if owned {
                 Span::styled("● owned", good())
             } else if app.can_make_now(kind, id) {
                 Span::styled("✔ ready", good())
@@ -88,8 +95,18 @@ fn wish_rows(app: &App) -> Vec<ListItem<'static>> {
 fn wish_piece_lines(app: &App, kind: u8, id: u16) -> Vec<Line<'static>> {
     let zenny = app.save.zenny;
     let mut lines: Vec<Line> = Vec::new();
+    if app.is_done(kind, id) {
+        lines.push(Line::styled(
+            "Marked done (left out of the shopping list). d takes the mark off.",
+            good(),
+        ));
+        return lines;
+    }
     if app.save.owns_equipment(kind, id) {
-        lines.push(Line::styled("You already own this piece (left out of the shopping list).", good()));
+        lines.push(Line::styled(
+            "You already own this piece (left out of the shopping list). d marks it done anyway.",
+            good(),
+        ));
         // still show what making another copy takes; `stock all` covers it
         if let Some(plan) = app.plan(kind, id) {
             for m in &plan.materials {
