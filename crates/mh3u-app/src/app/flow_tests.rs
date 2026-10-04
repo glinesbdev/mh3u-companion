@@ -857,3 +857,26 @@ fn the_builds_pool_honors_the_rarity_limit_and_make_now_filter() {
     assert!(app.builds.settings.craftable_only);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn every_ranking_finds_sets_quickly() {
+    let dir = temp_dir("buildranks");
+    let Some(mut app) = app_in(&dir) else { return };
+    app.builds.settings.pool = builds::Pool::OnOffer;
+    let attack = app.game.skill_ids().find(|&id| app.game.skill_name(id) == Some("Attack")).unwrap();
+    app.builds.settings.targets = vec![builds::Target { skill: attack, points: 5 }];
+    let mut rank = builds::Rank::Defense;
+    for _ in 0..4 {
+        app.builds.settings.rank = rank;
+        let start = std::time::Instant::now();
+        app.refresh_builds();
+        let took = start.elapsed();
+        assert!(!app.builds.results.is_empty(), "{rank:?}");
+        assert!(took.as_secs() < 10, "{rank:?} took {took:?}");
+        let scores: Vec<i64> = app.builds.results.iter().map(|f| f.score).collect();
+        assert!(scores.windows(2).all(|w| w[0] >= w[1]), "{rank:?} is sorted by its score");
+        eprintln!("{rank:?}: {} sets in {took:?}", app.builds.results.len());
+        rank = rank.next();
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

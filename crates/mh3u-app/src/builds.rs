@@ -44,6 +44,59 @@ impl Pool {
     }
 }
 
+/// What the sets found are ranked by. Ties go to the sturdier set, then the one with more pieces you own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Rank {
+    /// The most base defense.
+    #[default]
+    Defense,
+    /// The most pieces you already own.
+    Owned,
+    /// The most gem slots (what the pieces have left after the jewels in them).
+    Slots,
+    /// The best total elemental resistance.
+    Resist,
+}
+
+impl Rank {
+    pub fn next(self) -> Rank {
+        match self {
+            Rank::Defense => Rank::Owned,
+            Rank::Owned => Rank::Slots,
+            Rank::Slots => Rank::Resist,
+            Rank::Resist => Rank::Defense,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Rank::Defense => "defense",
+            Rank::Owned => "pieces owned",
+            Rank::Slots => "gem slots",
+            Rank::Resist => "resistance",
+        }
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Rank::Defense => "defense",
+            Rank::Owned => "owned",
+            Rank::Slots => "slots",
+            Rank::Resist => "resist",
+        }
+    }
+
+    /// What one piece adds to a set's score (the score of a set is the sum over its pieces).
+    fn value(self, c: &Candidate) -> i64 {
+        match self {
+            Rank::Defense => i64::from(c.stats.defense),
+            Rank::Owned => i64::from(c.owned),
+            Rank::Slots => i64::from(c.stats.slots),
+            Rank::Resist => c.stats.resist.iter().map(|&r| i64::from(r)).sum(),
+        }
+    }
+}
+
 /// A skill and the points wanted in it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Target {
@@ -68,6 +121,11 @@ pub struct Found {
     pub pieces: Vec<usize>,
     pub defense: u32,
     pub owned: usize,
+    /// Gem slots the pieces have free, and their elemental resistances added up.
+    pub slots: u32,
+    pub resist: i32,
+    /// The number the set is ranked by (see [`Rank`]).
+    pub score: i64,
 }
 
 /// The order the slots are searched in: the body last.
@@ -80,6 +138,12 @@ const STURDY_EXTRA: usize = 10;
 
 /// Sets that reach every target, sturdiest first (then those needing the fewest pieces still to be made). At most `limit`.
 pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found> {
+    search_ranked(pool, targets, Rank::Defense, limit)
+}
+
+/// Like [`search`], with the sets ordered by `rank`.
+pub fn search_ranked(pool: &[Candidate], targets: &[Target], rank: Rank, limit: usize) -> Vec<Found> {
+    let value = |i: usize| rank.value(&pool[i]);
     if targets.is_empty() || limit == 0 {
         return Vec::new();
     }
@@ -109,18 +173,25 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
             }
         };
         let mut chosen: Vec<usize> = of_kind.iter().copied().filter(|&i| wanted(&pool[i]) || relevance(i) > 0).collect();
-        chosen.sort_by_key(|&i| (std::cmp::Reverse(relevance(i)), std::cmp::Reverse(pool[i].stats.defense), i));
-        // The best by relevance, plus a few of the sturdiest of the rest: a set is ranked by defense, so those can matter more.
+        chosen.sort_by_key(|&i| {
+            (
+                std::cmp::Reverse(relevance(i)),
+                std::cmp::Reverse(value(i)),
+                std::cmp::Reverse(pool[i].stats.defense),
+                i,
+            )
+        });
+        // The best by relevance, plus a few of the best by the ranking of the rest, which can matter more.
         let mut rest = chosen.split_off(PER_SLOT.min(chosen.len()));
-        rest.sort_by_key(|&i| (std::cmp::Reverse(pool[i].stats.defense), i));
+        rest.sort_by_key(|&i| (std::cmp::Reverse(value(i)), std::cmp::Reverse(pool[i].stats.defense), i));
         chosen.extend(rest.into_iter().take(STURDY_EXTRA));
-        // sturdiest first, so good sets turn up early and the sets still to come can be judged against them
-        chosen.sort_by_key(|&i| (std::cmp::Reverse(pool[i].stats.defense), i));
+        // best first, so good sets turn up early and the sets still to come can be judged against them
+        chosen.sort_by_key(|&i| (std::cmp::Reverse(value(i)), std::cmp::Reverse(pool[i].stats.defense), i));
         let filler = of_kind
             .iter()
             .copied()
             .filter(|i| !chosen.contains(i) && !hurts(&pool[*i]))
-            .max_by_key(|&i| (pool[i].stats.defense, pool[i].owned, std::cmp::Reverse(i)));
+            .max_by_key(|&i| (value(i), pool[i].stats.defense, pool[i].owned, std::cmp::Reverse(i)));
         chosen.extend(filler);
         slots.push(chosen);
     }
@@ -149,15 +220,16 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
         }
     }
 
-    // The most defense the slots from each step on can still add.
-    let mut sturdy = vec![0u32; steps + 1];
+    // The most score the slots from each step on can still add (a slot may be left empty, so never less than 0).
+    let mut sturdy = vec![0i64; steps + 1];
     for s in (0..steps).rev() {
         let best = slots[s]
             .iter()
             .filter(|&&i| i != empty)
-            .map(|&i| u32::from(pool[i].stats.defense))
+            .map(|&i| value(i))
             .max()
-            .unwrap_or(0);
+            .unwrap_or(0)
+            .max(0);
         sturdy[s] = sturdy[s + 1] + best;
     }
 
@@ -172,11 +244,12 @@ pub fn search(pool: &[Candidate], targets: &[Target], limit: usize) -> Vec<Found
         sturdy: &sturdy,
         empty,
         limit,
+        rank,
         // once `limit` sets are in hand, a branch that cannot beat the weakest of them is dropped
-        floor: 0,
+        floor: None,
     };
     search.walk(0, 0, &mut picked, &mut so_far, &mut out);
-    rank(&mut out);
+    sort_sets(&mut out);
     out.truncate(limit);
     out
 }
@@ -186,14 +259,15 @@ struct Walk<'a> {
     targets: &'a [Target],
     slots: &'a [Vec<usize>],
     ahead: &'a [Vec<i32>],
-    sturdy: &'a [u32],
+    sturdy: &'a [i64],
     empty: usize,
     limit: usize,
-    floor: u32,
+    rank: Rank,
+    floor: Option<i64>,
 }
 
 impl Walk<'_> {
-    fn walk(&mut self, step: usize, defense: u32, picked: &mut Vec<usize>, so_far: &mut Vec<i32>, out: &mut Vec<Found>) {
+    fn walk(&mut self, step: usize, score: i64, picked: &mut Vec<usize>, so_far: &mut Vec<i32>, out: &mut Vec<Found>) {
         let (pool, targets, empty) = (self.pool, self.targets, self.empty);
         if step == self.slots.len() {
             let parts: Vec<(u8, &ArmorStats)> = picked.iter().map(|&i| (pool[i].kind, &pool[i].stats)).collect();
@@ -210,19 +284,22 @@ impl Walk<'_> {
                     pieces: picked.clone(),
                     defense: summary.defense,
                     owned: picked.iter().filter(|&&i| pool[i].owned).count(),
+                    slots: picked.iter().map(|&i| u32::from(pool[i].stats.slots)).sum(),
+                    resist: picked.iter().flat_map(|&i| pool[i].stats.resist).map(i32::from).sum(),
+                    score,
                 });
                 // keep the list from growing without bound
                 if out.len() >= self.limit * 8 {
-                    rank(out);
+                    sort_sets(out);
                     out.truncate(self.limit);
-                    self.floor = out.last().map_or(0, |f| f.defense);
+                    self.floor = out.last().map(|f| f.score);
                 }
             }
             return;
         }
         for &i in &self.slots[step] {
-            let own_defense = if i == empty { 0 } else { u32::from(pool[i].stats.defense) };
-            if self.floor > 0 && defense + own_defense + self.sturdy[step + 1] < self.floor {
+            let own_score = if i == empty { 0 } else { self.rank.value(&pool[i]) };
+            if self.floor.is_some_and(|floor| score + own_score + self.sturdy[step + 1] < floor) {
                 continue;
             }
             // the body is searched last, so the running totals before it carry no doubling
@@ -260,7 +337,7 @@ impl Walk<'_> {
             if i != empty {
                 picked.push(i);
             }
-            self.walk(step + 1, defense + own_defense, picked, so_far, out);
+            self.walk(step + 1, score + own_score, picked, so_far, out);
             if i != empty {
                 picked.pop();
             }
@@ -271,10 +348,11 @@ impl Walk<'_> {
     }
 }
 
-/// Sturdiest first, then the fewest pieces still to get, then the fewest pieces overall.
-fn rank(found: &mut Vec<Found>) {
+/// Best score first, then the sturdiest, then the fewest pieces still to get, then the fewest pieces overall.
+fn sort_sets(found: &mut Vec<Found>) {
     found.sort_by_key(|f| {
         (
+            std::cmp::Reverse(f.score),
             std::cmp::Reverse(f.defense),
             std::cmp::Reverse(f.owned),
             f.pieces.len(),
@@ -302,6 +380,8 @@ pub struct Settings {
     pub craftable_only: bool,
     /// No piece above this rarity (1 to 10; `None`: any).
     pub max_rarity: Option<u8>,
+    /// What the sets are ordered by.
+    pub rank: Rank,
 }
 
 /// The armor class a weapon type is worn with: bows and bowguns take gunner armor, everything else blademaster armor.
@@ -344,6 +424,7 @@ impl Default for Settings {
             weapon: None,
             craftable_only: false,
             max_rarity: None,
+            rank: Rank::Defense,
         }
     }
 }
@@ -371,6 +452,14 @@ impl Settings {
                     }
                 }
                 (Some("talisman"), Some(v), _) => out.use_talisman = v != "0",
+                (Some("rank"), Some(v), _) => {
+                    out.rank = match v {
+                        "owned" => Rank::Owned,
+                        "slots" => Rank::Slots,
+                        "resist" => Rank::Resist,
+                        _ => Rank::Defense,
+                    }
+                }
                 (Some("craftable"), Some(v), _) => out.craftable_only = v != "0",
                 (Some("rarity"), Some(v), _) => out.max_rarity = v.parse().ok().filter(|r| (1..=10).contains(r)),
                 (Some("gender"), Some(v), _) => {
@@ -418,6 +507,9 @@ impl Settings {
         }
         if self.craftable_only {
             text += "craftable 1\n";
+        }
+        if self.rank != Rank::Defense {
+            text += &format!("rank {}\n", self.rank.name());
         }
         if let Some(r) = self.max_rarity {
             text += &format!("rarity {r}\n");
@@ -585,10 +677,13 @@ mod tests {
             weapon: Some((17, 34)),
             craftable_only: true,
             max_rarity: Some(6),
+            rank: Rank::Slots,
         };
         assert_eq!(Settings::parse(&s.format()), s);
         assert_eq!(Settings::parse("rarity 0\nrarity 11\n").max_rarity, None, "out of range");
         assert!(!Settings::parse("craftable 0\n").craftable_only);
+        assert_eq!(Settings::parse("rank resist\n").rank, Rank::Resist);
+        assert_eq!(Settings::parse("rank nonsense\n").rank, Rank::Defense);
         let parsed = Settings::parse("skill x 3\nskill 5 10\nskill 5 20\nnonsense\n");
         assert_eq!(
             parsed.targets,
@@ -596,6 +691,32 @@ mod tests {
             "bad and repeated lines are skipped"
         );
         assert_eq!(Settings::parse(""), Settings::default());
+    }
+
+    #[test]
+    fn sets_can_be_ranked_by_slots_resistance_or_pieces_owned() {
+        // two Attack heads: a sturdy one with no slots and a frail one with 3 slots and fire resistance, the rest plain
+        let mut pool = pool();
+        pool[5].stats.defense = 20;
+        let mut slotted = piece(5, 3, 5, &[(ATTACK, 4)]);
+        slotted.stats.slots = 3;
+        slotted.stats.resist = [6, 0, 0, 0, 0];
+        slotted.owned = false;
+        pool.push(slotted);
+        let target = [Target { skill: ATTACK, points: 10 }];
+        let head_of = |pool: &[Candidate], f: &Found| f.pieces.iter().map(|&i| &pool[i]).find(|c| c.kind == 5).map(|c| c.id);
+        let by = |rank| search_ranked(&pool, &target, rank, 10);
+        assert_eq!(head_of(&pool, &by(Rank::Defense)[0]), Some(2), "sturdiest");
+        let slots = by(Rank::Slots);
+        assert_eq!((head_of(&pool, &slots[0]), slots[0].slots), (Some(3), 3));
+        assert!(slots.windows(2).all(|w| w[0].slots >= w[1].slots));
+        let resist = by(Rank::Resist);
+        assert_eq!((head_of(&pool, &resist[0]), resist[0].resist), (Some(3), 6));
+        let owned = by(Rank::Owned);
+        assert_eq!(head_of(&pool, &owned[0]), Some(2), "the other head is not owned");
+        assert!(owned.windows(2).all(|w| w[0].owned >= w[1].owned));
+        // the default is the old behavior
+        assert_eq!(search(&pool, &target, 10), by(Rank::Defense));
     }
 
     #[test]

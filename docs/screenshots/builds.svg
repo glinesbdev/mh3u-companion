@@ -409,9 +409,10 @@
 <text x="841.6" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">now</text>
 <text x="889.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">l</text>
 <text x="908.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">rarity</text>
-<text x="985.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
-<text x="1004.8" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">talisman</text>
-<text x="1100.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">e</text>
-<text x="1120.0" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">gen</text>
+<text x="985.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">t</text>
+<text x="1004.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">rank</text>
+<text x="1052.8" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">by</text>
+<text x="1091.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">m</text>
+<text x="1110.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">tali</text>
 </g>
 </svg>

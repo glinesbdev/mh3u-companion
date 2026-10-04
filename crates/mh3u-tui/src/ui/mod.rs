@@ -277,6 +277,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                     ("o", "pieces"),
                     ("u", "make now"),
                     ("l", "rarity"),
+                    ("t", "rank by"),
                     ("m", "talisman"),
                     ("e", "gender"),
                     ("c", "class"),

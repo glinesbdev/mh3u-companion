@@ -194,7 +194,7 @@ impl App {
         const SHOWN: usize = 300;
         self.builds.stale = false;
         self.builds.pool = self.build_pool();
-        self.builds.results = builds::search(&self.builds.pool, &self.builds.settings.targets, SHOWN);
+        self.builds.results = builds::search_ranked(&self.builds.pool, &self.builds.settings.targets, self.builds.settings.rank, SHOWN);
         let len = self.builds.results.len();
         let at = self.builds.result_state.selected().unwrap_or(0).min(len.saturating_sub(1));
         self.builds.result_state.select((len > 0).then_some(at));
@@ -319,6 +319,10 @@ impl App {
                     Some(Gender::Male) => Some(Gender::Female),
                     _ => None,
                 };
+                self.builds_changed();
+            }
+            Key::Char('t') => {
+                self.builds.settings.rank = self.builds.settings.rank.next();
                 self.builds_changed();
             }
             Key::Char('u') => {

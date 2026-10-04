@@ -45,6 +45,9 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     if let Some(g) = app.builds.settings.gender {
         pool += &format!(" · {}", g.label().to_lowercase());
     }
+    if app.builds.settings.rank != mh3u_app::builds::Rank::Defense {
+        pool += &format!(" · by {}", app.builds.settings.rank.label());
+    }
     if app.builds.settings.craftable_only {
         pool += " · make now";
     }
@@ -66,6 +69,11 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             ListItem::new(Line::from(vec![
                 Span::styled(format!("{:>3}  ", n + 1), muted()),
                 Span::raw(format!("Def {:>3}  ", found.defense)),
+                Span::raw(match app.builds.settings.rank {
+                    mh3u_app::builds::Rank::Slots => format!("Slots {:>2}  ", found.slots),
+                    mh3u_app::builds::Rank::Resist => format!("Res {:>+3}  ", found.resist),
+                    _ => String::new(),
+                }),
                 Span::styled(
                     format!("{}/{} owned", found.owned, found.pieces.len()),
                     if found.owned == found.pieces.len() { good() } else { muted() },
