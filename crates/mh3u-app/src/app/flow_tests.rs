@@ -880,3 +880,27 @@ fn every_ranking_finds_sets_quickly() {
     }
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_equipment_skill_points_sort_puts_armor_with_skills_first() {
+    let dir = temp_dir("equipskills");
+    let Some(mut app) = app_in(&dir) else { return };
+    app.tab = Tab::Equipment;
+    let mut presses = 0;
+    while app.inv.equip_sort.label() != "skill points" && presses < 10 {
+        press(&mut app, "s");
+        presses += 1;
+    }
+    assert_eq!(app.inv.equip_sort.label(), "skill points");
+    let kinds: Vec<u8> = app.inv.equip_view.iter().map(|&i| app.save.equipment_box[i].kind).collect();
+    assert!(!kinds.is_empty());
+    assert!(kinds[0] <= 6, "armor or a talisman leads");
+    let first_weapon = kinds.iter().position(|&k| k > 6).unwrap_or(kinds.len());
+    assert!(
+        kinds[first_weapon..].iter().all(|&k| k > 6 || k == 0),
+        "no armor with points after the weapons that have none"
+    );
+    press(&mut app, "s");
+    assert_eq!(app.inv.equip_sort.label(), "box order", "the cycle comes back around");
+    let _ = std::fs::remove_dir_all(&dir);
+}

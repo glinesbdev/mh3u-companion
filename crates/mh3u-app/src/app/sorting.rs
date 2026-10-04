@@ -99,6 +99,8 @@ pub enum EquipSort {
     Defense,
     Type,
     WornFirst,
+    /// Armor and talismans first, the most skill points first (jewels in them count).
+    Skills,
 }
 
 impl EquipSort {
@@ -110,7 +112,8 @@ impl EquipSort {
             EquipSort::Attack => EquipSort::Defense,
             EquipSort::Defense => EquipSort::Type,
             EquipSort::Type => EquipSort::WornFirst,
-            EquipSort::WornFirst => EquipSort::BoxOrder,
+            EquipSort::WornFirst => EquipSort::Skills,
+            EquipSort::Skills => EquipSort::BoxOrder,
         }
     }
 
@@ -123,6 +126,7 @@ impl EquipSort {
             EquipSort::Defense => "defense",
             EquipSort::Type => "type",
             EquipSort::WornFirst => "worn first",
+            EquipSort::Skills => "skill points",
         }
     }
 }

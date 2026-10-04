@@ -164,6 +164,22 @@ impl App {
         let mut view: Vec<usize> = (0..boxed.len()).filter(|&i| found(i).is_some()).collect();
         let attack = |i: usize| self.game.weapon_stats(boxed[i].kind, boxed[i].id).map_or(0, |w| w.attack);
         let defense = |i: usize| self.game.armor_stats(boxed[i].kind, boxed[i].id).map_or(0, |a| a.defense);
+        // skill points a piece gives, the positive ones, with the jewels in it
+        let skill_points = |i: usize| -> i32 {
+            let e = &boxed[i];
+            let (own, codes) = match e.kind {
+                1..=5 => (
+                    self.game.armor_stats(e.kind, e.id).map(|a| a.skills.clone()).unwrap_or_default(),
+                    e.decorations(),
+                ),
+                6 => (e.talisman_skills(), e.talisman_decorations()),
+                _ => return 0,
+            };
+            own.iter()
+                .chain(&self.game.decoration_points(&codes))
+                .map(|&(_, p)| i32::from(p).max(0))
+                .sum()
+        };
         match self.inv.equip_sort {
             EquipSort::BoxOrder if !words.is_empty() => view.sort_by_key(|&i| std::cmp::Reverse(found(i))),
             EquipSort::BoxOrder => {}
@@ -172,6 +188,7 @@ impl App {
             EquipSort::Name => view.sort_by_key(|&i| (name(i), kind_rank(boxed[i].kind))),
             EquipSort::Rarity => view.sort_by_key(|&i| (std::cmp::Reverse(rarity(i)), kind_rank(boxed[i].kind), name(i))),
             EquipSort::Type => view.sort_by_key(|&i| (kind_rank(boxed[i].kind), name(i))),
+            EquipSort::Skills => view.sort_by_key(|&i| (std::cmp::Reverse(skill_points(i)), std::cmp::Reverse(defense(i)), name(i))),
             EquipSort::WornFirst => view.sort_by_key(|&i| (!self.save.is_worn(&boxed[i]), kind_rank(boxed[i].kind), name(i))),
         }
         let at = kept
