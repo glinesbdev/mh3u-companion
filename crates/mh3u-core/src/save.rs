@@ -18,7 +18,7 @@ const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
-/// byte each). Found by comparing the saves of two hunters with the numbers on their guild cards (docs/formats.md).
+/// byte each). Found by comparing the saves of two hunters with the numbers on their guild cards, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7568;
 const GUILD_QUESTS_OFFSET: usize = 0x7569;

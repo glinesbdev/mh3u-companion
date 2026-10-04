@@ -4,7 +4,7 @@ use super::*;
 
 /// The popup that lists the save slots that hold a hunter.
 pub struct HunterChoice {
-    /// (save slot, hunter name, play time).
+    /// (save slot, hunter name, guild card summary).
     pub slots: Vec<(u8, String, String)>,
     pub state: ListState,
 }
@@ -21,7 +21,12 @@ impl App {
             .filter_map(|slot| {
                 let bytes = std::fs::read(dir.join(format!("user{slot}"))).ok()?;
                 let save = Save::parse(&bytes).ok()?;
-                let played = save.play_time();
+                let played = format!(
+                    "{}  {} village · {} guild",
+                    save.play_time(),
+                    save.village_quests,
+                    save.guild_quests
+                );
                 Some((slot, save.hunter_name, played))
             })
             .filter(|(_, name, _)| !name.is_empty())
