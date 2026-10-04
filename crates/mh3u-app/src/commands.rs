@@ -7,6 +7,9 @@
 //! stock             make sure the item pouch and box hold everything the wishlist needs
 //! scan head         look for the blacksmith's list in the game's memory (read-only; also body, arms, waist, legs)
 //! scan head A, B    the same, for a menu that really shows pieces A and B (names as in the game, comma separated)
+//! equip 12          show the 16 bytes of equipment box slot 12 (counted from 0)
+//! equip 12 = <hex>  write a whole record (32 hex digits);  equip 12 @4 <hex>  write bytes starting at offset 4
+//! talisman auto-guard 10, psychic 5   add a talisman with these skills (copies the kind and id bytes of one you have)
 //! stock all         the same, also for wishlisted pieces you already own (to craft another copy)
 //! ```
 
@@ -35,6 +38,16 @@ pub enum Command {
     Stock {
         include_owned: bool,
     },
+    /// Show (no bytes) or write bytes of an equipment box record, for finding out what the record's fields do.
+    Equip {
+        slot: usize,
+        offset: usize,
+        bytes: Vec<u8>,
+    },
+    /// Add a talisman with skills given as (skill name, points).
+    Talisman {
+        skills: Vec<(String, i8)>,
+    },
     /// Look for the blacksmith's list of this kind of armor in the game's memory (read-only).
     Scan {
         kind: u8,
@@ -50,7 +63,7 @@ fn number(word: &str) -> Option<u32> {
 pub fn parse(text: &str) -> Result<Command, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     let Some((&verb, args)) = words.split_first() else {
-        return Err("type a command: zenny, give, set, stock or scan".into());
+        return Err("type a command: zenny, give, set, stock, equip, talisman or scan".into());
     };
     match verb.to_lowercase().as_str() {
         "zenny" | "z" => {
@@ -90,6 +103,50 @@ pub fn parse(text: &str) -> Result<Command, String> {
             [all] if all.eq_ignore_ascii_case("all") => Ok(Command::Stock { include_owned: true }),
             _ => Err("stock covers the wishlist; 'stock all' also covers pieces you already own".into()),
         },
+        "equip" | "eq" => {
+            let slot = args
+                .first()
+                .and_then(|s| s.parse().ok())
+                .ok_or("equip needs a slot number: equip 12, equip 12 = <hex> or equip 12 @4 <hex>")?;
+            let mut rest = &args[1..];
+            let mut offset = 0;
+            match rest.first() {
+                Some(&"=") => rest = &rest[1..],
+                Some(w) if w.starts_with('@') => {
+                    offset = w[1..].parse().map_err(|_| "after @ comes the byte offset, like @4".to_string())?;
+                    rest = &rest[1..];
+                }
+                _ => {}
+            }
+            let hex: String = rest.concat().replace("0x", "");
+            if !hex.len().is_multiple_of(2) || !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+                return Err("the bytes are hex digits in pairs, like 25 0a".into());
+            }
+            let bytes = (0..hex.len() / 2)
+                .map(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).unwrap_or(0))
+                .collect();
+            Ok(Command::Equip { slot, offset, bytes })
+        }
+        "talisman" | "tal" => {
+            let skills = args
+                .join(" ")
+                .split(',')
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .map(|segment| {
+                    let (name, points) = segment.rsplit_once(' ').ok_or("each skill is a name and points: auto-guard 10")?;
+                    let points: i8 = points
+                        .trim_start_matches('+')
+                        .parse()
+                        .map_err(|_| "the points are a number from -127 to 127")?;
+                    Ok((name.trim().to_string(), points))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+            if skills.is_empty() {
+                return Err("talisman needs skills: talisman auto-guard 10, psychic 5".into());
+            }
+            Ok(Command::Talisman { skills })
+        }
         "scan" => {
             let kind = match args.first().map(|w| w.to_lowercase()).as_deref() {
                 None | Some("head") => 5,
@@ -107,7 +164,9 @@ pub fn parse(text: &str) -> Result<Command, String> {
                 .collect();
             Ok(Command::Scan { kind, names })
         }
-        other => Err(format!("unknown command '{other}': zenny, give, set, stock or scan")),
+        other => Err(format!(
+            "unknown command '{other}': zenny, give, set, stock, equip, talisman or scan"
+        )),
     }
 }
 
@@ -117,6 +176,16 @@ fn split_item(args: &[&str]) -> (String, Option<u32>) {
         Some((last, rest)) if number(last).is_some() && !rest.is_empty() => (rest.join(" "), number(last)),
         _ => (args.join(" "), None),
     }
+}
+
+/// The skill chosen for a query by the same rules as items: an exact name, then a name that starts with it, then one that contains it.
+pub fn resolve_skill(game: &GameData, query: &str) -> Option<(u8, String)> {
+    let names: Vec<(u16, &str)> = game
+        .skill_ids()
+        .filter_map(|id| Some((u16::from(id), game.skill_name(id)?)))
+        .collect();
+    let found = pick(&names, query)?;
+    Some((u8::try_from(found.id).ok()?, found.name.to_string()))
 }
 
 /// The item chosen for a query, and other names that matched equally well (so the status line can say what else it
@@ -201,6 +270,56 @@ mod tests {
 
     fn give(item: &str, count: Option<u16>) -> Command {
         Command::Give { item: item.into(), count }
+    }
+
+    #[test]
+    fn equip_shows_writes_or_pokes_a_record() {
+        assert_eq!(
+            parse("equip 12"),
+            Ok(Command::Equip {
+                slot: 12,
+                offset: 0,
+                bytes: vec![]
+            })
+        );
+        assert_eq!(
+            parse("equip 3 = 06 00 00 01 25 0a"),
+            Ok(Command::Equip {
+                slot: 3,
+                offset: 0,
+                bytes: vec![6, 0, 0, 1, 0x25, 0x0a]
+            })
+        );
+        assert_eq!(
+            parse("equip 3 @4 250a"),
+            Ok(Command::Equip {
+                slot: 3,
+                offset: 4,
+                bytes: vec![0x25, 0x0a]
+            })
+        );
+        assert!(parse("equip").is_err() && parse("equip x").is_err());
+        assert!(parse("equip 3 @4 25 0").is_err(), "an odd number of digits");
+        assert!(parse("equip 3 @4 zz").is_err());
+    }
+
+    #[test]
+    fn talisman_takes_skills_and_points_separated_by_commas() {
+        assert_eq!(
+            parse("talisman auto-guard +10, psychic -3"),
+            Ok(Command::Talisman {
+                skills: vec![("auto-guard".into(), 10), ("psychic".into(), -3)]
+            })
+        );
+        assert_eq!(
+            parse("tal attack up (s) 4"),
+            Ok(Command::Talisman {
+                skills: vec![("attack up (s)".into(), 4)]
+            })
+        );
+        assert!(parse("talisman").is_err());
+        assert!(parse("talisman psychic").is_err(), "no points");
+        assert!(parse("talisman psychic lots").is_err());
     }
 
     #[test]

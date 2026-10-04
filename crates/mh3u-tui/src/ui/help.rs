@@ -184,6 +184,7 @@ pub(super) const EDIT_SECTION: Section = Section {
         (":", "zenny 50000 | zenny +500"),
         (":", "give iron ore [n] | set honey 5"),
         (":", "stock | stock all (cover the wishlist)"),
+        (":", "equip N [= hex | @off hex] | talisman skill pts, ... (poke records)"),
         (":", "scan head | body | arms | waist | legs (find the blacksmith's list in memory)"),
     ],
 };

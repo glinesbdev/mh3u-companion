@@ -79,12 +79,27 @@ type a command:
 | `set honey 5` | set exactly 5; `set honey 0` removes it |
 | `stock` | add whatever the Wishlist tab's shopping list is still missing |
 | `scan head` | read-only: look in the game's memory for the blacksmith's list of head pieces (also `body`, `arms`, `waist`, `legs`); see below |
+| `equip 12` | show the 16 bytes of equipment box slot 12 (slots count from 0; the Equipment tab's order is the box order unless sorted) |
+| `equip 12 = 06 00 00 01 25 0a ...` | write a whole record (32 hex digits); `equip 12 @4 25 0a` writes bytes from offset 4 of the record |
+| `talisman auto-guard 10, psychic 5` | add a talisman with those skills (names matched like items); its first four bytes are copied from a talisman you already have |
 | `stock all` | the same, but also for wishlisted pieces you already own (for crafting another copy, e.g. to learn a starter weapon's price) |
 
 Edited values are what the game sees from then on (a shop or the item box shows them), and they come back to the screen like
 any other live change. **If you save in the game, the edits are saved with them.** So when edit mode starts, the save slots
 (`user1`-`user3`, `system`) are copied to `~/.local/share/mh3u-companion/backups/<unix time>/`, and the status line says
 where. It is a good idea to use a spare hunter.
+
+### Finding what an equipment record's bytes mean (`equip`, `talisman`)
+
+An equipment box record is 16 bytes: kind, a state byte, the piece id (u16) and 12 bytes that hold a talisman's skills and, probably, a
+piece's socketed decorations. To learn them, write a record and look at it in the game, a change at a time:
+
+1. `equip 12` on a talisman shows its bytes (the Equipment tab lists the box in box order with `s` set to box order).
+2. `talisman auto-guard 10` adds one with a skill you know; check it in the game's item box (it should read Auto-Guard +10).
+3. `equip N @6 30 05` writes a second pair (skill id 0x30, 5 points); does the game show a second skill? Then try the other bytes
+   (`@10`, `@12`, `@14`...) one at a time, and note what the screen says.
+
+Edits go into the live game only, and the saves are backed up first like every other debug edit; use a spare hunter.
 
 ### Finding the blacksmith's list (`scan`)
 

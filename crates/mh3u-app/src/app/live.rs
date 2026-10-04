@@ -143,6 +143,32 @@ impl App {
                     notes.push(format!("{} in the box set to {}", found.describe(), count.min(edit::MAX_STACK)));
                 }
                 commands::Command::Scan { .. } => {}
+                commands::Command::Equip { slot, offset, bytes } => {
+                    if bytes.is_empty() {
+                        let record = edit::equipment_record(&data, slot).map_err(|e| e.to_string())?;
+                        let hex: Vec<String> = record.iter().map(|b| format!("{b:02x}")).collect();
+                        notes.push(format!("slot {slot}: {}", hex.join(" ")));
+                    } else {
+                        push(
+                            edit::poke_equipment(&data, slot, offset, &bytes).map_err(|e| e.to_string())?,
+                            &mut data,
+                        );
+                        let record = edit::equipment_record(&data, slot).map_err(|e| e.to_string())?;
+                        let hex: Vec<String> = record.iter().map(|b| format!("{b:02x}")).collect();
+                        notes.push(format!("slot {slot} is now {}", hex.join(" ")));
+                    }
+                }
+                commands::Command::Talisman { skills } => {
+                    let mut pairs = Vec::new();
+                    for (name, points) in &skills {
+                        let (id, full) = commands::resolve_skill(&self.game, name).ok_or(format!("no skill matches '{name}'"))?;
+                        notes.push(format!("{full} {points:+}"));
+                        pairs.push((id, *points));
+                    }
+                    let (slot, patch) = edit::new_talisman(&data, &pairs).map_err(|e| e.to_string())?;
+                    push(patch, &mut data);
+                    notes = vec![format!("talisman in slot {slot}: {}", notes.join(", "))];
+                }
                 commands::Command::Stock { include_owned } => {
                     let (need, _) = self.shopping_need_with(include_owned);
                     for (id, wanted) in need {

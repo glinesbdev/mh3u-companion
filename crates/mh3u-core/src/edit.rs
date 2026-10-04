@@ -2,7 +2,7 @@
 //! materials) so features can be tested without hours of play. Nothing here touches a file or memory; a patch is just
 //! "these bytes at this offset", to be applied by whoever holds the live memory.
 
-use crate::save::{BOX_OFFSET, BOX_SLOTS, SAVE_LEN, ZENNY_OFFSET};
+use crate::save::{BOX_OFFSET, BOX_SLOTS, EQUIP_LEN, EQUIP_OFFSET, EQUIP_SLOTS, SAVE_LEN, ZENNY_OFFSET};
 use anyhow::{Result, bail};
 
 /// The most of one item a stack holds.
@@ -60,6 +60,72 @@ pub fn set_box_item(data: &[u8], id: u16, count: u16) -> Result<Patch> {
     })
 }
 
+/// The 16 bytes of an equipment box record (`slot` counts from 0).
+pub fn equipment_record(data: &[u8], slot: usize) -> Result<&[u8]> {
+    if data.len() != SAVE_LEN {
+        bail!("not a save block");
+    }
+    if slot >= EQUIP_SLOTS {
+        bail!("the equipment box has slots 0 to {}", EQUIP_SLOTS - 1);
+    }
+    let at = EQUIP_OFFSET + slot * EQUIP_LEN;
+    Ok(&data[at..at + EQUIP_LEN])
+}
+
+/// Overwrite `bytes` inside an equipment box record, starting `offset` bytes into it.
+pub fn poke_equipment(data: &[u8], slot: usize, offset: usize, bytes: &[u8]) -> Result<Patch> {
+    equipment_record(data, slot)?;
+    if bytes.is_empty() || offset + bytes.len() > EQUIP_LEN {
+        bail!(
+            "a record is {EQUIP_LEN} bytes: {} byte(s) at offset {offset} do not fit",
+            bytes.len()
+        );
+    }
+    Ok(Patch {
+        offset: EQUIP_OFFSET + slot * EQUIP_LEN + offset,
+        bytes: bytes.to_vec(),
+    })
+}
+
+/// The first unused equipment box slot (a record whose kind byte is 0).
+pub fn first_empty_equipment(data: &[u8]) -> Option<usize> {
+    (0..EQUIP_SLOTS).find(|&slot| data[EQUIP_OFFSET + slot * EQUIP_LEN] == 0)
+}
+
+/// The most skills a talisman record is written with (pairs of skill id and points from byte 4).
+pub const TALISMAN_PAIRS: usize = 6;
+/// Equipment kind of a talisman.
+const TALISMAN_KIND: u8 = 6;
+
+/// A new talisman in the first empty slot, with these skills (id, points). Its first four bytes (kind, state, id) are copied from a
+/// talisman already in the box, since what the state and id bytes mean is not known; the rest of the record is zero but the pairs.
+/// Returns the slot and the patch.
+pub fn new_talisman(data: &[u8], skills: &[(u8, i8)]) -> Result<(usize, Patch)> {
+    if skills.is_empty() || skills.len() > TALISMAN_PAIRS {
+        bail!("a talisman takes 1 to {TALISMAN_PAIRS} skills");
+    }
+    let model = (0..EQUIP_SLOTS)
+        .map(|slot| equipment_record(data, slot))
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .find(|r| r[0] == TALISMAN_KIND)
+        .ok_or_else(|| anyhow::anyhow!("the box has no talisman to copy the kind and id bytes from; use equip to write a record"))?;
+    let slot = first_empty_equipment(data).ok_or_else(|| anyhow::anyhow!("the equipment box is full"))?;
+    let mut record = [0u8; EQUIP_LEN];
+    record[..4].copy_from_slice(&model[..4]);
+    for (k, &(id, points)) in skills.iter().enumerate() {
+        record[4 + 2 * k] = id;
+        record[5 + 2 * k] = points as u8;
+    }
+    Ok((
+        slot,
+        Patch {
+            offset: EQUIP_OFFSET + slot * EQUIP_LEN,
+            bytes: record.to_vec(),
+        },
+    ))
+}
+
 /// How many of `id` the item box holds.
 pub fn box_count(data: &[u8], id: u16) -> u16 {
     (0..BOX_SLOTS)
@@ -77,6 +143,37 @@ mod tests {
     fn set(d: &mut [u8], id: u16, count: u16) {
         let patch = set_box_item(d, id, count).unwrap();
         apply(d, &patch);
+    }
+
+    #[test]
+    fn equipment_records_are_read_and_poked_inside_their_slot() {
+        let mut d = vec![0u8; SAVE_LEN];
+        let at = |slot: usize| EQUIP_OFFSET + slot * EQUIP_LEN;
+        d[at(3)] = TALISMAN_KIND;
+        d[at(3) + 1] = 9;
+        d[at(3) + 2..at(3) + 4].copy_from_slice(&7u16.to_be_bytes());
+        assert_eq!(equipment_record(&d, 3).unwrap()[..4], [6, 9, 0, 7]);
+        assert!(equipment_record(&d, 1000).is_err());
+        let patch = poke_equipment(&d, 3, 4, &[0x25, 0x0a]).unwrap();
+        assert_eq!(patch.offset, at(3) + 4);
+        assert!(poke_equipment(&d, 3, 15, &[1, 2]).is_err(), "runs past the record");
+        assert!(poke_equipment(&d, 3, 0, &[]).is_err());
+    }
+
+    #[test]
+    fn a_new_talisman_copies_the_header_of_one_in_the_box_and_takes_the_first_empty_slot() {
+        let mut d = vec![0u8; SAVE_LEN];
+        let at = |slot: usize| EQUIP_OFFSET + slot * EQUIP_LEN;
+        d[at(0)] = 5; // some armor in slot 0
+        assert!(new_talisman(&d, &[(0x25, 10)]).is_err(), "no talisman to copy from");
+        d[at(1)..at(1) + 4].copy_from_slice(&[6, 2, 0, 1]);
+        d[at(1) + 4..at(1) + 6].copy_from_slice(&[0x25, 0x0a]);
+        let (slot, patch) = new_talisman(&d, &[(0x25, 10), (0x30, -3)]).unwrap();
+        assert_eq!(slot, 2);
+        assert_eq!(patch.offset, at(2));
+        assert_eq!(patch.bytes, [6, 2, 0, 1, 0x25, 10, 0x30, 0xfd, 0, 0, 0, 0, 0, 0, 0, 0]);
+        assert!(new_talisman(&d, &[]).is_err());
+        assert!(new_talisman(&d, &[(1, 1); 7]).is_err());
     }
 
     #[test]

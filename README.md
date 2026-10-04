@@ -113,7 +113,7 @@ Forging costs for weapons (create and upgrade) and armor are read straight from 
 `~/.local/share/mh3u-companion/prices.tsv`, then shown beside the recipe and totalled on the Wishlist tab. See `docs/prices.md`.
 
 `mh3u-tui --live --debug-edit` adds a debug command line (`:`) that changes the running game's zenny and item box (`zenny 50000`,
-`give iron ore`, `stock` to cover the wishlist) for testing without hours of play. This is the only part that writes to the game;
+`give iron ore`, `stock` to cover the wishlist, `equip` and `talisman` to write equipment records and find out what their bytes mean) for testing without hours of play. This is the only part that writes to the game;
 it backs up your save slots first, and anything you then save in the game keeps the edits. See `docs/live.md`.
 
 ## Running
