@@ -2,8 +2,8 @@
 //!
 //! One table in the executable's data section, a run of 20-byte records indexed by item id (the ids of the name table), from
 //! [`TABLE_AT`]. A big-endian u32 at the start of a record is the **sell price** in zenny. All 681 items whose price a published list
-//! gives agree. Byte 7 of the record is very likely the carry limit (99 for most things, 10 for others; 652 of those 681 agree), but
-//! it is not read: the buying price is not in this table (shops have their own prices).
+//! gives agree. Byte 7 of the record looks like the carry limit (99 for most things, 10 for others) but agrees with a published list for
+//! only 87% of items, so it is not read; the carry limit and the shop price come from `item_extras.rs`.
 
 use anyhow::{Result, bail};
 

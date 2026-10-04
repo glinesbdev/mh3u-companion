@@ -237,6 +237,14 @@ Three rows of the wiki's tables are cut off (a note sequence with no song) and a
 the weapon database names the light-blue note "orange" in white-note horns (Bone Horn is white, red and light blue), so `weapon_extras.tsv`
 uses the wiki's name, `sky`, there. Every horn in the table has at least two songs (a test checks).
 
+## Carry limits and shop prices (`item_extras.rs`)
+
+The item table (above) has the sell price. The carry limit and the price a shop asks are not in anything the program reads: byte 7 of the item
+record agrees with Kiranico's carry limit for 1,121 of 1,292 items (87%), too few to use. `data/item_extras.tsv` has both, taken from Kiranico's
+item pages and joined to the game's items by name (1,293 of 1,331; the other 38 are not items in the game's text). The join was checked with
+the sell price: Kiranico's agrees with the game's table for 1,199 of 1,228 items (the rest are special items and a few jewels). About 365 items have a shop price. Which shop sells an item, and
+when, is not known.
+
 ## Not found / not decoded
 
 - Weapon sharpness (the selector bytes are known, the table is not) and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.

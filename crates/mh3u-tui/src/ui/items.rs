@@ -133,6 +133,18 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
             Span::styled(" each", muted()),
         ]));
     }
+    if let Some(price) = app.game.shop_price(id) {
+        lines.push(Line::from(vec![
+            Span::styled("Shop asks ", muted()),
+            Span::raw(format!("{}z", group_digits(u64::from(price)))),
+        ]));
+    }
+    if let Some(limit) = app.game.carry_limit(id) {
+        lines.push(Line::from(vec![
+            Span::styled("Carry limit ", muted()),
+            Span::raw(limit.to_string()),
+        ]));
+    }
     lines.extend(spare_lines(app, id));
     let (need, _) = app.shopping_need();
     if let Some(&(_, n)) = need.iter().find(|&&(item, _)| item == id) {

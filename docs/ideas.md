@@ -40,7 +40,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   kinds in a monster's order). **Needs:** the table that says which parts a monster can break, probably in code.
 - Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
 - Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (a byte at 0x7569 may be it; to confirm at the next rank-up), weapon usage (the count for the great sword shows 11; not found as a plain count) and the title.
-- **Item carry limits and buying prices.** The item table's byte 7 looks like the carry limit (652 of 681 agree with a published list, so it is not shown) and shops price their own goods; **Needs:** the shop tables.
+- **Which shop sells what.** The Items tab shows an item's shop price and carry limit (from Kiranico), but not where it is sold or when it appears. **Needs:** the shop tables.
 - How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the hunt rule).
 - Other languages: the text archive also has French, German, Italian and Spanish names and descriptions; a language option would only
   need the archive path to change.

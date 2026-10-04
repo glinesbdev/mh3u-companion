@@ -76,6 +76,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// Carry limits and shop prices of items, by item id.
+    item_extras: HashMap<u16, crate::item_extras::ItemExtras>,
     /// Songs of the hunting horns, by the horn's notes.
     horn_songs: Vec<(Vec<String>, crate::horn_songs::Song)>,
     /// Sharpness and element of the melee weapons, by (kind, id).
@@ -181,6 +183,7 @@ impl GameData {
             decorations: crate::decorations::parse(&data_section)?,
             weapon_extras: HashMap::new(),
             horn_songs: crate::horn_songs::parse()?,
+            item_extras: HashMap::new(),
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
@@ -193,6 +196,11 @@ impl GameData {
             .into_iter()
             .filter(|((kind, id), (name, _))| game.piece_name(*kind, *id) == Some(name.as_str()))
             .map(|(key, (_, extras))| (key, extras))
+            .collect();
+        game.item_extras = crate::item_extras::parse()?
+            .into_iter()
+            .filter(|(id, (name, _))| game.item_name(*id) == Some(name.as_str()))
+            .map(|(id, (_, extras))| (id, extras))
             .collect();
         Ok(game)
     }
@@ -270,6 +278,16 @@ impl GameData {
     /// A melee weapon's sharpness bars and elements, when the table has the weapon under this name.
     pub fn weapon_extras(&self, kind: u8, id: u16) -> Option<&crate::weapon_extras::Extras> {
         self.weapon_extras.get(&(kind, id))
+    }
+
+    /// The most of an item the hunter can carry in a stack, where the table has it.
+    pub fn carry_limit(&self, id: u16) -> Option<u16> {
+        self.item_extras.get(&id)?.carry
+    }
+
+    /// What a shop asks for an item, if some shop sells it.
+    pub fn shop_price(&self, id: u16) -> Option<u32> {
+        self.item_extras.get(&id)?.buy
     }
 
     /// What a shop pays for an item, in zenny; `None` for an item with no value (or an id past the table).
@@ -557,6 +575,10 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // carry limits and shop prices joined by name
+        assert!(game.item_extras.len() > 1250, "{}", game.item_extras.len());
+        let potion = game.item_names().find(|(_, n)| *n == "Potion").unwrap().0;
+        assert_eq!((game.carry_limit(potion), game.shop_price(potion)), (Some(10), Some(66)));
         // sharpness and element joined by name: nearly every melee weapon has them, and Chrome Quietus is the example in the docs
         assert!(game.weapon_extras.len() > 1090, "{}", game.weapon_extras.len());
         let quietus = game

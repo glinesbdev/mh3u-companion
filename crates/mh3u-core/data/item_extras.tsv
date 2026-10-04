@@ -1,0 +1,1295 @@
+# game item id	name	carry limit	shop price (zenny; empty when no shop sells it)
+# From Kiranico's Monster Hunter 3 Ultimate database, joined to the game's items by name. See docs/formats.md.
+2	Book of Combos 1	1	1000
+3	Book of Combos 2	1	2000
+4	Book of Combos 3	1	5000
+5	Book of Combos 4	1	10000
+6	Book of Combos 5	1	15000
+7	Organizer Guide	1	3000
+8	Pack Rat Guide	1	5000
+9	Potion	10	66
+10	Mega Potion	10	
+11	Nutrients	5	760
+12	Mega Nutrients	5	
+13	Antidote	10	60
+14	Immunizer	10	
+15	Dash Juice	5	
+16	Mega Dash Juice	5	
+17	Demondrug	5	
+18	Mega Demondrug	5	
+19	Might Pill	5	
+20	Armorskin	5	
+21	Mega Armorskin	5	
+22	Adamant Pill	5	
+23	Cool Drink	5	300
+24	Hot Drink	5	250
+25	Cleanser	10	140
+26	Psychoserum	3	300
+27	Herbal Medicine	10	250
+28	Max Potion	2	
+29	Ancient Potion	1	
+30	Catalyst	5	480
+31	Energy Drink	10	
+32	Air Philter	5	80
+33	Mega Air Philter	3	
+34	Gunpowder	20	222
+35	Lifecrystals	10	
+36	Lifepowder	3	
+37	Mystery Charm	8	
+38	Shining Charm	8	
+39	Timeworn Charm	9	
+40	Enduring Charm	9	
+41	Powercharm	1	36000
+42	Powertalon	1	
+43	Armorcharm	1	24000
+44	Armortalon	1	
+45	Tranquilizer	10	150
+46	Raw Meat	10	50
+47	Poisoned Meat	10	188
+48	Tinged Meat	10	300
+49	Drugged Meat	10	315
+50	Rare Steak	10	
+51	Well-done Steak	10	
+52	Burnt Meat	10	
+53	Hot Meat	10	
+54	Chilled Meat	10	
+55	Pink Liver	99	
+56	Ethnic Wyvrnmeat	99	
+57	Boomerang	10	
+58	Throwing Knife	5	
+59	Poison Knife	5	
+60	Sleep Knife	5	
+61	Paralysis Knife	5	
+62	Tranq Knife	5	
+63	Bomb Casing	30	150
+64	Paintball	99	
+65	Flash Bomb	5	
+66	Sonic Bomb	10	
+67	Dung	10	10
+68	Super-sized Dung	99	
+69	Fertile Mud	99	
+70	Dung Bomb	10	160
+71	Smoke Bomb	10	437
+72	Poison Smoke Bmb	10	
+73	Farcaster	1	300
+74	Tranq Bomb	8	
+75	Oxygen Supply	10	240
+76	Spider Web	10	
+77	Net	10	
+78	Trap Tool	2	200
+79	Pitfall Trap	1	
+80	Shock Trap	1	320
+81	Small Barrel	10	80
+82	Large Barrel	10	210
+83	Barrel Bomb S	10	156
+84	Barrel Bomb S+	5	
+85	Barrel Bomb L	3	518
+86	Barrel Bomb L+	2	
+87	Bounce Bomb	10	180
+88	Bounce Bomb+	10	
+89	Felvine Bomb	10	
+90	Huskberry	99	2
+91	Bone Husk S	99	30
+92	Bone Husk L	99	
+93	Normal S Lv1		
+94	Normal S Lv2	99	3
+95	Normal S Lv3	99	5
+96	Pierce S Lv1	60	12
+97	Pierce S Lv2	60	16
+98	Pierce S Lv3	60	22
+99	Pellet S Lv1	80	4
+100	Pellet S Lv2	70	8
+101	Pellet S Lv3	60	12
+102	Crag S Lv1	9	41
+103	Crag S Lv2	9	
+104	Crag S Lv3	9	
+105	Clust S Lv1	3	38
+106	Clust S Lv2	3	
+107	Clust S Lv3	3	
+108	Flaming S	60	20
+109	Water S	60	20
+110	Thunder S	60	20
+111	Freeze S	60	20
+112	Dragon S	3	100
+113	Recov S Lv1	12	8
+114	Recov S Lv2	12	15
+115	Poison S Lv1	12	17
+116	Poison S Lv2	12	
+117	Para S Lv1	12	26
+118	Para S Lv2	8	
+119	Sleep S Lv1	12	17
+120	Sleep S Lv2	8	
+121	Tranq S	8	
+122	Paint S	99	20
+123	Demon S	5	
+125	Armor S	5	
+127	Sub S Lv1	60	17
+128	Sub S Lv2	60	
+129	Exhaust S Lv1	12	25
+130	Exhaust S Lv2	8	
+131	Slicing S	30	30
+134	WyvernFire	10	62
+135	UW Ballista Ammo	10	
+137	Empty Phial	99	5
+138	Power Coating	50	32
+139	C.Range Coating	20	27
+140	Poison Coating	20	17
+141	Para Coating	20	26
+142	Sleep Coating	20	17
+143	Exhaust Coating	20	19
+144	Paint Coating	99	20
+146	Worm	10	20
+148	Mega Fishing Fly	10	30
+149	Frog	10	
+150	Whetfish Bait	5	
+151	Sushifish Bait	5	
+152	Tuna Bait	10	
+154	Goldenfish Bait	5	
+155	Burst Bait	5	
+157	Old Pickaxe	5	60
+158	Iron Pickaxe	5	160
+159	Mega Pickaxe	5	240
+160	Old Bug Net	5	30
+161	Bug Net	5	80
+162	Mega Bug Net	5	120
+163	Fishing Harpoon	5	140
+164	Mega Harpoon	5	300
+165	BBQ Spit	1	560
+166	Double BBQ Spit	1	
+167	Whetstone	20	80
+168	Binoculars	1	50
+169	Garbage	99	
+170	Field Horn	1	480
+171	Health Horn	1	
+172	Antidote Horn	1	
+173	Demon Horn	1	
+174	Armor Horn	1	
+175	Honey	10	90
+176	Herb	10	20
+177	Antidote Herb	10	20
+178	Fire Herb	20	44
+180	Ivy	10	75
+181	Sleep Herb	10	50
+182	Sap Plant	30	24
+183	Felvine	10	14
+184	Cactus Flower	10	
+185	Airweed	10	40
+186	Hot Pepper	10	44
+188	Blue Mushroom	10	24
+189	Nitroshroom	20	60
+190	Parashroom	10	150
+191	Toadstool	10	75
+192	Exciteshroom	10	180
+194	Dragon Toadstool	10	400
+195	Bindshroom	99	
+196	Paintberry	99	60
+197	Might Seed	10	280
+198	Adamant Seed	10	220
+199	Dragonfell Berry	10	780
+200	Scatternut	30	82
+201	Needleberry	99	22
+203	Bomberry	10	120
+208	Nulberry	10	
+209	Bumblepumpkin	99	
+210	Broken Shell	99	
+211	Black Pearl	99	
+212	Jumbo Pearl	99	
+213	Stone	99	
+214	Iron Ore	99	
+215	Earth Crystal	99	
+216	Machalite Ore	99	
+217	Dragonite Ore	99	
+218	Pelagicite Ore	99	
+222	Carbalite Ore	99	
+223	Eltalite Ore	99	
+224	Fucium Ore	99	
+225	Meldspar Ore	99	
+226	Bathycite Ore	99	
+227	Lava Nugget	99	
+228	Firestone	99	
+229	Firecell Stone	99	
+230	Allfire Stone	99	
+231	Lightcrystal	99	
+232	Isisium	99	
+234	Gracium	99	
+235	Antiseptic Stone	10	
+236	Ice Crystal	20	600
+237	Armor Stone	99	1500
+238	Armor Sphere	99	
+239	Armor Sphere+	99	
+240	Adv Armor Sphere	99	
+241	Hrd Armor Sphere	99	
+242	Hvy Armor Sphere	99	
+244	Tru Armor Sphere	99	
+245	Whetfish	20	135
+246	Sushifish	10	90
+247	Sleepyfish	10	90
+248	Pin Tuna	30	190
+249	Popfish	40	38
+250	Scatterfish	10	300
+251	Burst Arowana	10	90
+252	Bomb Arowana	10	270
+253	Glutton Tuna	10	
+254	Small Goldenfish	10	
+255	Wanchovy	20	
+257	Blue Cutthroat	10	
+258	Humspun Conch	10	
+260	Insect Husk	10	
+261	Yambug	99	30
+262	Bughopper	99	60
+264	Stinkhopper	99	
+265	Snakebee Larva	99	300
+266	Godbug	10	420
+267	Bitterbug	10	20
+268	Flashbug	10	96
+269	Thunderbug	99	300
+270	Fulgurbug	99	
+271	Carpenterbug	99	
+272	Killer Beetle	99	
+273	Hercudrome	99	
+275	King Scarab	99	
+276	Rare Scarab	99	
+278	Flutterfly	99	
+280	Bomb Sac	99	
+281	Screamer	99	150
+282	Poison Sac	99	
+283	Toxin Sac	99	
+285	Paralysis Sac	99	
+286	Omniplegia Sac	99	
+287	Sleep Sac	99	
+288	Coma Sac	99	
+289	Flame Sac	99	
+290	Inferno Sac	99	
+291	Conflagrant Sac	99	
+292	Aqua Sac	99	
+293	Torrent Sac	99	
+295	Thunder Sac	99	
+296	Lightning Sac	99	
+297	Frost Sac	99	
+298	Freezer Sac	99	
+299	Dash Extract	20	
+300	Pale Extract	20	
+301	Monster Bone S	99	100
+302	Monster Bone M	99	2100
+303	Monster Bone L	99	
+304	Mystery Bone	99	
+305	Unknown Skull	99	
+306	Bone	99	
+307	Avian Stoutbone	99	
+309	Monster Bone+	99	
+310	Monster Keenbone	99	
+311	Monster Hardbone	99	
+312	Monster Slogbone	99	
+313	Avian Finebone	99	
+314	Jumbo Bone	99	
+315	Stoutbone	99	
+316	Dragonbone Relic	99	
+317	Wyvern Fang	50	58
+318	Wyvern Claw	50	180
+319	Wyvern Stone	99	
+320	Lrg Wyvern Stone	99	
+321	Bird Wyvern Gem	99	
+322	Fey Wyvern Gem	99	
+323	ElderDragonBlood	99	
+325	Azure Dragongem	99	
+326	Azure Drgnsphire	99	
+327	Beautiful Scale	10	
+328	Shining Starfish	99	
+329	Armorfish Morsel	99	
+330	Fine Pelt	99	
+331	Power Paddle	99	
+332	Curved Fang	99	
+333	Dragonbone Piece	99	
+334	Abalone Piece	99	
+335	Fossil Piece	99	
+336	Stunning Quill	99	
+337	Saturnian	99	
+338	Mystic Narwhal	99	
+339	Perfect Paddle	99	
+340	Moonlight Fang	99	
+341	Glittering Scale	99	
+342	Giant Skull	99	
+343	Atlantis Crab	99	
+344	Queen Needle	99	
+345	Ancient Skin Oil	99	
+346	Flamboyant Quill	99	
+347	Eldest Saturnian	99	
+348	Queen's Spirit	99	
+350	Sea-King's Scale	99	
+351	Odd Egg	99	
+352	Saturnian Trap	99	
+353	BugMaker! Pro	99	
+354	Funky Pheromones	99	
+355	Shroom Germ	99	
+356	Shroom Germ+	99	
+357	Bizzy Bees	99	
+358	Fish Finder	99	
+359	Treasure Tracker	99	
+360	Spare Spear	99	
+361	Pittance Fang	99	
+362	Fortune Fang	99	
+363	Gold Needle	99	
+364	Wyverngold	99	
+365	Pirate Booty	10	
+366	Steel Egg	15	
+367	Silver Egg	15	
+368	Golden Egg	15	
+369	Kelbi Horn Objet	99	
+370	Twstd Horn Objet	99	
+371	MohranFang Objet	99	
+372	Poogie	99	
+373	Eggie Poogie	99	
+374	Rath Poogie	99	
+375	Sandstone Plant	99	
+376	Marshland Plant	99	
+377	Snowflake Plant	99	
+378	Prismshroom Lamp	99	
+379	Qurupeco Lamp	99	
+380	Sirensea Lamp	99	
+381	Oceanic Fountain	99	
+382	Bubbly Fountain	99	
+383	Magma Fountain	99	
+384	Iron Figure	99	
+385	Machalite Figure	99	
+386	Dragonite Figure	99	
+387	Model Sandskiff	99	
+388	Model Airship	99	
+390	Guildie (Red)	99	
+391	Guildie (Green)	99	
+392	Guildie (Blue)	99	
+393	Great Poogi	99	
+394	Incomplete Crown	99	
+395	Crown's Gemstone	99	
+396	Dazzling Crown	99	
+397	Prize Gold Sword	99	
+398	Golden Medallion	99	
+399	Kelbi Horn	99	520
+400	Blue Kelbi Horn	99	
+401	Warm Pelt	99	
+402	High-qualty Pelt	99	
+403	Gargwa Feather	99	
+406	Anteka Antler	99	
+408	Bnahabra Shell	99	
+410	Bnaha Carapace	99	
+411	Bnahabra Wing	99	
+413	Bnahabra Cutwing	99	
+414	Bnahabra Spine	99	
+415	Altaroth Jaw	99	
+417	Altaroth Stomach	99	
+418	Prized Stomach	99	
+419	Quality Sac	99	
+420	Bullfango Pelt	50	
+422	Bullfango Head	99	
+423	Monster Fluid	99	
+424	Monster Broth	99	
+425	Rhenoplos Shell	99	
+426	Rhenoplos Bone	99	
+427	Rhenoplos Scalp	99	
+429	Rheno Carapace	99	
+431	Slagtoth Hide+	99	
+433	Big Fin	99	
+435	Quality Fin	99	
+436	Giant Fin	99	
+437	Sharpened Fang	99	1700
+438	Velvety Hide	99	
+439	Sharqskin	99	
+440	Jaggi Scale	99	
+441	Jaggi Scale+	99	
+443	Jaggi Hide	99	
+446	Bird Wyvern Fang	50	80
+447	G.Jaggi Hide	99	
+448	G.Jaggi Hide+	99	
+449	Great Jaggi Piel	99	
+450	G.Jaggi Claw	99	
+451	G.Jaggi Claw+	99	
+453	King's Frill	99	
+454	Imperial Frill	99	
+455	Great Jaggi Head	99	
+457	Baggi Hide	99	
+458	Baggi Scale	99	
+459	Baggi Scale+	99	
+461	G.Baggi Hide	99	
+462	G.Baggi Hide+	99	
+463	Great Baggi Piel	99	
+464	G.Baggi Claw	99	
+465	G.Baggi Claw+	99	
+467	King's Crest	99	
+468	Imperial Crest	99	
+469	Wroggi Scale	99	
+470	Wroggi Scale+	99	
+472	Wroggi Hide	99	
+473	Wroggi Fang	99	
+474	G.Wroggi Hide	99	
+475	G.Wroggi Piel	99	
+476	G.Wroggi Hide+	99	
+477	G.Wroggi Brace	99	
+479	G.Wroggi Brace+	99	
+480	King's Beak	99	
+481	Imperial Beak	99	
+482	Qurupeco Scale	99	
+483	Qurupeco Scale+	99	
+484	Qurupeco Shard	99	
+485	Qurupeco Feather	99	
+486	Lustrous Feather	99	
+487	Qurupeco Wing	99	
+488	Peco Fellwing	99	
+489	Vivid Feather	99	
+490	Strange Beak	99	
+491	Wonderful Beak	99	
+492	Alluring Beak	99	
+493	Flintstone	99	
+494	Quality Flint	99	
+495	C.Peco Scale+	99	
+496	C.Peco Shard	99	
+497	C.Peco Wing	99	
+498	C.Peco Fellwing	99	
+499	Voltstone	99	
+500	High Voltstone	99	
+501	Hydro Hide	99	
+502	Hydro Hide+	99	
+504	Immature Sponge	99	
+505	Quality Sponge	99	
+506	Spongy Hide	99	
+507	Spongy Hide+	99	
+508	Spongy Piel	99	
+509	R.Ludroth Scale	99	
+510	R.Ludroth Scale+	99	
+511	R.Ludroth Shard	99	
+512	R.Ludroth Claw	99	
+513	R.Ludroth Claw+	99	
+514	R.Ludroth Talon	99	
+515	R.Ludroth Crest	99	
+516	R.Ludroth Crest+	99	
+517	Chic Crest	99	
+518	R.Ludroth Tail	99	
+519	Plum Spongy Hide	99	
+520	Plum Spongy Piel	99	
+521	P.Ludroth Scale+	99	
+522	P.Ludroth Shard	99	
+523	P.Ludroth Claw+	99	
+524	P.Ludroth Talon	99	
+525	Barroth Shell	99	
+526	Barroth Carapace	99	
+527	Barroth Cortex	99	
+528	Barroth Ridge	99	
+529	Barroth Ridge+	99	
+530	Barroth Chine	99	
+531	Barroth Claw	99	
+532	Barroth Claw+	99	
+533	Barroth Talon	99	
+534	Barroth Scalp	99	
+535	Barroth Crown	99	
+536	Barroth Tail	99	
+537	J.Barr Carapace	99	
+538	J.Barroth Cortex	99	
+539	J.Barroth Ridge+	99	
+540	J.Barroth Chine	99	
+541	J.Barroth Claw+	99	
+542	J.Barroth Talon	99	
+543	J.Barroth Scalp	99	
+544	J.Barroth Crown	99	
+545	J.Barroth Tail	99	
+546	J.Barroth Lash	99	
+547	Frozen Glob	99	
+549	Gobul Hide	99	
+550	Gobul Hide+	99	
+551	Gobul Piel	99	
+552	Gobul Fin	99	
+553	Gobul Fin+	99	
+554	Fine Gobul Fin	99	
+555	Gobul Spike	99	
+556	Gobul Spike+	99	
+557	Gobul Surspike	99	
+558	Gobul Whisker	99	
+559	Gobul Kingwhiskr	99	
+560	Gobul Lantern	99	
+561	Gobul Lantern+	99	
+562	Gobul Beacon	99	
+563	Rathian Scale	99	
+564	Rathian Scale+	99	
+565	Rathian Shard	99	
+566	Rathian Shell	99	
+567	Rathian Carapace	99	
+568	Rathian Cortex	99	
+569	Rathian Webbing	99	
+570	Rathian Spike	99	
+571	Rathian Spike+	99	
+572	Rathian Surspike	99	
+573	Rathian Plate	99	
+574	Rathian Mantle	99	
+575	Rathian Ruby	99	
+577	P.Rathian Scale+	99	
+578	P.Rathian Shard	99	
+579	P.Rath Carapace	99	
+580	P.Rathian Cortex	99	
+581	G.Rathian Shard	99	
+582	G.Rathian Cortex	99	
+583	G.Rath Surspike	99	
+584	Rathalos Scale	99	
+585	Rathalos Scale+	99	
+586	Rathalos Shard	99	
+587	Rathalos Shell	99	
+588	Rathlos Carapace	99	
+589	Rathalos Cortex	99	
+590	Rathalos Webbing	99	
+591	Rathlos Fellwing	99	
+592	Rathalos Tail	99	
+593	Rathalos Lash	99	
+594	Rathalos Plate	99	
+595	Rathalos Mantle	99	
+596	Rathalos Ruby	99	
+597	Rath Talon	99	
+598	Rath Ripper	99	
+599	Rath Marrow	99	
+600	Rath Medulla	99	
+601	Rath Gleem	99	
+602	A.Rath Scale+	99	
+603	A.Rathalos Shard	99	
+604	A.Rath Carapace	99	
+605	A.Rath Cortex	99	
+606	A.Rathalos Tail	99	
+607	A.Rathalos Lash	99	
+608	A.Rathalos Wing	99	
+609	S.Rathalos Shard	99	
+610	S.Rath Cortex	99	
+611	S.Rathalos Lash	99	
+615	Gigginox Hide	99	
+616	Gigginox Hide+	99	
+617	Gigginox Piel	99	
+618	Uncanny Hide	99	
+619	Uncanny Hide+	99	
+620	Gigginox Claw	99	
+621	Gigginox Claw+	99	
+622	Gigginox Talon	99	
+625	Fearsome Maw	99	
+626	Venom Gland	99	
+627	Grim Venom Gland	99	
+628	Foul Venom Gland	99	
+629	B.Giggi Hide+	99	
+630	B.Giggi Piel	99	
+631	B.Giggi Claw+	99	
+632	B.Giggi Talon	99	
+633	Lagiacrus Scale	99	
+634	Lagiacrus Scale+	99	
+635	Lagiacrus Shard	99	
+636	Shell Shocker	99	
+637	Shell Shocker+	99	
+638	Deathly Shocker	99	
+639	Lagiacrus Hide	99	
+640	Lagiacrus Hide+	99	
+641	Lagiacrus Claw	99	
+642	Lagiacrus Claw+	99	
+643	Lagiacrus Talon	99	
+644	Lagiacrus Tail	99	
+645	Lagiacrus Flail	99	
+646	Lagiacrus Horn	99	
+647	Lagiacrus Horn+	99	
+648	Lagia Sapphire	99	
+649	Lagiacrus Mantle	99	
+650	Lagiacrus Plate	99	
+651	I.Lagi Scale+	99	
+652	I.Lagi Shard	99	
+653	I.Lagi Shocker+	99	
+654	I.Lagi D-Shocker	99	
+655	I.Lagi Hide+	99	
+656	I.Lagi Piel	99	
+661	I.Lagi Horn+	99	
+662	I.Lagi Hardhorn	99	
+666	A.Lagi Shard	99	
+667	A.Lagi D-Shocker	99	
+668	A.Lagi Piel	99	
+671	A.Lagi Hardhorn	99	
+672	A.Lagi Dynamo	99	
+673	Barioth Shell	99	
+674	Barioth Carapace	99	
+675	Barioth Cortex	99	
+676	Barioth Pelt	99	
+677	Barioth Pelt+	99	
+678	Barioth Fur	99	
+679	Barioth Claw	99	
+680	Barioth Claw+	99	
+681	Barioth Talon	99	
+682	Barioth Spike	99	
+684	Barioth Tail	99	
+685	Barioth Lash	99	
+686	Amber Tusks	99	
+687	Amber Tusks+	99	
+688	Hvy Amber Tusks	99	
+689	S.Bari Carapace	99	
+690	S.Barioth Cortex	99	
+691	S.Barioth Pelt+	99	
+692	S.Barioth Fur	99	
+693	S.Barioth Claw+	99	
+694	S.Barioth Talon	99	
+695	S.Barioth Tail	99	
+696	S.Barioth Lash	99	
+697	Indigo Tusks+	99	
+698	Hvy Indigo Tusks	99	
+699	Rugged Pleura	99	
+700	Rugged Pleura+	99	
+701	Diablos Shell	99	
+702	Diablos Carapace	99	
+703	Diablos Cortex	99	
+704	Diablos Ridge	99	
+705	Diablos Ridge+	99	
+706	Diablos Chine	99	
+707	Diablos Tailcase	99	
+709	Diablos Fang	99	
+710	Twisted Horn	99	
+711	Majestic Horn	99	
+712	Stout Horn	99	
+713	Diablos Marrow	99	
+714	Diablos Medulla	99	
+715	B.Diab Carapace	99	
+716	B.Diablos Cortex	99	
+717	B.Diablos Ridge+	99	
+718	B.Diablos Chine	99	
+721	Blackcurl Horn	99	
+722	Blackcurl Horn+	99	
+723	Uragaan Scale	99	
+724	Uragaan Scale+	99	
+725	Uragaan Shard	99	
+726	Uragaan Shell	99	
+727	Uragaan Carapace	99	
+728	Uragaan Cortex	99	
+729	Uragaan Jaw	99	
+730	Uragaan Jaw+	99	
+731	Uragaan Scute	99	
+732	Uragaan Scute+	99	
+733	Uragaan Marrow	99	
+734	Uragaan Ruby	99	
+735	Uragaan Pallium	99	
+736	S.Uragaan Scale+	99	
+737	S.Uragaan Shard	99	
+738	S.Urag Carapace	99	
+739	S.Uragaan Cortex	99	
+740	S.Uragaan Maw	99	
+741	S.Uragaan Jaw+	99	
+742	S.Uragaan Scute	99	
+743	S.Uragaan Scute+	99	
+744	Uroktor Scale	99	
+745	Uroktor Scale+	99	
+746	Supple Piel	99	
+747	Agnaktor Scale	99	
+749	Agnaktor Shell	99	
+750	Agnak Carapace	99	
+751	Agnaktor Hide	99	
+752	Agnaktor Hide+	99	
+753	Agnaktor Piel	99	
+754	Agnaktor Claw	99	
+755	Agnaktor Claw+	99	
+756	Agnaktor Talon	99	
+757	Agnaktor Fin	99	
+758	Agnaktor Fin+	99	
+759	Fine Agnak Fin	99	
+760	Agnaktor Beak	99	
+762	Agnaktor Tail	99	
+764	Scalding Pleura+	99	
+765	Scorching Pleura	99	
+766	G.Agnak Carapace	99	
+767	G.Agnak Cortex	99	
+768	G.Agnak Hide+	99	
+769	G.Agnak Piel	99	
+770	G.Agnak Claw+	99	
+771	G.Agnak Talon	99	
+772	G.Agnak Fin+	99	
+773	Fine G.Agnak Fin	99	
+774	G.Agnak Beak	99	
+776	G.Agnak Tail	99	
+778	Dewy Pleura+	99	
+779	Drenched Pleura	99	
+780	Ceadeus Scale	99	
+781	Ceadeus Hide	99	
+782	Ceadeus Fur	99	
+783	Ceadeus Tail	99	
+784	Crooked Horn	99	
+785	Luminous Organ	99	
+786	Deep Dragongem	99	
+787	G.Ceadeus Shard	99	
+788	G.Ceadeus Coat	99	
+789	G.Ceadeus Fur	99	
+791	Crooked Hardhorn	99	
+793	Dark Dragongem	99	
+795	Mohran Scale+	99	
+797	Mohran Carapace	99	
+799	Mohran Brace+	99	
+801	Sturdy Fang+	99	
+802	Earth Dragongem	99	
+804	H.Jhen Shard	99	
+806	H.Jhen Rockskin	99	
+808	H.Jhen Allbrace	99	
+810	Deific Fang	99	
+811	Earth Drgnsphire	99	
+812	Deviljho Scale	99	
+813	Deviljho Shard	99	
+814	Deviljho Hide	99	
+815	Deviljho Coat	99	
+816	Deviljho Fang	99	
+817	Vile Fang	99	
+818	Deviljho Talon	99	
+819	Deviljho Ripper	99	
+820	Deviljho Scalp	99	
+822	Deviljho Tail	99	
+823	Deviljho Flail	99	
+824	Deviljho Saliva	99	
+825	Black Blood	99	
+826	Deviljho Gem	99	
+827	Deviljho Crook	99	
+828	Alatreon Scute	99	
+829	Alatreon Pallium	99	
+830	Alatreon Plate	99	
+831	Alatreon Mantle	99	
+832	Alatreon Talon	99	
+833	Alatreon Ripper	99	
+834	Alatreon Webbing	99	
+835	Alatreo Direwing	99	
+836	Alatreon Tail	99	
+837	Alatreo Diretail	99	
+838	Brkn Skypiercer	99	
+840	Skypiercer	99	
+841	Skyswayer	99	
+842	Arzuros Pelt	99	
+843	Arzuros Pelt+	99	
+845	Arzuros Shell	99	
+846	Arzuros Carapace	99	
+847	Arzuros Cortex	99	
+848	Arzuros Brace	99	
+849	Arzuros Brace+	99	
+850	Arzuros Allbrace	99	
+851	Lagombi Pelt	99	
+852	Lagombi Pelt+	99	
+853	Lagombi Fur	99	
+854	Lagombi Ear	99	
+855	Lagombi Ear+	99	
+856	Lagombi Auricle	99	
+857	Lagom Plastron	99	
+858	Lagom Plastron+	99	
+860	Lagombi Claw	99	
+861	Lagombi Claw+	99	
+863	Volvidon Shell	99	
+864	Volvi Carapace	99	
+865	Volvidon Cortex	99	
+866	Volvidon Claw	99	
+867	Volvidon Claw+	99	
+868	Volvidon Talon	99	
+869	Volvi Rickrack	99	
+871	Nibelsnarf Shell	99	
+872	Nibel Carapace	99	
+873	Nibel Cortex	99	
+874	Nibelsnarf Hide	99	
+875	Nibelsnarf Hide+	99	
+876	Nibelsnarf Piel	99	
+877	Nibelsnarf Claw	99	
+878	Nibelsnarf Claw+	99	
+879	Nibelsnarf Talon	99	
+880	Nibelsnarf Scalp	99	
+882	Vivid Fluid	99	
+883	Brilliant Fluid	99	
+884	Dazzling Fluid	99	
+886	Zinogre Carapace	99	
+887	Zinogre Cortex	99	
+889	Zinogre Shocker+	99	
+890	Zin Electrofur+	99	
+892	Zinogre Horn+	99	
+893	Zinogre Hardhorn	99	
+895	Zinogre Claw+	99	
+896	Zinogre Talon	99	
+897	Zinogre Tail	99	
+898	Zinogre Lash	99	
+900	Zin Electrofur	99	
+901	Zin D-Shocker	99	
+903	Zinogre Jasper	99	
+904	Zin Skymerald	99	
+905	S.Zin Cortex	99	
+906	S.Zin Dragonhair	99	
+907	S.Zin Hardhorn	99	
+908	S.Zinogre Talon	99	
+909	S.Zinogre Lash	99	
+910	S.Zin Dragnshell	99	
+911	S.Zin Skymerald	99	
+912	Nargacuga Scale+	99	
+913	Nargacuga Shard	99	
+914	Nargacuga Mantle	99	
+916	Nargacuga Fur	99	
+917	Nargacuga Tail	99	
+918	Nargacuga Lash	99	
+919	Narga Tailspike	99	
+920	Narga Tailspear	99	
+922	Narga Razor+	99	
+923	Nargacuga Fang+	99	
+924	Hvy Narga Fang	99	
+925	Narga Medulla	99	
+927	G.Narga Shard	99	
+929	G.Narga Dapples	99	
+931	G.Narga Razor+	99	
+933	Hvy G.Narga Fang	99	
+934	L.Narga Shard	99	
+935	L.Narga Dapples	99	
+936	L.Narga Razor	99	
+937	Hvy L.Narga Fang	99	
+938	Duramboros Shell	99	
+939	Duram Carapace	99	
+940	Duram Cortex	99	
+941	Duram Mossplate	99	
+942	Hard Mossplate	99	
+943	Heavy Mossplate	99	
+944	Duramboros Hump	99	
+945	Marbled Hump	99	
+946	Duram Tailcase	99	
+947	Duram Tailcase+	99	
+948	Duram Hardtail	99	
+949	Duramboros Horn	99	
+950	Duramboros Horn+	99	
+951	Duram Hardhorn	99	
+952	Duram Tailbone	99	
+953	Duram Sacrum	99	
+954	Durambolite	99	
+955	R.Duram Shell	99	
+956	R.Duram Plate	99	
+958	R.Duram Hardtail	99	
+961	Lrg Lobstershell	99	
+963	Plesioth Fang+	99	
+964	Hvy Plesio Fang	99	
+965	Plesioth Scale+	99	
+966	Plesioth Shard	99	
+967	Plesioth Fin+	99	
+968	Fine Plesio Fin	99	
+970	G.Plesio Shard	99	
+972	Fine G.Plesi Fin	99	
+973	Brach Carapace	99	
+974	Brach Cortex	99	
+975	Brach Ebonshell	99	
+976	Brach Ebonshell+	99	
+979	Brach Scalp	99	
+980	Brach Scalp+	99	
+981	Mystery Slime	99	
+982	Glowing Slime	99	
+983	Brach Pounder	99	
+984	Brach Pounder+	99	
+985	Brachydios Tail	99	
+987	Brachydios Gem	99	
+988	Brach Pallium	99	
+989	Miralis Scale	99	
+990	Miralis Fireback	99	
+991	Miralis Fireclaw	99	
+994	Miralis Evil Eye	99	
+996	Miralis Hellwing	99	
+999	Miralis Smelter	99	
+1000	Immortal Heart	99	
+1002	Gushing Magma	99	
+1003	Dire Dragongem	99	
+1004	Rustshard	3	
+1005	Ancient Shard	3	
+1006	Rusted Fragment	99	
+1007	Large Fragment	99	
+1008	Slender Fragment	99	
+1009	Long Fragment	99	
+1010	Map	1	
+1011	First-aid Med	10	
+1012	Ration	10	
+1014	Mini Whetstone	10	
+1015	EZ Shock Trap	1	
+1016	EZ Flash Bomb	5	
+1017	EZ Sonic Bomb	10	
+1018	EZ Max Potion	3	
+1019	EZ Pitfall Trap	1	
+1020	Mini Oxy Supply	10	
+1021	EZ Barrel Bomb L	2	
+1022	Ballista Ammo	10	
+1023	Ballista Binder	1	
+1025	Cannon Ammo	1	
+1026	Anti-dragon Bomb	10	
+1027	Torch	1	
+1028	Paw Pass Ticket	1	
+1029	Royal Honey	10	
+1030	Unique Mushroom	20	
+1031	Choice Mushroom	10	
+1032	Ripened Mushroom	10	
+1033	Great Shroom	10	
+1034	Super Sprout	10	
+1037	Silverfish	10	
+1040	Goldenfish	10	
+1041	Royal Rhino	10	
+1042	Divine Rhino	10	
+1043	Silver Cricket	10	
+1044	Gold Cricket	10	
+1045	Auristone Piece	10	
+1046	Auristone Chunk	10	
+1047	Balmstone Piece	10	
+1048	Balmstone Chunk	10	
+1049	Crystal Bone	10	
+1050	Golden Bone	10	
+1051	Bloodstone	10	
+1052	Deep Bloodstone	10	
+1053	Coal	10	
+1054	Volatile Coal	10	
+1055	Wyvern Egg	1	
+1056	Herbivore Egg	1	
+1057	Gargwa Egg	1	
+1058	Gold Gargwa Egg	1	
+1060	Powderstone	1	
+1061	Gargwa Guano	10	
+1062	White Liver	10	
+1063	Slagtoth Oil	10	
+1064	Popo Tongue	10	
+1065	Secret Stash	10	
+1066	Round Acorn	10	
+1069	Giggi Extract	10	
+1070	Monster Guts	10	
+1071	Red Coral Stone	10	
+1072	Wyvern Tear	10	
+1073	Lrg Wyvern Tear	10	
+1074	Beast Tear	10	
+1075	Lrg Beast Tear	10	
+1076	Bird Coin	99	
+1083	Leviathan Coin	99	
+1089	Pinnacle Coin	99	
+1090	Hunter King Coin	99	
+1091	Voucher	99	
+1092	Gourmet Voucher	99	
+1093	Sharq Ticket	99	
+1103	Conqueror's Seal	99	
+1105	Commendation	99	
+1107	Pawprint Stamp	99	
+1108	Aquaglow Jewel	99	
+1109	Sunspire Jewel	99	
+1110	Bloodrun Jewel	99	
+1111	Lazurite Jewel	99	
+1112	Paralysis Jwl 1	99	200
+1113	Paralysis Jwl 2	99	375
+1114	Pep Jewel 1	99	200
+1115	Pep Jewel 2	99	375
+1116	Steadfast Jwl 1	99	200
+1117	Standfast Jwl 1	99	200
+1118	Antidote Jewel 1	99	200
+1119	Antidote Jewel 2	99	375
+1120	Tracker Jewel 1	99	200
+1121	Trekker Jewel 1	99	200
+1122	Ninja Jewel 1	99	200
+1123	Vitality Jewel 1	99	200
+1124	Recovery Jewel 1	99	200
+1125	Recovery Jewel 2	99	375
+1126	Razor Jewel 1	99	200
+1127	Razor Jewel 3	99	450
+1128	Handicraft Jwl 2	99	375
+1129	Handicraft Jwl 3	99	450
+1130	Fencer Jewel 1	99	200
+1131	Fencer Jewel 3	99	450
+1132	Expert Jewel 1	99	200
+1133	Expert Jewel 2	99	375
+1134	Expert Jewel 3	99	450
+1135	Grinder Jewel 1	99	200
+1136	Ironwall Jewel 1	99	200
+1137	Ironwall Jewel 2	99	375
+1138	Shield Jewel 1	99	200
+1139	Shield Jewel 2	99	375
+1140	Quickload Jwl 1	99	200
+1141	Quickload Jwl 2	99	375
+1142	Absorber Jewel 1	99	200
+1143	Absorber Jewel 3	99	450
+1144	Forceshot Jwl 1	99	200
+1145	Forceshot Jwl 3	99	450
+1146	Pierce Jewel 1	99	200
+1147	Pierce Jewel 3	99	450
+1148	Pellet Jewel 1	99	200
+1149	Pellet Jewel 3	99	450
+1150	ShotPlus Jewel 1	99	200
+1151	ShotPlus Jewel 2	99	375
+1152	PiercePlus Jwl 1	99	200
+1154	PelletPlus Jwl 1	99	200
+1155	CragPlus Jewel 1	99	200
+1156	ClustPlus Jwl 1	99	200
+1157	Disabler Jewel 1	99	200
+1158	Disabler Jewel 2	99	375
+1159	Element Jewel 1	99	200
+1160	Element Jewel 3	99	450
+1161	Bombardier Jwl 1	99	200
+1163	Hungerless Jwl 1	99	200
+1164	Metabolism Jwl 1	99	200
+1165	Attack Jewel 1	99	200
+1166	Attack Jewel 2	99	375
+1167	Attack Jewel 3	99	450
+1168	Defense Jewel 1	99	200
+1169	Defense Jewel 2	99	375
+1170	Protection Jwl 1	99	200
+1171	Asylum Jewel 1	99	200
+1172	Earplug Jewel 1	99	200
+1173	Earplug Jewel 3	99	450
+1174	Alarm Jewel 1	99	200
+1175	Friendship Jwl 1	99	200
+1176	Friendship Jwl 2	99	375
+1177	Transportr Jwl 1	99	200
+1178	Fire Res Jewel 1	99	200
+1179	Water Res Jwl 1	99	200
+1180	Ice Res Jewel 1	99	200
+1181	ThunderRes Jwl 1	99	200
+1182	Dragon Res Jwl 1	99	200
+1183	Heat Res Jewel 1	99	200
+1184	Cold Res Jewel 1	99	200
+1185	Wind Res Jewel 1	99	200
+1186	Wind Res Jewel 2	99	375
+1188	Gathering Jwl 1	99	200
+1189	Spree Jewel 1	99	200
+1190	Blessing Jewel 1	99	200
+1191	Fate Jewel 1	99	200
+1192	Fate Jewel 3	99	450
+1194	Psychic Jewel 1	99	200
+1195	Medicine Jewel 1	99	200
+1196	Medicine Jewel 2	99	375
+1197	Professor Jwl 1	99	200
+1198	Factory Jewel 1	99	200
+1199	Evasion Jewel 1	99	200
+1200	Evasion Jewel 2	99	375
+1201	Potential Jwl 1	99	200
+1202	Potential Jwl 2	99	375
+1203	Enduring Jewel 1	99	200
+1204	Sprinter Jewel 1	99	200
+1205	Sprinter Jewel 3	99	450
+1206	Capacity Jewel 2	99	375
+1207	Capacity Jewel 3	99	450
+1208	Sniper Jewel 1	99	200
+1209	Gobbler Jewel 1	99	200
+1210	Gobbler Jewel 3	99	450
+1211	Carver Jewel 1	99	200
+1212	Carver Jewel 3	99	450
+1213	Footing Jewel 1	99	200
+1214	Tectonic Jewel 1	99	200
+1216	Jumping Jewel 1	99	200
+1218	Draw Jewel 1	99	200
+1219	Draw Jewel 2	99	375
+1220	Trapmaster Jwl 1	99	200
+1221	Physique Jewel 1	99	200
+1222	Physique Jewel 2	99	375
+1223	Capture Jewel 1	99	200
+1224	Capture Jewel 3	99	450
+1225	Perception Jwl 1	99	200
+1226	Charger Jewel 1	99	200
+1227	Charger Jewel 3	99	450
+1228	Fresh Air Jwl 1	99	200
+1229	Stopflow Jewel 1	99	200
+1230	Swimmer Jewel 1	99	200
+1231	Diver Jewel 1	99	200
+1232	Gambit Jewel 1	99	200
+1233	Gambit Jewel 3	99	450
+1234	Resistor Jewel 1	99	200
+1235	Release Jewel 2	99	375
+1236	Catalyst Jewel 3	99	450
+1237	Fortitude Jwl 1	99	200
+1238	Fortitude Jwl 2	99	375
+1239	Salvo Jewel 1	99	200
+1240	Salvo Jewel 3	99	450
+1241	Dungmaster Jwl 1	99	200
+1242	Torchlight Jwl 1	99	200
+1247	Slime S	12	24
+1249	Flying Wyverns Vol 1	1	100
+1250	Flying Wyverns Vol 2	1	200
+1251	Flying Wyverns Vol 3	1	500
+1252	Bird Wyverns Vol 1	1	100
+1253	Bird Wyverns Vol 2	1	200
+1254	Brute Wyverns Vol 1	1	100
+1255	Brute Wyverns Vol 2	1	200
+1256	Brute Wyverns Vol 3	1	500
+1257	Leviathans Vol 1	1	100
+1258	Leviathans Vol 2	1	200
+1259	Leviathans Vol 3	1	500
+1260	Fanged Wyverns Vol 1	1	100
+1261	Fanged Wyverns Vol 2	1	200
+1262	Fanged Beasts	1	100
+1264	Piscine Wyverns	1	100
+1265	Elder Dragons Vol 1	1	100
+1266	Elder Dragons Vol 2	1	200
+1267	Elder Dragons Vol 3	1	500
+1268	Lynians	1	100
+1269	Neopteron	1	100
+1270	Herbivores Vol 1	1	100
+1271	Herbivores Vol 2	1	200
+1272	Deviljho	1	200
+1273	Brachydios	1	200
+1274	Dire Miralis	1	500
+1275	Plesioth Vol 1	1	200
+1276	Plesioth Vol 2	1	500
+1277	Deodorant	10	80
+1278	Emperor Hopper	99	
+1279	Elder Dragonbone	99	
+1281	Purecrystal	99	
+1282	Adamant Orb	99	
+1283	Lagiacrus Piel	99	
+1285	Nightmarish Maw	99	
+1289	Slime Coating	20	20
+1291	Blossom Cricket	99	
+1292	L.Narg Tailspear	99	
+1294	G.Narg Tailspear	99	
+1296	Agnaktor Cortex	99	
+1297	Revolting Piel	99	
+1298	Cryo Sac	99	
+1299	Flood Sac	99	
+1300	Monster Essence	99	
+1302	Massive Bone	99	
+1304	Prized Pelt	99	
+1307	Speartuna	10	
+1308	Nargacuga Pelt+	99	
+1309	Narga Razor	99	
+1310	VE Ticket	99	
+1311	VE Deluxe Ticket	99	
+1312	VE Bronze Ticket	99	
+1313	VE Silver Ticket	99	
+1314	VE Golden Ticket	99	
+1315	VE Cosmic Ticket	99	
+1318	Maiden Butterfly	99	
+1324	Chum-Chum Ticket	99	
+1326	Lagia Hardhorn	99	
+1330	Heftcorn	99	
+1333	Bullfango Tusk	99	
+1337	Butterfly Beetle	99	
+1340	Diablos Hardtail	99	
+1341	Barroth Lash	99	
+1345	Scalding Pleura	99	
+1347	Crested Crown	99	
+1348	Royal Crest	99	
+1349	Realmless Crown	99	
+1350	Giant Fossil	99	
+1352	R.Ludroth Lash	99	
+1353	Mohran Shard	99	
+1354	Mohran Rockskin	99	
+1355	Mohran Allbrace	99	
+1356	Rathalos Wing	99	
+1357	Plesioth Webbing	99	
+1358	Hrd Ples Webbing	99	
+1359	Fish	1	200
+1362	Small Golden Egg	15	
+1367	Plesioth Head	99	
+1368	Uber Plesio Head	99	
+1369	Beast Coin	99	
+1370	Flying Coin	99	
+1371	Piscine Coin	99	
+1372	Brute Coin	99	
+1373	Port Gal (Red)	99	
+1374	Port Gal (Blue)	99	
+1375	Port Gal (Green)	99	
+1376	Port Gal (White)	99	
+1377	Slickaxe	99	
+1378	Mooncatcher Fang	99	
+1379	Glossy Scale	99	
+1392	Thick Skull	99	
+1393	Savory Bear Paw	99	
+1394	Peco Pipes	99	
+1395	Billowy Mane	99	
+1396	Volvidon Tongue	99	
+1397	Quality Mud Pack	99	
+1400	Rathian Loin	99	
+1401	Tender Liver	99	
+1402	P.Rathian Loin	99	
+1403	Supersized Scale	99	
+1404	Rathalos Ribs	99	
+1405	Prime Plesioth	99	
+1406	Diablos Heart	99	
+1407	Bag of Zs	99	
+1408	Large Obsidian	99	
+1409	Duram Truffle	99	
+1411	Zinogre Head	99	
+1413	Nargacuga Eye	99	
+1414	Celestial Scale	99	
+1415	Alabaster Scale	99	
+1416	Worldeater Belly	99	
+1446	Flying Wyverns Vol 4	1	500
+1447	Flying Wyverns Vol 5	1	500
+1448	Def Lock Jewel 1	99	200
+1449	Sterile Jewel 1	99	200
+1450	Aseptic Jewel 1	99	200
+1451	Blaze Jewel 1	99	200
+1452	Blaze Jewel 2	99	375
+1453	Stream Jewel 1	99	200
+1454	Stream Jewel 2	99	375
+1455	Bolt Jewel 1	99	200
+1456	Bolt Jewel 2	99	375
+1457	Frost Jewel 1	99	200
+1458	Frost Jewel 2	99	375
+1459	Dragon Jewel 1	99	200
+1460	Dragon Jewel 2	99	375
+1461	Tenderizer Jwl 1	99	200
+1462	Tenderizer Jwl 3	99	450
+1463	Destroyer Jwl 1	99	200
+1464	Destroyer Jwl 3	99	450
+1465	Throttle Jewel 1	99	200
+1466	Throttle Jewel 2	99	375
+1467	KO Jewel 1	99	200
+1468	Drain Jewel 1	99	200
+1469	Drain Jewel 2	99	375
+1470	Sonorous Jewel 1	99	200
+1471	Artillery Jwl 1	99	200
+1472	Resistor Jewel 3	99	450
+1473	Nul-Fire Jewel 1	99	200
+1474	Nul-Water Jwl 1	99	200
+1475	Nul-Thundr Jwl 1	99	200
+1476	Nul-Ice Jewel 1	99	200
+1477	Nul-Dragon Jwl 1	99	200
+1478	Sheath Jewel 1	99	200
+1479	Sheath Jewel 2	99	375
+1480	Refresh Jewel 1	99	200
+1481	Refresh Jewel 2	99	375
+1482	Ranger Jewel 1	99	200
+1483	SlicePlus Jwl 1	99	200
+1486	Sleepcoat Jwl 1	99	200
+1487	Poisoncoat Jwl 1	99	200
+1488	Powercoat Jwl 1	99	200
+1489	Powercoat Jwl 2	99	375
+1490	Rangecoat Jwl 1	99	200
+1491	Draincoat Jwl 1	99	200
+1492	Stopflow Jewel 2	99	375
+1493	Guts Jewel 1	99	200
+1494	Guts Jewel 2	99	375
+1495	Meateater Jwl 1	99	200
+1496	Meatlover Jwl 1	99	200
+1497	Slider Jewel 1	99	200
+1498	Glider Jewel 1	99	200
+1499	Honeybee Jewel 1	99	200
+1500	Queenbee Jewel 1	99	200
+1501	Biology Jewel 1	99	200
+1502	Microbio Jewel 1	99	200
+1503	Spirit Jewel 1	99	200
+1504	Spirit Jewel 2	99	375
+1505	Flawless Jewel 1	99	200
+1506	Flawless Jewel 2	99	375
+1507	Steady Jewel 1	99	200
+1508	Steady Jewel 3	99	450
+1509	Fish Jewel 1	99	200
+1510	Fish Jewel 2	99	375
+1511	Player Jewel 1	99	200
+1512	Morale Jewel 1	99	200
+1513	Leader Jewel 1	99	200
+1514	Leader Jewel 2	99	375
+1515	Dust of Life	2	
+1516	KO Jewel 2	99	375
+1517	Diablos Hardhorn	99	
+1518	Ghostly Quartz	99	
+1519	Crushing Fang	99	
+1520	Cloudy Moonshard	99	
+1521	Bulky Pelt	99	
+1522	Excellent Fang	99	
+1524	Gloamgrass Bud	3	
+1525	Platinum Needle	99	
+1526	Goldmine Fang	99	
+1527	Wyverngold Lode	99	
+1528	Charmer Jewel 1	99	200
+1529	Dracophage Bug	99	
+1530	Tanzia Chips	5	98
+1531	SlimePlus Jwl 1	99	200
+1532	Slimecoat Jwl 1	99	200
+1533	Sparkly Fragment	99	
+1534	Flashbolt Diploma	99	
+1535	Captain's IOU	99	
+1536	Thunderclap Diploma	99	
+1537	Top Secret Formula	99	
+1538	Medal Voucher L	99	
+1539	Exquisite Meat	99	
+1540	Lion's Claw	99	
+1541	Shadowed Edge	99	
+1542	Hades's Skull	99	
+1543	Crown of Glory	99	
+1544	Medal Voucher G	99	
+1545	Far East Sword	99	
+1546	Miniature Ticket	99	
+1547	Fierce Soul	99	
+1548	Bronze Coin	99	
+1549	Silver Coin	99	
+1550	Gold Coin	99	
