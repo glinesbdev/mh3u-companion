@@ -18,10 +18,10 @@ const WORN_OFFSET: usize = 0xc2;
 const WORN_SLOTS: usize = 5;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
-/// byte each). Found by comparing the saves of two hunters with the numbers on their guild cards, which matched (docs/formats.md).
+/// byte each, not next to each other). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7568;
-const GUILD_QUESTS_OFFSET: usize = 0x7569;
+const GUILD_QUESTS_OFFSET: usize = 0x792f;
 const HUNTED_OFFSET: usize = 0x57a0;
 const HUNTED_FIRST_MONSTER: u16 = 6;
 const HUNTED_COUNT: usize = 90;
@@ -220,17 +220,25 @@ mod tests {
         assert_eq!(Save { play_seconds: 59, ..s }.play_time(), "0 h 00 min");
     }
 
-    /// Two real saves: the play time of one hunter was read off its guild card (2 h 10 min, no quests); the other hunter's card was read a
-    /// few minutes after this snapshot was taken, so only the counts it held then are checked.
+    /// Real saves, with the numbers read off the guild cards in the game: one hunter has 2 h 10 min and no quests; the other 2 h 20 min,
+    /// 8 village and 2 guild quests (snapshot 11), and a few quests fewer in snapshot 09.
     #[test]
     fn the_guild_card_numbers_of_real_saves_are_where_they_should_be() {
-        let dir = concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/09-hr1-worntester/");
-        let (Ok(a), Ok(b)) = (std::fs::read(format!("{dir}user2")), std::fs::read(format!("{dir}user1"))) else {
-            return;
+        let read = |snapshot: &str, user: &str| {
+            std::fs::read(format!("{}/../../snapshots/{snapshot}/{user}", env!("CARGO_MANIFEST_DIR")))
+                .ok()
+                .map(|d| Save::parse(&d).unwrap())
         };
-        let (a, b) = (Save::parse(&a).unwrap(), Save::parse(&b).unwrap());
-        assert_eq!((b.play_time().as_str(), b.village_quests, b.guild_quests), ("2 h 10 min", 0, 0));
-        assert_eq!((a.play_time().as_str(), a.village_quests, a.guild_quests), ("1 h 49 min", 6, 1));
+        let card = |s: &Save| (s.play_time(), s.village_quests, s.guild_quests);
+        if let Some(shamus) = read("09-hr1-worntester", "user1") {
+            assert_eq!(card(&shamus), ("2 h 10 min".to_string(), 0, 0));
+        }
+        if let Some(earlier) = read("09-hr1-worntester", "user2") {
+            assert_eq!(card(&earlier), ("1 h 49 min".to_string(), 6, 1));
+        }
+        if let Some(later) = read("11-hall-quest", "user2") {
+            assert_eq!(card(&later), ("2 h 20 min".to_string(), 8, 2));
+        }
     }
 
     #[test]
