@@ -1,0 +1,330 @@
+# monster id	monster	row of its first hit-zone table	cut	impact	shot	fire	water	ice	thunder	dragon (the game's numbers, to check the row)	zone name
+# From Kiranico's Monster Hunter 3 Ultimate database: each row of the game's table was matched to the zone with the same eight numbers. See docs/formats.md.
+1	Rathian	0	90	80	70	0	15	15	20	35	Head
+1	Rathian	1	40	40	40	0	10	10	15	20	Neck
+1	Rathian	2	24	30	30	15	10	10	15	25	Back
+1	Rathian	4	30	30	25	0	5	5	10	25	Tail
+1	Rathian	5	24	20	25	0	10	10	15	20	Wing
+1	Rathian	6	44	40	45	0	5	5	10	10	Legs
+2	Rathalos	0	75	70	60	0	15	15	20	35	Head
+2	Rathalos	1	44	40	20	0	10	10	15	20	Neck
+2	Rathalos	2	25	30	20	15	10	10	15	25	Back
+2	Rathalos	3	44	40	15	0	5	5	20	10	Belly
+2	Rathalos	4	30	30	25	0	5	5	10	25	Tail
+2	Rathalos	5	25	20	25	0	10	10	15	20	Wing
+2	Rathalos	6	30	25	45	0	5	5	10	10	Legs
+3	Qurupeco	0	70	90	60	10	25	35	15	5	Head
+3	Qurupeco	1	60	50	50	5	15	15	10	0	Body
+3	Qurupeco	2	40	30	30	5	15	20	10	10	Tail
+3	Qurupeco	4	40	40	40	5	10	15	10	0	Legs
+3	Qurupeco	5	60	55	70	5	15	20	10	0	Breast
+3	Qurupeco	6	40	40	30	5	10	15	5	10	Wing (Inside)
+3	Qurupeco	7	36	36	30	5	10	15	5	10	Wing (Outside)
+4	Gigginox	0	45	55	50	30	5	0	0	20	Head
+4	Gigginox	2	35	30	25	20	5	0	0	5	Back
+4	Gigginox	3	55	45	50	30	5	0	0	15	Breast
+4	Gigginox	4	30	30	15	10	5	0	0	5	Front Legs
+4	Gigginox	5	40	40	35	10	5	0	0	10	Back Legs
+4	Gigginox	6	19	19	19	30	5	0	0	10	Tail
+4	Gigginox	7	50	55	45	20	5	0	0	5	Egg
+5	Barioth	0	60	65	70	30	10	0	25	15	Head
+5	Barioth	1	30	25	30	5	5	0	5	10	Neck/Back
+5	Barioth	2	45	25	40	10	0	0	5	5	Belly
+5	Barioth	3	25	30	25	30	5	0	25	10	Thorns
+5	Barioth	4	30	30	30	15	0	0	10	5	Front Legs
+5	Barioth	5	35	35	35	10	5	0	5	0	Back Legs
+5	Barioth	6	40	40	30	15	0	0	10	5	Tail
+6	Diablos	0	24	15	20	0	15	20	15	15	Head
+6	Diablos	1	45	45	30	0	10	15	10	10	Neck
+6	Diablos	2	23	42	20	10	15	25	15	15	Back/Wings
+6	Diablos	3	68	75	40	0	10	10	10	10	Belly
+6	Diablos	4	40	30	45	0	10	20	10	10	Wing Flaps
+6	Diablos	5	35	35	35	0	5	8	5	5	Legs
+6	Diablos	6	50	24	60	0	10	15	10	10	Tail
+6	Diablos	7	22	35	10	10	15	30	15	15	Tail Tip
+7	Deviljho	0	60	65	60	10	10	5	15	15	Head
+7	Deviljho	1	37	37	35	15	15	10	20	20	Breast
+7	Deviljho	2	25	25	25	5	5	5	20	20	Body
+7	Deviljho	3	30	30	30	10	10	5	15	15	Front Legs
+7	Deviljho	4	43	38	35	5	5	5	10	10	Back Legs
+7	Deviljho	5	35	32	30	5	5	5	20	20	Tail
+8	Barroth	1	36	45	35	25	0	10	0	5	Body
+8	Barroth	2	45	50	45	20	0	10	0	5	Front Legs
+8	Barroth	3	36	30	25	20	0	15	0	5	Left Back Leg
+8	Barroth	4	36	30	25	20	0	15	0	5	Right Back Leg
+8	Barroth	5	42	42	45	25	0	20	0	10	Tail
+9	Uragaan	0	19	20	10	0	40	20	5	30	Head
+9	Uragaan	1	25	30	25	0	20	10	0	15	Neck
+9	Uragaan	2	22	24	10	0	15	10	0	15	Back
+9	Uragaan	3	55	45	45	0	30	15	5	30	Belly
+9	Uragaan	4	25	30	20	0	15	10	0	15	Front Legs
+9	Uragaan	5	25	30	20	0	15	10	0	15	Back Legs
+9	Uragaan	6	35	30	25	0	25	10	0	20	Tail
+9	Uragaan	7	22	24	10	0	35	15	5	25	Tail Tip
+10	Jaggi	0	115	115	120	70	50	50	50	10	Body
+11	Jaggia	0	85	85	95	75	50	50	50	10	Body
+12	Great Jaggi	0	85	85	65	30	20	20	20	5	Head
+12	Great Jaggi	1	65	63	58	30	20	20	20	5	Body
+14	Great Baggi	0	60	50	55	40	20	0	20	0	Head
+14	Great Baggi	1	40	40	35	40	20	0	20	0	Body
+15	Lagiacrus	0	40	40	40	15	0	5	0	5	Head
+15	Lagiacrus	1	45	40	35	20	0	10	0	10	Breast
+15	Lagiacrus	2	35	35	20	15	0	5	0	5	Body
+15	Lagiacrus	3	25	40	15	25	0	15	0	15	Back
+15	Lagiacrus	4	27	25	10	15	0	5	0	5	Legs
+15	Lagiacrus	5	30	35	15	15	0	5	0	5	Tail
+16	Royal Ludroth	0	42	50	50	20	0	10	15	5	Head
+16	Royal Ludroth	1	50	45	40	25	0	15	10	0	Belly
+16	Royal Ludroth	2	45	42	45	20	0	15	15	0	Mane
+16	Royal Ludroth	3	30	45	30	30	0	10	10	5	Back
+16	Royal Ludroth	4	30	35	25	15	0	15	10	0	Front Legs
+16	Royal Ludroth	5	35	30	30	15	0	10	10	0	Back Legs
+16	Royal Ludroth	6	42	42	40	20	0	10	5	0	Tail
+17	Ludroth	0	90	95	90	40	0	10	30	0	Head
+17	Ludroth	1	85	85	80	60	0	10	25	0	Body
+18	Gobul	0	45	40	40	15	0	5	20	0	Head
+18	Gobul	1	40	35	40	5	0	0	15	0	Edges
+18	Gobul	2	50	25	35	0	0	0	20	0	Back
+18	Gobul	3	55	40	60	0	0	5	5	0	Belly
+18	Gobul	4	25	35	40	10	0	0	5	0	Legs
+18	Gobul	5	35	40	35	5	0	0	15	0	Tail
+18	Gobul	6	20	50	20	15	0	5	30	0	Inflated Back
+18	Gobul	7	65	70	50	10	0	5	25	0	Lantern
+19	Agnaktor	0	15	15	15	10	30	25	15	0	Head
+19	Agnaktor	1	15	15	15	10	15	15	0	0	Neck
+19	Agnaktor	2	15	15	15	10	25	20	10	0	Breast
+19	Agnaktor	3	15	15	15	10	20	15	0	0	Left Legs
+19	Agnaktor	4	15	15	15	10	20	15	0	0	Right Legs
+19	Agnaktor	5	15	15	15	10	20	20	0	0	Body
+19	Agnaktor	6	15	15	15	10	20	15	5	0	Tail
+19	Agnaktor	7	20	24	20	5	15	10	10	20	Fin
+20	Ceadeus	0	26	30	40	5	0	5	20	25	Head
+20	Ceadeus	1	18	33	20	10	0	0	25	35	Horn
+20	Ceadeus	2	60	55	40	10	0	0	10	20	Beard
+20	Ceadeus	3	40	35	40	15	0	0	5	15	Breast
+20	Ceadeus	4	25	40	25	5	0	5	15	20	Back
+20	Ceadeus	5	32	20	45	5	0	0	15	30	Belly
+20	Ceadeus	6	35	28	25	10	0	5	25	20	Tail
+20	Ceadeus	7	28	30	20	5	0	0	20	20	Front Legs
+21	Uroktor	0	85	85	80	0	40	10	30	0	Head
+21	Uroktor	1	80	80	70	0	60	10	25	0	Body
+22	Delex	0	90	90	90	0	50	0	30	0	Body
+23	Epioth	0	120	120	120	55	15	55	55	10	Head
+23	Epioth	1	110	110	110	50	10	50	50	10	Body
+25	Jhen Mohran	0	18	18	18	0	5	15	5	15	Fang
+25	Jhen Mohran	1	21	21	20	0	5	8	5	8	Body
+25	Jhen Mohran	2	33	33	25	0	8	15	8	15	Arm
+25	Jhen Mohran	3	60	55	38	0	12	22	12	22	Belly
+25	Jhen Mohran	4	68	78	48	0	15	22	15	22	Weakened Fin
+25	Jhen Mohran	5	90	80	50	0	20	30	20	25	Mouth
+25	Jhen Mohran	6	35	35	40	0	10	15	5	15	Fin
+26	Giggi	0	85	80	90	60	25	0	0	10	Body
+27	Aptonoth	0	120	120	120	55	55	55	55	10	Head
+27	Aptonoth	1	110	110	110	50	50	50	50	10	Body
+28	Popo	0	110	110	110	55	10	10	15	10	Head
+28	Popo	1	100	100	100	50	10	10	10	10	Body
+29	Rhenoplos	0	35	40	45	0	45	45	45	5	Head
+29	Rhenoplos	1	100	105	110	10	50	50	50	10	Body
+31	Melynx	0	110	100	100	100	100	100	100	10	Body
+34	Kelbi	0	100	100	100	100	100	100	100	10	Body
+36	Bnahabra	0	120	130	110	100	50	50	10	0	Body
+37	Bnahabra	0	120	130	110	100	50	50	10	0	Body
+38	Bnahabra	0	120	130	110	100	50	50	10	0	Body
+39	Bnahabra	0	120	130	110	100	50	50	10	0	Body
+41	Zinogre	0	45	50	60	15	20	20	0	5	Head
+41	Zinogre	1	25	25	35	5	5	5	0	5	Body
+41	Zinogre	2	40	36	30	10	15	15	0	5	Back
+41	Zinogre	3	24	30	25	5	5	10	0	5	Front Legs
+41	Zinogre	4	36	35	35	5	5	10	0	5	Back Legs
+41	Zinogre	5	30	30	30	5	5	5	0	5	Shoulder/Thigh
+41	Zinogre	6	27	24	20	5	5	10	0	5	Tail
+41	Zinogre	7	21	15	10	10	10	15	0	5	Tail Tip
+42	Arzuros	0	60	60	60	20	5	15	10	0	Head
+42	Arzuros	1	50	50	80	25	5	15	10	0	Upper Body
+42	Arzuros	2	33	35	28	30	5	20	30	0	Front Legs
+42	Arzuros	3	85	85	44	15	5	20	10	0	Butt
+42	Arzuros	4	56	56	40	15	5	20	10	0	Belly/Back Legs
+43	Lagombi	0	45	45	50	40	0	0	20	0	Head
+43	Lagombi	1	44	44	40	30	0	0	15	0	Upper Body
+43	Lagombi	2	30	30	20	10	0	0	5	0	Front Legs
+43	Lagombi	3	50	50	35	20	0	0	10	0	Butt
+43	Lagombi	4	35	35	20	10	0	0	5	0	Belly/Back Legs
+44	Volvidon	0	60	55	50	0	30	20	15	0	Head
+44	Volvidon	1	45	45	35	0	20	15	10	0	Upper Body
+44	Volvidon	2	40	30	30	0	10	5	5	0	Front Legs
+44	Volvidon	3	30	30	25	0	15	10	10	0	Lower Back
+44	Volvidon	4	36	36	20	0	10	10	5	0	Belly/Back Legs
+45	Great Wroggi	0	60	45	50	0	20	40	5	0	Head
+45	Great Wroggi	1	45	60	40	0	20	40	5	0	Body
+46	Duramboros	0	43	24	35	10	5	5	15	5	Head
+47	Nibelsnarf	0	24	26	20	0	15	15	10	5	Head
+47	Nibelsnarf	1	26	24	24	0	10	15	15	5	Body/Tail
+47	Nibelsnarf	2	36	30	40	0	15	20	15	5	Back
+47	Nibelsnarf	4	45	45	50	0	10	30	15	5	Nose
+47	Nibelsnarf	5	36	30	30	0	10	20	25	5	Belly
+47	Nibelsnarf	6	45	45	50	0	10	15	15	5	Gills
+47	Nibelsnarf	7	60	60	60	0	10	10	10	5	Mouth
+48	Wroggi	0	95	95	95	0	30	70	10	10	Body
+49	Slagtoth	0	85	80	80	35	35	45	55	5	Head
+49	Slagtoth	1	75	70	80	30	30	40	50	5	Body
+50	Gargwa	0	110	110	110	100	90	90	90	5	Head
+50	Gargwa	1	105	105	105	90	80	80	80	0	Body
+51	Crimson Qurupeco	0	60	70	60	20	10	30	0	5	Head
+51	Crimson Qurupeco	1	50	40	40	10	5	15	0	0	Body
+51	Crimson Qurupeco	2	40	30	30	15	15	20	0	10	Tail
+51	Crimson Qurupeco	3	21	21	30	15	15	30	0	0	Wing (Voltstone)
+51	Crimson Qurupeco	4	40	40	40	10	5	10	0	0	Legs
+51	Crimson Qurupeco	5	50	40	70	15	5	20	0	0	Breast
+51	Crimson Qurupeco	6	40	40	30	10	5	15	0	10	Wing (Inside)
+51	Crimson Qurupeco	7	35	35	30	10	5	15	0	10	Wing (Outside)
+52	Baleful Gigginox	0	45	55	50	5	30	0	0	20	Head
+52	Baleful Gigginox	1	40	40	40	5	25	0	0	10	Neck
+52	Baleful Gigginox	2	35	30	25	5	20	0	0	5	Back
+52	Baleful Gigginox	3	55	45	50	5	30	0	0	15	Breast
+52	Baleful Gigginox	4	30	30	15	5	10	0	0	5	Front Legs
+52	Baleful Gigginox	5	40	40	35	5	10	0	0	10	Back Legs
+52	Baleful Gigginox	6	19	19	19	5	30	0	0	10	Tail
+53	Sand Barioth	0	60	65	70	0	15	30	25	10	Head
+53	Sand Barioth	1	30	25	30	0	5	5	5	5	Neck/Back
+53	Sand Barioth	2	45	25	40	0	5	10	5	5	Belly
+53	Sand Barioth	3	25	30	25	0	20	30	25	10	Thorns
+53	Sand Barioth	4	30	30	30	0	5	15	10	5	Front Legs
+53	Sand Barioth	5	35	35	35	0	5	10	5	0	Back Legs
+53	Sand Barioth	6	40	40	25	0	10	15	10	5	Tail
+54	Jade Barroth	0	20	22	13	25	0	0	20	10	Head
+54	Jade Barroth	1	35	45	35	15	0	0	15	5	Body
+54	Jade Barroth	2	45	45	40	10	5	0	20	5	Front Legs
+54	Jade Barroth	3	30	27	20	10	5	0	25	5	Left Back Leg
+54	Jade Barroth	4	30	27	20	10	5	0	25	5	Right Back Leg
+54	Jade Barroth	5	36	36	45	15	0	0	20	10	Tail
+54	Jade Barroth	6	20	22	13	35	0	0	15	0	Head
+54	Jade Barroth	7	35	45	35	25	0	0	10	0	Body
+55	Steel Uragaan	0	19	20	10	0	40	20	5	30	Head
+55	Steel Uragaan	1	25	30	25	0	20	10	0	15	Neck
+55	Steel Uragaan	2	22	24	10	0	15	10	0	15	Back
+55	Steel Uragaan	3	55	45	45	0	30	15	5	30	Belly
+55	Steel Uragaan	4	25	30	15	0	15	10	0	15	Front Legs
+55	Steel Uragaan	6	35	30	25	0	25	10	0	20	Tail
+55	Steel Uragaan	7	22	24	10	0	35	15	5	25	Tail Tip
+56	Purple Ludroth	0	36	45	50	15	0	5	10	5	Head
+56	Purple Ludroth	1	45	36	35	20	0	5	15	0	Belly
+56	Purple Ludroth	2	44	40	35	15	0	5	10	0	Mane
+56	Purple Ludroth	3	30	45	25	30	0	5	15	5	Back
+56	Purple Ludroth	4	24	30	20	10	0	5	10	0	Front Legs
+56	Purple Ludroth	5	30	24	20	10	0	5	5	0	Back Legs
+56	Purple Ludroth	6	40	40	40	15	0	5	5	0	Tail
+57	Glacial Agnaktor	0	55	60	50	30	0	0	25	35	Head
+57	Glacial Agnaktor	1	40	35	30	15	0	0	10	20	Neck
+57	Glacial Agnaktor	2	50	45	45	25	0	0	20	30	Breast
+57	Glacial Agnaktor	3	35	35	25	20	0	0	10	25	Right Legs
+57	Glacial Agnaktor	4	35	40	25	20	0	0	10	25	Left Legs
+57	Glacial Agnaktor	5	40	44	35	25	0	0	10	30	Body
+57	Glacial Agnaktor	6	35	30	25	20	0	0	15	25	Tail
+57	Glacial Agnaktor	7	20	24	20	15	0	0	10	20	Fin
+58	Black Diablos	0	24	15	20	0	15	20	15	15	Head
+58	Black Diablos	1	45	45	30	0	10	15	10	10	Neck
+58	Black Diablos	2	23	42	20	10	15	25	15	15	Back/Wings
+58	Black Diablos	3	68	75	40	0	10	10	10	10	Belly
+58	Black Diablos	4	40	30	45	0	10	20	10	10	Wing Flaps
+58	Black Diablos	5	35	35	35	0	5	8	5	5	Legs
+58	Black Diablos	6	50	24	60	0	10	15	10	10	Tail
+58	Black Diablos	7	22	35	10	10	15	30	15	15	Tail Tip
+59	Nargacuga	0	50	50	55	20	10	15	25	15	Head
+59	Nargacuga	1	36	40	30	15	5	5	15	10	Neck/Back
+59	Nargacuga	2	25	25	30	5	0	0	5	5	Belly
+59	Nargacuga	3	20	20	20	25	5	10	35	15	Wing Blade
+59	Nargacuga	4	36	36	25	5	0	0	10	10	Tail
+59	Nargacuga	5	30	30	25	5	5	5	10	10	Front Legs
+59	Nargacuga	6	30	30	35	10	0	0	15	5	Back Legs
+59	Nargacuga	7	24	24	30	25	5	10	30	10	Tail Tip
+60	Green Nargacuga	0	60	60	65	20	10	15	25	15	Head
+60	Green Nargacuga	1	35	35	30	15	5	5	15	10	Neck/Back
+60	Green Nargacuga	2	25	25	30	5	0	0	5	5	Belly
+60	Green Nargacuga	3	20	20	20	25	5	10	35	15	Wing Blade
+60	Green Nargacuga	4	35	30	25	5	0	0	10	10	Tail
+60	Green Nargacuga	5	24	24	25	5	5	5	10	10	Front Legs
+60	Green Nargacuga	6	30	30	35	10	0	0	15	5	Back Legs
+60	Green Nargacuga	7	20	20	20	25	5	10	30	10	Tail Tip
+61	Lucent Nargacuga	0	20	20	20	5	10	20	0	15	Head
+61	Lucent Nargacuga	1	25	25	25	5	10	15	0	10	Neck/Back
+61	Lucent Nargacuga	2	45	43	30	5	15	15	5	10	Belly
+61	Lucent Nargacuga	3	20	20	20	10	10	20	0	15	Wing Blade
+61	Lucent Nargacuga	4	43	45	40	5	10	20	5	10	Tail
+61	Lucent Nargacuga	5	23	23	23	5	5	15	5	10	Front Legs
+61	Lucent Nargacuga	6	38	38	30	5	10	15	0	10	Back Legs
+61	Lucent Nargacuga	7	69	55	60	5	10	10	5	10	Tail Tip
+62	Pink Rathian	1	30	30	20	0	5	5	10	15	Neck
+62	Pink Rathian	2	35	40	40	5	5	5	10	20	Back
+62	Pink Rathian	3	70	60	60	0	5	5	20	10	Belly
+62	Pink Rathian	4	24	24	20	0	5	5	10	20	Tail
+62	Pink Rathian	5	40	40	40	0	10	10	15	20	Wing
+62	Pink Rathian	6	44	45	40	0	5	5	5	5	Legs
+62	Pink Rathian	7	28	28	23	0	5	5	10	20	Tail Tip
+64	Azure Rathalos	0	70	65	55	0	10	15	10	20	Head
+64	Azure Rathalos	1	45	40	30	0	10	15	10	20	Neck
+64	Azure Rathalos	2	20	25	30	10	15	20	15	20	Back
+64	Azure Rathalos	3	45	40	70	0	10	15	10	10	Belly
+64	Azure Rathalos	4	23	23	20	0	5	5	5	20	Tail
+64	Azure Rathalos	5	25	20	25	0	10	15	10	15	Wing
+64	Azure Rathalos	6	28	25	28	0	15	20	15	30	Legs
+64	Azure Rathalos	7	30	30	25	0	5	5	5	20	Tail Tip
+66	Plesioth	0	45	50	30	15	0	5	20	5	Head
+66	Plesioth	1	30	30	35	15	0	5	25	5	Neck
+66	Plesioth	2	22	22	25	20	0	5	25	5	Back
+66	Plesioth	3	50	45	50	20	0	5	20	5	Belly
+66	Plesioth	4	25	25	30	25	0	5	25	5	Wing
+66	Plesioth	5	32	38	35	15	0	5	15	5	Legs
+66	Plesioth	6	30	24	45	20	0	5	25	5	Tail
+67	Green Plesioth	0	40	45	40	15	0	5	20	5	Head
+67	Green Plesioth	1	30	30	35	15	0	5	25	5	Neck
+67	Green Plesioth	2	22	22	25	20	0	5	25	5	Back
+67	Green Plesioth	3	45	50	45	20	0	5	20	5	Belly
+67	Green Plesioth	4	25	25	30	25	0	5	25	5	Wing
+67	Green Plesioth	5	32	38	35	15	0	5	15	5	Legs
+67	Green Plesioth	6	45	24	35	20	0	5	25	5	Tail
+68	Ivory Lagiacrus	0	18	15	18	10	0	8	0	10	Head
+68	Ivory Lagiacrus	1	44	40	35	22	0	10	0	22	Breast
+68	Ivory Lagiacrus	2	35	35	30	20	0	10	0	20	Body
+68	Ivory Lagiacrus	3	55	50	40	30	0	15	0	30	Back
+68	Ivory Lagiacrus	4	25	28	25	18	0	5	0	18	Front Legs
+68	Ivory Lagiacrus	5	38	43	45	20	0	8	0	20	Tail
+68	Ivory Lagiacrus	6	28	32	27	18	0	5	0	18	Back Legs
+69	Abyssal Lagiacrus	0	15	15	18	20	0	5	0	35	Head
+69	Abyssal Lagiacrus	1	45	40	35	15	0	10	0	20	Breast
+69	Abyssal Lagiacrus	2	35	35	20	10	0	5	0	15	Body
+69	Abyssal Lagiacrus	3	25	40	15	20	0	15	0	25	Back
+69	Abyssal Lagiacrus	4	27	25	10	10	0	5	0	15	Legs
+69	Abyssal Lagiacrus	5	30	35	15	10	0	5	0	15	Tail
+70	Goldbeard Ceadeus	0	26	30	43	5	0	5	20	25	Head
+70	Goldbeard Ceadeus	1	22	33	25	10	0	0	30	35	Horn
+70	Goldbeard Ceadeus	2	60	55	40	10	0	0	15	20	Beard
+70	Goldbeard Ceadeus	3	45	38	50	15	0	0	5	15	Breast
+70	Goldbeard Ceadeus	4	25	45	25	5	0	5	18	20	Back
+70	Goldbeard Ceadeus	5	32	20	45	5	0	0	15	30	Belly
+70	Goldbeard Ceadeus	6	38	24	25	10	0	5	25	20	Tail
+70	Goldbeard Ceadeus	7	28	30	20	5	0	0	20	20	Front Legs
+72	Stygian Zinogre	0	45	45	50	10	20	10	20	0	Head
+72	Stygian Zinogre	1	25	25	25	5	10	5	15	0	Body
+72	Stygian Zinogre	2	30	30	30	15	15	15	20	0	Back
+72	Stygian Zinogre	3	25	25	20	5	15	10	20	0	Front Legs
+72	Stygian Zinogre	4	25	25	30	5	15	10	20	0	Back Legs
+72	Stygian Zinogre	5	25	25	25	5	20	10	25	0	Shoulder/Thigh
+72	Stygian Zinogre	6	28	21	20	5	5	5	20	0	Tail
+72	Stygian Zinogre	7	21	21	10	10	10	10	25	0	Tail Tip
+73	Rust Duramboros	0	38	25	35	5	10	10	15	5	Head
+74	Brachydios	0	50	50	45	0	20	15	10	5	Head
+74	Brachydios	1	44	40	20	0	15	10	0	5	Body
+74	Brachydios	2	30	35	30	0	10	5	5	0	Front Legs
+74	Brachydios	3	30	35	35	0	10	5	5	0	Back Legs
+74	Brachydios	4	35	25	45	0	15	10	5	5	Tail
+74	Brachydios	5	20	10	10	0	10	5	0	0	Tail Tip
+77	Anteka	0	100	90	90	100	50	5	80	10	Body
+78	Slagtoth	0	85	80	80	35	35	45	55	5	Head
+78	Slagtoth	1	75	70	80	30	30	40	50	5	Body
+85	Hallowed Jhen Mohran	0	19	22	19	15	0	0	10	10	Fang
+85	Hallowed Jhen Mohran	1	25	25	25	8	0	0	6	6	Body
+85	Hallowed Jhen Mohran	2	35	38	30	15	0	0	10	10	Arm
+85	Hallowed Jhen Mohran	3	55	50	38	22	0	0	15	15	Belly
+85	Hallowed Jhen Mohran	4	76	76	65	22	0	0	15	15	Weakened Fin
+85	Hallowed Jhen Mohran	5	84	84	60	30	0	0	20	20	Mouth
+85	Hallowed Jhen Mohran	6	44	40	40	15	0	0	10	10	Fin

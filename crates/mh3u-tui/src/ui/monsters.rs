@@ -121,19 +121,23 @@ fn soft(value: u8, from: u8) -> Span<'static> {
     Span::styled(format!("{value:>5}"), style)
 }
 
-/// The hit zones in the game's order with their damage percentages, and the element that does the most anywhere. The game's data
-/// does not name the zones.
+/// The hit zones in the game's order with their damage percentages, and the element that does the most anywhere. The names come from
+/// a public database (the game's data names none); a zone with no name there is numbered.
 fn weak_spots(app: &App, monster: u16) -> Vec<Line<'static>> {
     let zones = app.game.hit_zones(monster);
     if zones.is_empty() {
         return Vec::new();
     }
     let mut lines = vec![Line::raw(""), Line::styled("Weak spots", bold())];
-    let mut header = vec![Span::styled(format!("  {:<7}", "Zone"), muted())];
+    let label = |i: usize| match app.game.zone_name(monster, i) {
+        Some(name) => name.to_string(),
+        None => format!("Zone {}", i + 1),
+    };
+    let mut header = vec![Span::styled(format!("  {:<12}", "Zone"), muted())];
     header.extend(["Cut", "Imp", "Shot", "Fire", "Wat", "Ice", "Thun", "Drag"].map(|h| Span::styled(format!("{h:>5}"), muted())));
     lines.push(Line::from(header));
     for (i, z) in zones.iter().enumerate() {
-        let mut spans = vec![Span::raw(format!("  {:<7}", i + 1))];
+        let mut spans = vec![Span::raw(format!("  {:<12}", fit(&label(i), 12)))];
         spans.extend(z.physical().map(|v| soft(v, 70)));
         spans.extend(z.elements().map(|v| soft(v, 25)));
         lines.push(Line::from(spans));
@@ -150,12 +154,9 @@ fn weak_spots(app: &App, monster: u16) -> Vec<Line<'static>> {
         lines.push(Line::from(vec![
             Span::styled("  Best element: ", muted()),
             Span::styled(ELEMENTS[e], theme::element_style(ELEMENTS[e])),
-            Span::styled(format!(" {value}% at zone {}", zone + 1), muted()),
+            Span::styled(format!(" {value}% at {}", label(zone)), muted()),
         ]));
     }
-    lines.push(Line::styled(
-        "  Zones are numbered in the game's order; its data names none.",
-        muted(),
-    ));
+    lines.push(Line::styled("  Game order; names from a public database.", muted()));
     lines
 }

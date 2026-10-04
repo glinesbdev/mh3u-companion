@@ -44,3 +44,4 @@ pub mod skilltiers;
 pub mod weapon_extras;
 pub mod weapons;
 pub mod weaponskills;
+pub mod zone_names;

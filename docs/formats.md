@@ -181,7 +181,7 @@ After a header of about 0x100 bytes come tables of 10-byte rows, one per hit zon
 ice, thunder, dragon), a dizzy byte and a fixed `0x64`; unused rows are filled with `0x64`. The first table starts at 0xD0, 0x110 or
 elsewhere, so `hitzones.rs` finds it by the row shape (starts non-zero, ends `0x64`, at most 180) and reads up to the filler. It is the
 normal state; later tables (other states) are not read. Compared with Kiranico on 49 monsters, 319 of the 432 zones it lists are in the
-first table. Nothing in the file names a zone, and nothing found says which zone each part-break list belongs to (the order of a monster's break lists is not the order of its zones: Gigginox breaks tail, head, stomach and its zones run head first).
+first table. Nothing in the file names a zone, so the names come from `data/zone_names.tsv` (`zone_names.rs`): each row of a monster's first table was matched to Kiranico's zone with the same eight numbers, 328 of 361 rows (318 with one name, 10 where two differently named zones had the same numbers and the names were given out in Kiranico's order; the rest are zones of other states or a monster Kiranico does not list). A name is shown only if the monster's name and the row's numbers are the game's. And nothing found says which zone each part-break list belongs to (the order of a monster's break lists is not the order of its zones: Gigginox breaks tail, head, stomach and its zones run head first).
 
 ## Hunter's Notes
 

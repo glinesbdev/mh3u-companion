@@ -35,7 +35,7 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   Rathalos), are numbered. The game's own source for the parts was searched for and not found: the monster archive's `em_status00` and
   `em_hitdata00` (the hit areas carry an index, not the kind of part), and the executable's data and read-only sections (no table of the
   kinds in a monster's order). **Needs:** the table that says which parts a monster can break, probably in code.
-- Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
+- Monster **hit points** and the zones of other states (enraged, broken); `em_status00` has no names, and the zone names shown come from Kiranico (33 rows have none).
 - Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (a byte at 0x7569 may be it; to confirm at the next rank-up), weapon usage (the count for the great sword shows 11; not found as a plain count) and the title.
 - **Which shop sells what.** The Items tab shows an item's shop price and carry limit (from Kiranico), but not where it is sold or when it appears. **Needs:** the shop tables.
 - How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the hunt rule).

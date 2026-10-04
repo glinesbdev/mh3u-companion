@@ -76,6 +76,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// Names of hit zones, by (monster, row of its first table).
+    zone_names: HashMap<(u16, usize), crate::zone_names::Entry>,
     /// Carry limits and shop prices of items, by item id.
     item_extras: HashMap<u16, crate::item_extras::ItemExtras>,
     /// Songs of the hunting horns, by the horn's notes.
@@ -184,6 +186,7 @@ impl GameData {
             weapon_extras: HashMap::new(),
             horn_songs: crate::horn_songs::parse()?,
             item_extras: HashMap::new(),
+            zone_names: crate::zone_names::parse()?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
@@ -212,6 +215,26 @@ impl GameData {
             .entry(monster)
             .or_insert_with(|| std::sync::Arc::new(self.read_zones(monster)))
             .clone()
+    }
+
+    /// The name of a hit zone (a row of the monster's first table), when the table has it for this monster and these numbers.
+    pub fn zone_name(&self, monster: u16, row: usize) -> Option<&str> {
+        let entry = self.zone_names.get(&(monster, row))?;
+        if self.monster_name(monster)? != entry.monster {
+            return None;
+        }
+        let zone = self.hit_zones(monster).get(row).copied()?;
+        let values = [
+            zone.cut,
+            zone.impact,
+            zone.shot,
+            zone.fire,
+            zone.water,
+            zone.ice,
+            zone.thunder,
+            zone.dragon,
+        ];
+        (values == entry.values).then_some(entry.name.as_str())
     }
 
     fn read_zones(&self, monster: u16) -> Vec<crate::hitzones::Zone> {
@@ -581,6 +604,14 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // zone names are given only where the monster and the numbers are the game's
+        assert_eq!(game.zone_name(1, 0), Some("Head"));
+        assert_eq!(game.zone_name(1, 99), None);
+        assert_eq!(game.zone_name(0, 0), None);
+        let named = (1..200u16)
+            .map(|m| (0..game.hit_zones(m).len()).filter(|&r| game.zone_name(m, r).is_some()).count())
+            .sum::<usize>();
+        assert!(named > 300, "{named}");
         // every skill the weapon rules name exists in the game's text
         for name in crate::weaponskills::listed() {
             assert!(game.skills.iter().any(|s| s == name), "{name}");

@@ -89,6 +89,8 @@ enum Tool {
     ArmorTodo { game_dir: PathBuf, ledger: PathBuf },
     /// Every monster drop list as `monster<TAB>row<TAB>rank<TAB>kind<TAB>item:quantity:percent,...`.
     Drops { game_dir: PathBuf },
+    /// Every monster's first table of hit zones, one row per zone: monster id, name, row, then the eight values.
+    Zones { game_dir: PathBuf },
     /// Every weapon as `kind id name`, for joining with other tables.
     WeaponNames { game_dir: PathBuf },
     /// Start Cemu on the game and record every save block found in its memory.
@@ -131,8 +133,23 @@ fn main() -> Result<()> {
         Tool::ArmorTodo { game_dir, ledger } => armor_todo(&game_dir, &ledger),
         Tool::Drops { game_dir } => drops(&game_dir),
         Tool::WeaponNames { game_dir } => weapon_names(&game_dir),
+        Tool::Zones { game_dir } => zones(&game_dir),
         Tool::CemuHost { game_dir, outdir } => cemu_host(&game_dir, &outdir),
     }
+}
+
+fn zones(game_dir: &Path) -> Result<()> {
+    let game = GameData::load(game_dir)?;
+    for id in 0..200u16 {
+        let Some(name) = game.monster_name(id) else { continue };
+        for (row, z) in game.hit_zones(id).iter().enumerate() {
+            println!(
+                "{id}\t{name}\t{row}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+                z.cut, z.impact, z.shot, z.fire, z.water, z.ice, z.thunder, z.dragon
+            );
+        }
+    }
+    Ok(())
 }
 
 fn read(path: &Path) -> Result<Vec<u8>> {
