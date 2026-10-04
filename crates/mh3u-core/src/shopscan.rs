@@ -47,13 +47,18 @@ pub fn runs_of_width(
     order: Order,
     width: usize,
 ) -> Vec<Run> {
+    // a lookup table is much faster than hashing at every offset
+    let mut member = vec![false; 1 << 16];
+    for &id in wanted {
+        member[usize::from(id)] = true;
+    }
     let at = |o: usize| -> Option<u16> {
         let v = if width == 1 {
             u16::from(*data.get(o)?)
         } else {
             u16::from_be_bytes([*data.get(o)?, *data.get(o + 1)?])
         };
-        wanted.contains(&v).then_some(v)
+        member[usize::from(v)].then_some(v)
     };
     let mut out = Vec::new();
     let mut o = 0;
