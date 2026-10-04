@@ -64,7 +64,7 @@ pub(super) fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line
     for (method, rank, list) in app.game.drops().lists_for(monster) {
         if current != Some(method) {
             lines.push(Line::raw(""));
-            lines.push(Line::styled(method.label(), bold()));
+            lines.push(Line::styled(app.game.drop_label(monster, rank, method), bold()));
             current = Some(method);
         }
         let items: Vec<Vec<Span<'static>>> = list
@@ -89,7 +89,7 @@ pub(super) fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line
     }
     lines.push(Line::raw(""));
     lines.push(Line::styled(
-        "Part breaks are numbered in the game's order; which body part each one is, is not known.",
+        "Part break names come from a hand-made table and can be off.",
         muted(),
     ));
     lines

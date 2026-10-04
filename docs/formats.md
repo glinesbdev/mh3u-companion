@@ -90,7 +90,7 @@ monster's lists end. So they are assigned by content: each list goes to the mons
 are non-decreasing down the table, which is solved with a small dynamic program), and each run of lists given to one monster is its
 group. A capturable monster's group is `[capture, break lists..., one more list]`, where the last list repeats the capture's items with
 different chances and is not used; a monster that cannot be captured (Ceadeus) has only break lists. The break lists are in the game's
-order but nothing says which body part each is, so the app calls them "Part break 1, 2, ...". Checked against published lists for 12
+order but nothing says which body part each is, so the app calls them "Part break 1, 2, ..." unless the table below names them. Checked against published lists for 12
 monsters: 106 of the 108 capture and break lists (three ranks) are exactly where the inference puts them, and the two others are
 probably disagreements in that list. The grouping is inferred, not read from a table, so a monster with generic items only could be
 misplaced. Quest rewards are in the `.quest` files (`QTDS` format: multilingual text followed by binary data), which are not decoded.
@@ -138,6 +138,17 @@ towards the next rank. A byte at 0x7569 is 1 for the hunter with rank 1 and 0 fo
 may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 is a total of the quest points: it grew with every
 quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests, village ones included, so it is not the hall's hunter rank points alone. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
 byte or 16-bit number goes up by one with each quest, so it is stored in some other form or not in this file.
+
+## Which part a break list is
+
+Not found in the game's data (see `docs/ideas.md` for what was searched). The lists of a monster are in an order of its own that does not
+depend on the rank, and each is one of about 20 kinds of part, the same kinds for every monster. `mh3u-core/src/breakparts.rs` keeps a
+hand-made table of the kinds for 43 monsters: Rathian is head, wing; Gigginox tail, head, stomach; Lagiacrus head, front leg, chest, back;
+Agnaktor head, back leg, chest, fin. It was made by matching each list's items against a published monster database (the same set of
+items, for every rank of a monster where the database has the lists) and reading off the database's part names, which the game's text
+does not have ("Oral cavity", "Tail end"). A test checks that each monster in the table has as many break lists as parts in some rank, and
+the app names a monster's lists only for a rank where the numbers agree (some high and G rank decodes have extra lists, which stay
+numbered). A name can be off.
 
 ## Monster hit zones
 

@@ -140,7 +140,13 @@ fn hunt_details(app: &App) -> Vec<Line<'static>> {
         let item = app.game.item_name(cover.item).unwrap_or("?");
         let have = app.save.item_count(cover.item);
         let (chance, how) = match cover.how {
-            How::Drop(method) => (Span::styled(format!("{:>3}%  ", cover.percent), good()), method.label()),
+            How::Drop(method) => {
+                let label = match step.origin {
+                    Origin::Monster { monster, rank } => app.game.drop_label(monster, rank, method),
+                    Origin::Quest(_) => method.label(),
+                };
+                (Span::styled(format!("{:>3}%  ", cover.percent), good()), label)
+            }
             How::Reward { second_box, quantity } => (
                 if cover.percent == 0 {
                     Span::styled("always ", good())

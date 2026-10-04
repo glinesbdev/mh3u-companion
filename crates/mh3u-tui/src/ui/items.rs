@@ -145,9 +145,15 @@ pub(super) fn item_details(app: &App, id: u16) -> Vec<Line<'static>> {
         const SHOWN: usize = 12;
         let total = rows.len();
         for ((monster, method), chances) in rows.into_iter().take(SHOWN) {
+            // part names depend on the rank's break lists: use the first rank that has this drop
+            let first = chances
+                .iter()
+                .position(Option::is_some)
+                .map_or(mh3u_core::drops::Rank::Low, |i| mh3u_core::drops::Rank::ALL[i]);
+            let label = app.game.drop_label(monster, first, method);
             let mut spans = vec![
                 Span::raw(format!("  {:<19}", fit(app.game.monster_name(monster).unwrap_or("?"), 18))),
-                Span::styled(format!("{:<15}", method.label()), muted()),
+                Span::styled(format!("{:<18}", fit(&label, 17)), muted()),
             ];
             for (label, chance) in ["Low", "High", "G"].into_iter().zip(chances) {
                 spans.push(Span::styled(format!("{label} "), muted()));

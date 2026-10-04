@@ -196,6 +196,28 @@ impl GameData {
         self.recipe_rows.get(&kind).map_or(&[], Vec::as_slice)
     }
 
+    /// What a drop list is called: its method, or for a part break the part it is when  knows it ("Head break"). The part
+    /// is only given when the monster has as many break lists in that rank as the table has parts, so a rank with extra lists gets
+    /// "Part break N" for all.
+    pub fn drop_label(&self, monster: u16, rank: crate::drops::Rank, method: crate::drops::Method) -> String {
+        use crate::drops::Method;
+        if let Method::Break(n) = method
+            && let Some(parts) = crate::breakparts::parts(monster)
+        {
+            let lists = self
+                .drops
+                .lists_for(monster)
+                .filter(|&(m, r, _)| r == rank && matches!(m, Method::Break(_)))
+                .count();
+            if lists == parts.len()
+                && let Some(part) = parts.get(usize::from(n).wrapping_sub(1))
+            {
+                return format!("{} break", part.label());
+            }
+        }
+        method.label()
+    }
+
     /// The quests, by id.
     pub fn quests(&self) -> &[crate::quest::Quest] {
         &self.quests
@@ -395,6 +417,52 @@ mod tests {
             "Head armor made from Jaggi parts. Inexpensive."
         );
         assert_eq!(unwrap_text(""), "");
+    }
+
+    /// The part names fit the break lists of the dump: each monster in the table has as many break lists as parts in at least one rank
+    /// (skips without a dump).
+    #[test]
+    fn break_part_names_fit_the_break_lists_in_the_dump() {
+        use crate::drops::{Method, Rank};
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        let (mut monsters, mut named) = (0, 0);
+        for &monster in game.drops().monsters() {
+            let Some(parts) = crate::breakparts::parts(monster) else { continue };
+            monsters += 1;
+            let fits = |rank| {
+                game.drops()
+                    .lists_for(monster)
+                    .filter(|&(m, r, _)| r == rank && matches!(m, Method::Break(_)))
+                    .count()
+                    == parts.len()
+            };
+            assert!(
+                Rank::ALL.iter().any(|&r| fits(r)),
+                "monster {monster}: no rank has {} break lists",
+                parts.len()
+            );
+            named += 1;
+        }
+        assert!(monsters >= 40 && named == monsters, "{named} of {monsters}");
+        assert_eq!(game.drop_label(1, Rank::Low, Method::Break(1)), "Head break");
+        assert_eq!(game.drop_label(1, Rank::Low, Method::Break(2)), "Wing break");
+        assert_eq!(game.drop_label(4, Rank::High, Method::Break(3)), "Stomach break");
+        assert_eq!(game.drop_label(1, Rank::Low, Method::BodyCarve), "Body carve");
+        assert_eq!(
+            game.drop_label(0, Rank::Low, Method::Break(1)),
+            "Part break 1",
+            "a monster not in the table"
+        );
     }
 
     /// Real hit zones, as read from the dump (skipped without one): Rathian's first zone and Arzuros's five.
