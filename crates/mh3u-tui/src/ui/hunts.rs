@@ -100,7 +100,7 @@ fn unsourced_line(app: &App) -> Option<Vec<Line<'static>>> {
     Some(vec![
         Line::raw(names.join(", ")),
         Line::styled(
-            "Gathering, the shop, or a rank this plan leaves out (quests only count when every rank is allowed; r changes the ranks).",
+            "Gathering, the shop, or a rank this plan leaves out (a quest counts for its own rank when that is known; r changes the ranks).",
             muted(),
         ),
     ])

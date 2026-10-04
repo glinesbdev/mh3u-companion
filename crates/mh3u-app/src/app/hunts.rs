@@ -51,6 +51,7 @@ impl App {
             .filter(|q| q.stars > 0)
             .map(|q| QuestOffer {
                 id: q.id,
+                rank: q.rank(),
                 rewards: q
                     .rewards
                     .iter()

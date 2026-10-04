@@ -12,6 +12,7 @@
 //! and each box's chances add up to 100. Found by reading files and checking them against the quests played; the meaning of the
 //! rest of the binary part (the stage, the fees, the small monsters) is not known.
 
+use crate::drops::Rank;
 use anyhow::{Result, bail, ensure};
 
 /// The kind of quest, from the binary part.
@@ -85,6 +86,19 @@ pub fn map_name(map: u8) -> Option<&'static str> {
         13 => "Misty Peaks",
         _ => return None,
     })
+}
+
+impl Quest {
+    /// The rank the quest is in. Village quests of 1 to 5 stars are low rank and 6 to 9 stars high rank (from a published list of village
+    /// quests by rank); hall quests of 1 to 5 stars are low rank. Hall quests of 6 stars and up are high rank or G rank, and which is not
+    /// known, so they, tutorials and event quests have none.
+    pub fn rank(&self) -> Option<Rank> {
+        match (self.place, self.stars) {
+            (Place::Village | Place::Hall, 1..=5) => Some(Rank::Low),
+            (Place::Village, 6..=9) => Some(Rank::High),
+            _ => None,
+        }
+    }
 }
 
 /// One thing a quest can give: `percent` is the chance among its box; 0 means every time.
@@ -306,6 +320,24 @@ mod tests {
         assert_eq!(main, [(447, 1, 0), (448, 1, 60), (450, 1, 40)], "even entries");
         let second: Vec<u16> = q.rewards[1].iter().map(|r| r.item).collect();
         assert_eq!(second, [400, 449], "odd entries; an empty entry is skipped");
+    }
+
+    #[test]
+    fn a_quests_rank_follows_its_place_and_stars() {
+        let quest = |id: u16, stars: u8| Quest {
+            id,
+            stars,
+            place: Place::of_quest(id),
+            ..parse(&sample()).unwrap()
+        };
+        assert_eq!(quest(1202, 2).rank(), Some(Rank::Low));
+        assert_eq!(quest(1205, 5).rank(), Some(Rank::Low));
+        assert_eq!(quest(1609, 6).rank(), Some(Rank::High));
+        assert_eq!(quest(1911, 9).rank(), Some(Rank::High));
+        assert_eq!(quest(1101, 0).rank(), None, "a tutorial");
+        assert_eq!(quest(11106, 1).rank(), Some(Rank::Low));
+        assert_eq!(quest(11613, 6).rank(), None, "high or G rank in the hall: not known");
+        assert_eq!(quest(60001, 2).rank(), None, "an arena quest");
     }
 
     #[test]

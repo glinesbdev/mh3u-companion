@@ -376,9 +376,23 @@ fn the_hunt_plan_sends_you_to_a_quest_for_what_no_monster_drops() {
         "a quest step: {:?}",
         app.hunts.plan
     );
-    // quests only count when every rank is allowed
+    // with one rank chosen a quest counts only if it is known to be in that rank
     press(&mut app, "r");
-    assert!(app.hunts.plan.steps.iter().all(|s| matches!(s.origin, Origin::Monster { .. })));
+    assert_eq!(app.hunts.filter, crate::hunts::RankFilter::Only(mh3u_core::drops::Rank::Low));
+    for step in &app.hunts.plan.steps {
+        if let Origin::Quest(id) = step.origin {
+            let quest = app.game.quests().iter().find(|q| q.id == id).unwrap();
+            assert_eq!(quest.rank(), Some(mh3u_core::drops::Rank::Low), "quest {id}");
+        }
+    }
+    press(&mut app, "r");
+    assert!(
+        app.hunts.plan.steps.iter().all(|s| match s.origin {
+            Origin::Quest(id) => app.game.quests().iter().find(|q| q.id == id).unwrap().rank() == Some(mh3u_core::drops::Rank::High),
+            Origin::Monster { .. } => true,
+        }),
+        "high rank"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 

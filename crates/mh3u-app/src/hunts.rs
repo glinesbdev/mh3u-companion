@@ -157,13 +157,16 @@ impl Plan {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QuestOffer {
     pub id: u16,
+    /// The rank the quest is in, when it is known (see `mh3u_core::quest::Quest::rank`). A quest of unknown rank is used only when every
+    /// rank is allowed.
+    pub rank: Option<Rank>,
     /// (item, percent, quantity, second box).
     pub rewards: Vec<(u16, u8, u8, bool)>,
 }
 
 /// Plan the steps for `missing` (item, how many are missing). `sources(item)` lists every monster drop of an item and `hunt_worthy`
-/// says whether a monster may be hunted at all (it has a name the player knows). `quests` are used only when every rank is allowed:
-/// a quest has no rank of its own that is known.
+/// says whether a monster may be hunted at all (it has a name the player knows). A quest is used when every rank is allowed, or when
+/// its own rank is one of the allowed ones.
 pub fn plan<'a>(
     missing: &[(u16, u32)],
     sources: impl Fn(u16) -> &'a [Source],
@@ -204,8 +207,11 @@ pub fn plan<'a>(
                 },
             );
         }
-        if allowed == RankFilter::All {
-            for q in quests {
+        {
+            for q in quests
+                .iter()
+                .filter(|q| allowed == RankFilter::All || q.rank.is_some_and(|r| allowed.allows(r)))
+            {
                 for &(reward, percent, quantity, second_box) in q.rewards.iter().filter(|r| r.0 == item) {
                     any = true;
                     offer(
@@ -377,6 +383,7 @@ mod tests {
     fn quest(id: u16, rewards: &[(u16, u8, u8, bool)]) -> QuestOffer {
         QuestOffer {
             id,
+            rank: None,
             rewards: rewards.to_vec(),
         }
     }
@@ -413,11 +420,23 @@ mod tests {
     }
 
     #[test]
-    fn quests_are_left_out_when_one_rank_is_chosen_because_a_quest_has_no_rank_of_its_own() {
+    fn a_quest_of_unknown_rank_is_left_out_when_one_rank_is_chosen() {
         let quests = [quest(500, &[(9, 0, 3, false)])];
         let low = with_quests(&[(9, 1)], &quests, RankFilter::Only(Rank::Low));
         assert_eq!(low.unsourced, [9]);
         assert!(low.steps.is_empty());
+    }
+
+    #[test]
+    fn a_quest_of_a_known_rank_is_used_for_that_rank_only() {
+        let mut low_quest = quest(500, &[(9, 0, 3, false)]);
+        low_quest.rank = Some(Rank::Low);
+        let quests = [low_quest];
+        let low = with_quests(&[(9, 1)], &quests, RankFilter::Only(Rank::Low));
+        assert_eq!(low.steps[0].origin, Origin::Quest(500));
+        let high = with_quests(&[(9, 1)], &quests, RankFilter::Only(Rank::High));
+        assert_eq!(high.unsourced, [9]);
+        assert_eq!(with_quests(&[(9, 1)], &quests, RankFilter::All).steps.len(), 1);
     }
 
     #[test]
