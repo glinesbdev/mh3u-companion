@@ -13,7 +13,9 @@ const KEEP: usize = 12;
 /// Flags allowed to differ from the app's idea of what is on offer.
 const FLAG_MISSES: usize = 2;
 /// How many rows or ids a flag pattern covers.
-const FLAG_SPAN: usize = 48;
+const FLAG_SPAN: usize = 64;
+/// How many flags to read past a find, to list the ones set (the pattern is shorter than the game's array).
+const FLAG_READ: usize = 400;
 
 impl App {
     pub(super) fn run_scan(&mut self, kind: u8) {
@@ -81,6 +83,14 @@ impl App {
                 if h.pattern == 0 { "recipe row" } else { "piece id" },
                 h.misses
             );
+            if let Some(bytes) = (0..FLAG_READ).rev().step_by(64).find_map(|n| mem.read(h.host, n * 4).ok()) {
+                let set = h.layout.set_flags(&bytes, FLAG_READ);
+                let _ = writeln!(
+                    out,
+                    "  flags set (index = {}): {set:?}",
+                    if h.pattern == 0 { "row" } else { "piece id" }
+                );
+            }
             if let Ok(bytes) = mem.read(h.host.saturating_sub(16), 16 + 96) {
                 for (n, line) in bytes.chunks(16).enumerate() {
                     let hex: Vec<String> = line.iter().map(|b| format!("{b:02x}")).collect();

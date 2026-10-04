@@ -131,6 +131,16 @@ pub const LAYOUTS: [Layout; 6] = [
 ];
 
 impl Layout {
+    /// The indices below `count` whose flag is set, reading until the data stops being clean flags (so a bigger array than the pattern
+    /// shows what the game flags beyond it).
+    pub fn set_flags(self, data: &[u8], count: usize) -> Vec<usize> {
+        (0..count)
+            .map_while(|i| self.flag(data, i).map(|f| (i, f)))
+            .filter(|&(_, f)| f)
+            .map(|(i, _)| i)
+            .collect()
+    }
+
     /// Flag `i` of an array starting at `data[0]`; `None` if it is not a clean flag (a value other than 0 or 1) or past the end.
     fn flag(self, data: &[u8], i: usize) -> Option<bool> {
         let value = |width: usize| -> Option<bool> {
@@ -330,6 +340,12 @@ mod tests {
         // word layout: flag 0 is the lowest bit of the last byte of the first word
         let d = at(&[0, 0, 0, 0x4d]);
         assert!(flag_matches(&d, &pattern[..8], Layout::BitsWord, 0, d.len()).contains(&(3, 0)));
+    }
+
+    #[test]
+    fn the_set_flags_are_listed_until_the_data_stops_being_flags() {
+        assert_eq!(Layout::Bytes.set_flags(&[0, 1, 0, 1, 1, 9, 1], 7), vec![1, 3, 4]);
+        assert_eq!(Layout::BitsLsb.set_flags(&[0b0000_0110, 0b1000_0000], 16), vec![1, 2, 15]);
     }
 
     #[test]
