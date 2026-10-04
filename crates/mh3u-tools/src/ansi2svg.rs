@@ -1,7 +1,7 @@
 //! Turn a terminal capture with colors (`tmux capture-pane -p -e`) into an SVG picture of the terminal, for the README.
 //!
-//! Only what a TUI draws is handled: 16, 256 and true colors for the text, bold, dim and underline. Backgrounds are not used by
-//! this app, so they are ignored. The 16 named colors use the Tokyo Night palette.
+//! Only what a TUI draws is handled: 16, 256 and true colors for the text and for a cell's background, bold, dim and underline.
+//! The 16 named colors use the Tokyo Night palette.
 
 const CELL_W: f64 = 9.6;
 const CELL_H: f64 = 20.0;
@@ -18,6 +18,7 @@ const NAMED: [u32; 16] = [
 #[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
 struct Style {
     fg: Option<u32>,
+    bg: Option<u32>,
     bold: bool,
     dim: bool,
     underline: bool,
@@ -62,9 +63,19 @@ fn apply(style: &mut Style, params: &[u32]) {
                 }
                 i += 4;
             }
-            // backgrounds are not used; skip their extra parameters
-            48 if params.get(i + 1) == Some(&5) => i += 2,
-            48 if params.get(i + 1) == Some(&2) => i += 4,
+            49 => style.bg = None,
+            n @ 40..=47 => style.bg = Some(NAMED[(n - 40) as usize]),
+            n @ 100..=107 => style.bg = Some(NAMED[(n - 100 + 8) as usize]),
+            48 if params.get(i + 1) == Some(&5) => {
+                style.bg = params.get(i + 2).map(|&n| indexed(n));
+                i += 2;
+            }
+            48 if params.get(i + 1) == Some(&2) => {
+                if let [r, g, b] = params[i + 2..].iter().take(3).copied().collect::<Vec<_>>()[..] {
+                    style.bg = Some((r << 16) | (g << 8) | b);
+                }
+                i += 4;
+            }
             _ => {}
         }
         i += 1;
@@ -172,6 +183,14 @@ pub fn render(capture: &str, replacements: &[(String, String)]) -> String {
                 i += 1;
             }
             col = start + cells;
+            if let Some(bg) = style.bg {
+                svg.push_str(&format!(
+                    "<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{CELL_H}\" fill=\"#{bg:06x}\"/>\n",
+                    PAD + start as f64 * CELL_W,
+                    PAD + row as f64 * CELL_H,
+                    cells as f64 * CELL_W
+                ));
+            }
             if run.trim().is_empty() && !style.underline {
                 continue;
             }
@@ -233,6 +252,14 @@ pub fn render(capture: &str, replacements: &[(String, String)]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_background_is_drawn_behind_its_cells() {
+        let svg = render("\x1b[48;5;196m\x1b[30m ♪ \x1b[0m", &[]);
+        assert!(svg.contains("<rect x=\"16.0\" y=\"16.0\" width=\"28.8\""), "{svg}");
+        assert!(svg.contains("fill=\"#ff0000\""));
+        assert!(!render("plain", &[]).contains("<rect x="));
+    }
 
     #[test]
     fn colors_come_from_named_indexed_and_true_color_escapes() {

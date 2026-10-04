@@ -27,6 +27,7 @@ pub mod edit;
 pub mod gamedata;
 pub mod gmd;
 pub mod hitzones;
+pub mod horn_songs;
 pub mod items;
 pub mod live;
 pub mod livesave;

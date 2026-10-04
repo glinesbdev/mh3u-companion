@@ -76,6 +76,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// Songs of the hunting horns, by the horn's notes.
+    horn_songs: Vec<(Vec<String>, crate::horn_songs::Song)>,
     /// Sharpness and element of the melee weapons, by (kind, id).
     weapon_extras: HashMap<(u8, u16), crate::weapon_extras::Extras>,
     /// What each decoration does, indexed by the number a save keeps for it, minus one.
@@ -178,6 +180,7 @@ impl GameData {
             drops,
             decorations: crate::decorations::parse(&data_section)?,
             weapon_extras: HashMap::new(),
+            horn_songs: crate::horn_songs::parse()?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
@@ -254,6 +257,14 @@ impl GameData {
             out.extend(d.penalty);
         }
         out
+    }
+
+    /// The songs a hunting horn can play, from its notes in the weapon table (none for other weapons).
+    pub fn horn_songs(&self, kind: u8, id: u16) -> Vec<&crate::horn_songs::Song> {
+        match self.weapon_extras(kind, id).map(|e| &e.part) {
+            Some(crate::weapon_extras::Part::Notes(notes)) => crate::horn_songs::songs_for(&self.horn_songs, notes),
+            _ => Vec::new(),
+        }
     }
 
     /// A melee weapon's sharpness bars and elements, when the table has the weapon under this name.

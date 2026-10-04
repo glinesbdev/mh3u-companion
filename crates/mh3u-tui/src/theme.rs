@@ -200,6 +200,17 @@ pub fn note_color(name: &str) -> Color {
     }
 }
 
+/// A hunting horn note: a music note on a tile of the note's color.
+pub fn note_tile(name: &str) -> Span<'static> {
+    let color = note_color(name);
+    let text = if matches!(color, Color::Red | Color::Blue | Color::Magenta | Color::Green) {
+        Color::White
+    } else {
+        Color::Black
+    };
+    Span::styled(" ♪ ", Style::new().bg(color).fg(text))
+}
+
 /// The colors of a sharpness bar, red first.
 pub fn sharpness_color(index: usize) -> Color {
     [

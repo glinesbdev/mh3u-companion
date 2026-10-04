@@ -109,7 +109,7 @@ pub(super) fn weapon_lines(app: &App, kind: u8, id: u16, w: &mh3u_core::weapons:
     if let Some(e) = app.game.weapon_extras(kind, id) {
         for s in &e.specials {
             let mut spans = vec![
-                Span::styled(format!("{:<9}", if s.hidden { "Hidden" } else { "Element" }), muted()),
+                Span::styled(format!("{:<10}", if s.hidden { "Hidden" } else { "Element" }), muted()),
                 Span::styled(format!("{} {}", s.name, s.value), theme::element_style(&s.name)),
             ];
             if s.hidden {
@@ -138,22 +138,66 @@ pub(super) fn part_line(part: &mh3u_core::weapon_extras::Part) -> Option<Line<'s
         Part::None => return None,
         Part::Shell { kind, level } => ("Shells", vec![Span::raw(format!("{kind} Lv {level}"))]),
         Part::Phial(kind) => ("Phial", vec![Span::raw(kind.clone())]),
-        Part::Notes(colors) => (
-            "Notes",
-            colors
-                .iter()
-                .flat_map(|c| {
-                    [
-                        Span::raw("🎵"),
-                        Span::styled(format!("{c}  "), Style::new().fg(theme::note_color(c)).add_modifier(Modifier::BOLD)),
-                    ]
-                })
-                .collect(),
-        ),
+        Part::Notes(colors) => ("Notes", note_tiles(colors)),
     };
-    let mut spans = vec![Span::styled(format!("{label:<9}"), muted())];
+    let mut spans = vec![Span::styled(format!("{label:<10}"), muted())];
     spans.extend(body);
     Some(Line::from(spans))
+}
+
+/// Notes as tiles, with a space between so they read one by one.
+fn note_tiles(colors: &[String]) -> Vec<Span<'static>> {
+    colors.iter().flat_map(|c| [theme::note_tile(c), Span::raw(" ")]).collect()
+}
+
+/// A hunting horn's songs: the notes to play, what they do, for how long. Empty for other weapons.
+fn song_lines(app: &App, kind: u8, id: u16) -> Vec<Line<'static>> {
+    let songs = app.game.horn_songs(kind, id);
+    if songs.is_empty() {
+        return Vec::new();
+    }
+    let seconds = |s: Option<mh3u_core::horn_songs::Seconds>, plus: bool| -> String {
+        match s {
+            None => "-".to_string(),
+            Some(s) => {
+                let sign = if plus { "+" } else { "" };
+                match s.maestro {
+                    Some(m) => format!("{sign}{} ({sign}{m})", s.plain),
+                    None => format!("{sign}{}", s.plain),
+                }
+            }
+        }
+    };
+    let name = |e: &mh3u_core::horn_songs::Effect| {
+        if e.self_only {
+            format!("{} (you only)", e.name)
+        } else {
+            e.name.clone()
+        }
+    };
+    let mut lines = vec![
+        Line::raw(""),
+        Line::styled("Songs   seconds, with Horn Maestro in brackets", muted()),
+    ];
+    for s in songs {
+        let mut spans = note_tiles(&s.notes);
+        spans.push(Span::styled(name(&s.effect), bold()));
+        lines.push(Line::from(spans));
+        let mut more = String::from("  ");
+        if s.duration.is_some() {
+            more += &format!("{} s", seconds(s.duration, false));
+        }
+        if s.extension.is_some() {
+            more += &format!(", {} s more when played again", seconds(s.extension, true));
+        }
+        if let Some(e2) = &s.effect2 {
+            more += &format!("  then {}", name(e2));
+        }
+        if !more.trim().is_empty() {
+            lines.push(Line::styled(more, muted()));
+        }
+    }
+    lines
 }
 
 /// Points of sharpness shown by one cell of the bar.
@@ -162,7 +206,7 @@ const POINTS_PER_CELL: u32 = 3;
 /// A sharpness bar drawn in the colors of the game's, one cell for every few points. Cells are rounded from the running total so the bar
 /// is as long as the whole.
 fn sharpness_line(label: &str, bar: &mh3u_core::weapon_extras::Bar) -> Line<'static> {
-    let mut spans = vec![Span::styled(format!("{label:<9}"), muted())];
+    let mut spans = vec![Span::styled(format!("{label:<10}"), muted())];
     spans.extend(sharpness_spans(bar, POINTS_PER_CELL));
     Line::from(spans)
 }
@@ -239,6 +283,7 @@ pub(super) fn piece_details(app: &App, kind: u8, id: u16, name: &str, craftable:
         lines.extend(armor_lines(app, a));
     } else if let Some(w) = app.game.weapon_stats(kind, id) {
         lines.extend(weapon_lines(app, kind, id, w));
+        lines.extend(song_lines(app, kind, id));
     }
     lines.extend(unlock_line(app, kind, id));
     lines.push(Line::raw(""));

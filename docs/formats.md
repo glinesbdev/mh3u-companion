@@ -226,6 +226,17 @@ each tree's effects and thresholds, matched to the game's own effect names (all 
 real name and description, the effects of a tree are neighbours in the game's order, every tree's first tier is 10 points, and the
 three Attack Up descriptions read as small, medium and large. Torso Up (one effect at 10) is not in the effect text and has no row.
 
+## Hunting horn songs (`horn_songs.rs`)
+
+A horn has three notes; a song is a sequence of three or four of them, and the songs a horn can play depend on its note set. The game's files
+were not searched for the table; `data/horn_songs.tsv` is taken from the Monster Hunter Wiki's MH3U song tables (white, purple and orange note
+horns, read through the wiki's page API): one line per song with the horn's note set, the notes to play, the effect and the second effect (got
+by playing the song again while the first lasts; `@` marks an effect that only the player who plays gets), the duration and the extension
+in seconds (the number in brackets is with the Horn Maestro skill). Songs of the double white or purple note work on any horn that has that note.
+Three rows of the wiki's tables are cut off (a note sequence with no song) and are left out. The note sets match the weapon table's, with one fix:
+the weapon database names the light-blue note "orange" in white-note horns (Bone Horn is white, red and light blue), so `weapon_extras.tsv`
+uses the wiki's name, `sky`, there. Every horn in the table has at least two songs (a test checks).
+
 ## Not found / not decoded
 
 - Weapon sharpness (the selector bytes are known, the table is not) and element; what the talisman id decides;  which body part each part-break list is, and the names of the hit zones.
