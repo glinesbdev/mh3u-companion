@@ -30,11 +30,13 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 ## Data not shown yet
 
-- **Part-break names from the game.** `breakparts.rs` is a hand-made table for 43 monsters (see `docs/formats.md`); the rest, and a few whose
-  high and G rank lists do not line up (Brachydios, Alatreon, Abyssal Lagiacrus, Glacial Agnaktor, Green and Lucent Nargacuga, Silver
-  Rathalos), are numbered. The game's own source for the parts was searched for and not found: the monster archive's `em_status00` and
-  `em_hitdata00` (the hit areas carry an index, not the kind of part), and the executable's data and read-only sections (no table of the
-  kinds in a monster's order). **Needs:** the table that says which parts a monster can break, probably in code.
+- **Part-break names for the last 8 monsters** (Deviljho's other entry, Alatreon, Glacial Agnaktor, Green and Lucent Nargacuga, Silver Rathalos,
+  Abyssal Lagiacrus, Brachydios). `breakparts.rs` is a hand-made table for 43 monsters (see `docs/formats.md`). These 8 were looked at again
+  against Kiranico's per-part lists and left numbered, because the decoded lists themselves do not match: some ranks have extra lists
+  that hold the items of several parts together, low rank lists that are the same placeholder item repeated, and Alatreon's first two lists
+  are Ceadeus items. **Needs:** the grouping of the capture and break lists (inferred by content, see `docs/formats.md`) fixed for these
+  monsters first. The game's own source for part names was searched for and not found (the monster archive's `em_status00` and
+  `em_hitdata00`, and the executable's data and read-only sections).
 - Monster **hit points** and the zones of other states (enraged, broken); `em_status00` has no names, and the zone names shown come from Kiranico (33 rows have none).
 - Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (a byte at 0x7569 may be it; to confirm at the next rank-up), weapon usage (the count for the great sword shows 11; not found as a plain count) and the title.
 - **Which shop sells what.** The Items tab shows an item's shop price and carry limit (from Kiranico), but not where it is sold or when it appears. **Needs:** the shop tables.
