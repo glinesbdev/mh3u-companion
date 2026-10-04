@@ -75,8 +75,8 @@ impl Equipment {
     }
 
     /// The decorations socketed in a talisman, as numbers into the game's decoration table (see `decorations`), one per slot in
-    /// order. Seen so far: slot 1 of a 3-slot talisman held `0x0091` at bytes 8-9; slots 2 and 3 at bytes 10-11 and 12-13 are
-    /// a guess until a save with them filled is checked. Anything but a talisman has none (armor is not decoded yet).
+    /// order. Seen so far: slot 1 of a 3-slot talisman held `0x0091` at bytes 8-9; slot 2 held `0x0015` at bytes 10-11 (confirmed); slot 3 at
+    /// bytes 12-13 is the same pattern, not yet seen. Anything but a talisman has none (armor is not decoded yet).
     pub fn talisman_decorations(&self) -> Vec<u16> {
         if self.kind != 6 {
             return Vec::new();
@@ -360,6 +360,9 @@ mod tests {
         let socketed = jewel.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(socketed.talisman_decorations(), vec![0x91, 0, 0]);
         assert_eq!(made.talisman_decorations(), vec![0, 0, 0]);
+        let two = Save::parse(&fixture!("15-jewel2/user2")).unwrap();
+        let both = two.equipment_box.iter().find(|e| e.slot == 0).unwrap();
+        assert_eq!(both.talisman_decorations(), vec![0x91, 0x15, 0]);
     }
 
     #[test]

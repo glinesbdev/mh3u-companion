@@ -127,6 +127,11 @@ impl App {
                     notes.push(format!("zenny set to {}", group_digits(u64::from(amount))));
                 }
                 commands::Command::Give { item, count } => {
+                    // "give tenderizer jwl 3" is the item called that, not 3 of "tenderizer jwl"
+                    let (item, count) = match count.map(|n| format!("{item} {n}")) {
+                        Some(whole) if commands::has_item_named(&self.game, &whole) => (whole, None),
+                        _ => (item, count),
+                    };
                     let found = commands::resolve_item(&self.game, &item).ok_or(format!("no item matches '{item}'"))?;
                     let have = edit::box_count(&data, found.id);
                     let target = count.map_or(edit::MAX_STACK, |n| have.saturating_add(n));

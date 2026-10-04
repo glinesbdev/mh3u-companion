@@ -3,6 +3,7 @@
 //! ```text
 //! zenny 50000       set the wallet          zenny +500 / zenny -200   change it
 //! give iron ore     fill a stack to 99      give honey 5              add 5 (a stack holds 99)
+//!                    (a trailing number that is part of an item's name, like `give tenderizer jwl 3`, is the name)
 //! set honey 5       set exactly 5 (0 removes the item)
 //! stock             make sure the item pouch and box hold everything the wishlist needs
 //! scan head         look for the blacksmith's list in the game's memory (read-only; also body, arms, waist, legs)
@@ -205,6 +206,11 @@ impl Resolved<'_> {
             format!("{} (also matched: {})", self.name, self.others.join(", "))
         }
     }
+}
+
+/// Whether an item is called exactly this (ignoring case), so a trailing number can be part of its name.
+pub fn has_item_named(game: &GameData, name: &str) -> bool {
+    game.item_names().any(|(_, n)| n.eq_ignore_ascii_case(name))
 }
 
 /// The item that best matches the query. A whole-name match wins, then a name that starts with the query, then one that
