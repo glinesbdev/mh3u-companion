@@ -66,6 +66,8 @@ pub struct GameData {
     item_details: Vec<String>,
     skill_details: Vec<String>,
     monsters: Vec<String>,
+    /// The Hunter's Notes (see `notes`); empty when a dump lacks them.
+    hunters_notes: Vec<String>,
     recipes: HashMap<(u8, u16), Recipe>,
     upgrades: HashMap<(u8, u16), Upgrade>,
     armor: HashMap<(u8, u16), ArmorStats>,
@@ -159,6 +161,7 @@ impl GameData {
             item_details: optional("ItemDetail_eng"),
             skill_details: optional("Skill_Type_Exp_eng"),
             monsters: names("Monster_eng").unwrap_or_default(),
+            hunters_notes: optional("HNote_eng"),
             recipes,
             upgrades,
             armor,
@@ -284,6 +287,12 @@ impl GameData {
     /// The carve and shiny-drop lists.
     pub fn drops(&self) -> &crate::drops::Drops {
         &self.drops
+    }
+
+    /// The game's Hunter's Note on a monster, as one paragraph.
+    pub fn monster_note(&self, id: u16) -> Option<&str> {
+        let text = self.hunters_notes.get(crate::notes::note_of(id)?)?;
+        (!text.is_empty()).then_some(text.as_str())
     }
 
     pub fn monster_name(&self, id: u16) -> Option<&str> {
@@ -425,6 +434,34 @@ mod tests {
             "Head armor made from Jaggi parts. Inexpensive."
         );
         assert_eq!(unwrap_text(""), "");
+    }
+
+    /// Every note in the table is the note of its monster: it contains the word the table gives (skips without a dump).
+    #[test]
+    fn hunters_notes_are_matched_to_their_monsters() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        for &(monster, note, word) in crate::notes::TABLE {
+            let text = game
+                .monster_note(monster)
+                .unwrap_or_else(|| panic!("monster {monster}: no note {note}"));
+            assert!(
+                text.contains(word),
+                "monster {monster} ({:?}): note {note} lacks {word:?}: {text}",
+                game.monster_name(monster)
+            );
+        }
+        assert!(game.monster_note(1).is_some_and(|t| t.contains("Fire-breathing female wyverns")));
+        assert_eq!(game.monster_note(0), None);
     }
 
     /// Sell prices of real items, as a published list gives them (Rathian Scale 490, Potion 5... checked by name), skips without a dump.

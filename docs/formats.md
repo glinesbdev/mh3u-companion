@@ -159,6 +159,15 @@ elsewhere, so `hitzones.rs` finds it by the row shape (starts non-zero, ends `0x
 normal state; later tables (other states) are not read. Compared with Kiranico on 49 monsters, 319 of the 432 zones it lists are in the
 first table. Nothing in the file names a zone, and nothing found says which zone each part-break list belongs to (the order of a monster's break lists is not the order of its zones: Gigginox breaks tail, head, stomach and its zones run head first).
 
+## Hunter's Notes
+
+The text archive's `GUI\font\HNote_eng` holds a description of every monster in its first 73 entries (0 to 72); the rest are help pages. The
+order is the in-game journal's (small monsters from Aptonoth, then large ones from Great Jaggi, a species before its subspecies), not the
+order of the monster name table, and nothing in the data links a note to a monster. `notes.rs` has the table (monster id to note
+number), made by reading the notes: each one either describes the species ("Fire-breathing female wyverns..." is Rathian), says "a
+subspecies of X", or names the monster. A test checks that each note contains a word of its monster's name where it names anything.
+A few small monsters share a note (the two Slagtoth ids, Giggi and Giggi Sac).
+
 ## Items: sell price
 
 The data section holds a run of 20-byte records indexed by item id (the name table's ids), from `0x1188` up to item 1532 (`items.rs`). A

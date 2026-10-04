@@ -28,6 +28,7 @@ pub mod hitzones;
 pub mod items;
 pub mod live;
 pub mod livesave;
+pub mod notes;
 pub mod prices;
 pub mod procmem;
 pub mod quest;

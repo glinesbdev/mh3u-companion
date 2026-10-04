@@ -54,6 +54,10 @@ pub(super) fn draw_monsters(f: &mut Frame, app: &mut App, area: Rect) {
 pub(super) fn monster_details(app: &App, monster: u16, width: usize) -> Vec<Line<'static>> {
     let missing = app.missing_for_wishlist();
     let mut lines = vec![Line::styled(app.game.monster_name(monster).unwrap_or("?").to_string(), bold())];
+    if let Some(note) = app.game.monster_note(monster) {
+        lines.extend(super::help::wrap_words(note, width).into_iter().map(|l| Line::styled(l, muted())));
+        lines.push(Line::raw(""));
+    }
     lines.push(Line::from(vec![
         Span::styled("Chance in percent. ", muted()),
         Span::styled("★", warn()),
