@@ -19,6 +19,7 @@ pub mod arc;
 pub mod armor;
 pub mod blacksmith;
 pub mod breakparts;
+pub mod decorations;
 pub mod diff;
 pub mod drops;
 pub mod edit;

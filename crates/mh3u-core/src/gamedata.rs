@@ -73,6 +73,8 @@ pub struct GameData {
     armor: HashMap<(u8, u16), ArmorStats>,
     weapons: HashMap<(u8, u16), crate::weapons::Weapon>,
     drops: crate::drops::Drops,
+    /// What each decoration does, indexed by the number a save keeps for it, minus one.
+    decorations: Vec<crate::decorations::Decoration>,
     /// What a shop pays for each item, by item id.
     sell_prices: Vec<u32>,
     /// Piece ids of each equipment kind's recipe table, in row order (the order of the blacksmith's menu).
@@ -167,6 +169,7 @@ impl GameData {
             armor,
             weapons,
             drops,
+            decorations: crate::decorations::parse(&data_section)?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
             recipe_rows: recipes::row_order(&data_section),
             quests: load_quests(game_dir),
@@ -222,6 +225,11 @@ impl GameData {
             }
         }
         method.label()
+    }
+
+    /// The decoration a save's number stands for (the number counts from 1; 0 is an empty socket).
+    pub fn decoration(&self, code: u16) -> Option<&crate::decorations::Decoration> {
+        self.decorations.get(usize::from(code).checked_sub(1)?)
     }
 
     /// What a shop pays for an item, in zenny; `None` for an item with no value (or an id past the table).
@@ -462,6 +470,27 @@ mod tests {
         }
         assert!(game.monster_note(1).is_some_and(|t| t.contains("Fire-breathing female wyverns")));
         assert_eq!(game.monster_note(0), None);
+    }
+
+    /// The decoration a save held in a talisman (number 0x91) is the Tenderizer Jwl 1 (skips without a dump).
+    #[test]
+    fn a_decoration_number_from_a_save_names_the_jewel() {
+        let Some(home) = std::env::var_os("HOME") else { return };
+        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
+            .ok()
+            .and_then(|d| {
+                d.filter_map(|e| e.ok().map(|e| e.path()))
+                    .find(|p| p.to_string_lossy().contains("10118300"))
+            })
+        else {
+            return;
+        };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        let d = game.decoration(0x91).expect("decoration 145");
+        assert_eq!(game.item_name(d.item), Some("Tenderizer Jwl 1"));
+        assert_eq!((d.slots, game.skill_name(d.skill), d.points), (1, Some("Tenderizer"), 1));
+        assert_eq!(game.decoration(0), None);
+        assert_eq!(game.decoration(5000), None);
     }
 
     /// Sell prices of real items, as a published list gives them (Rathian Scale 490, Potion 5... checked by name), skips without a dump.
