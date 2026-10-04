@@ -39,7 +39,14 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
 
 - Weapon **sharpness and element** (not found in the executable's data tables).
 - **Armor maximum defense** (six growth bytes decide it; no formula yet).
-- Which body part each **part-break** list is.
+- Which body part each **part-break** list is. What is known (checked against a published monster database for 41 monsters whose break
+  lists all match by content): a break list is one of about 20 kinds of part (head, wing, tail, back, chest, front leg, back leg, fin, jaw,
+  horn, tusk, spike, hump, lantern, sponge, wrist, stomach, oral cavity, shoulder, tail end), the same kinds for every monster, and the lists
+  of a monster are in an order of its own (Rathian: head, wing; Gigginox: tail, head, stomach; Lagiacrus: head, front leg, chest, back;
+  Agnaktor: head, back leg, chest, fin) that is the same in every rank. The order is not by hit zone, and the game's text has no names for
+  the kinds. Searched without success: the monster archive's `em_status00` and `em_hitdata00` (the hit areas carry an index, but not
+  that kind), and the executable's data and read-only sections (no table of those kinds in a monster's order). **Needs:** the table that
+  says which parts a monster can break, or a decision to keep a small table of the kinds per monster, verified against the lists.
 - Skill **effect names and higher tiers**.
 - Monster **hit points**, the **names of the hit zones** and the zones of other states (enraged, broken) — `em_status00` has no names.
 - Palico (Felyne) equipment, and the rest of the guild card: **hunter rank** (a byte at 0x7569 may be it; to confirm at the next rank-up), weapon usage (the count for the great sword shows 11; not found as a plain count) and the title.
