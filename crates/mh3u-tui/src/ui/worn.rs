@@ -2,6 +2,9 @@
 
 use super::*;
 
+/// Stands for "the jewels in the armor" where the totals take a piece's equipment kind (0 is no real kind).
+const JEWELS: u8 = 0;
+
 /// Defense, gem slots, resistances and the skill points of a set of armor. Skills in `targets` show whether their goal is reached.
 pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets: &[mh3u_app::builds::Target]) -> Vec<Line<'static>> {
     let mut lines: Vec<Line> = Vec::new();
@@ -50,7 +53,14 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
         let parts: Vec<String> = t
             .parts
             .iter()
-            .map(|&(kind, p)| format!("{} {p:+}", app.game.equipment_kind_label(kind).unwrap_or("?")))
+            .map(|&(kind, p)| {
+                let label = if kind == JEWELS {
+                    "Jewels"
+                } else {
+                    app.game.equipment_kind_label(kind).unwrap_or("?")
+                };
+                format!("{label} {p:+}")
+            })
             .collect();
         lines.push(Line::from(vec![
             Span::raw(format!("{:<18}", app.game.skill_name(t.id).unwrap_or("?"))),
@@ -177,7 +187,7 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         0,
     );
     let mut counted = stats;
-    counted.push((6, &armor_jewels));
+    counted.push((JEWELS, &armor_jewels));
     if let Some(c) = &charm {
         counted.push((6, c));
     }

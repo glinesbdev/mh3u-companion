@@ -81,7 +81,11 @@ pub fn summarize(pieces: &[(u8, &ArmorStats)]) -> Summary {
             match totals.iter_mut().find(|t| t.id == id) {
                 Some(t) => {
                     t.points += counted;
-                    t.parts.push((kind, counted));
+                    // several jewels of one skill in the same place are one entry
+                    match t.parts.iter_mut().find(|p| p.0 == kind) {
+                        Some(part) => part.1 += counted,
+                        None => t.parts.push((kind, counted)),
+                    }
                 }
                 None => totals.push(SkillTotal {
                     id,
@@ -112,6 +116,15 @@ mod tests {
             price: None,
             max_defense: Some(defense + 40),
         }
+    }
+
+    #[test]
+    fn several_parts_of_one_kind_are_one_entry() {
+        let jewels = piece(0, 0, [0; 5], &[(11, 5), (11, 5), (11, 5)]);
+        let body = piece(10, 0, [0; 5], &[(11, 1)]);
+        let s = summarize(&[(1, &body), (0, &jewels)]);
+        assert_eq!(s.skills[0].points, 16);
+        assert_eq!(s.skills[0].parts, vec![(1, 1), (0, 15)]);
     }
 
     #[test]
