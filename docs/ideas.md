@@ -28,8 +28,11 @@ The Builds tab searches armor sets for wanted skills and keeps build templates (
   box...) are assumptions to check in play, and it does not yet pick between a quick plan and a short one (fewest steps vs fewest runs). It
   also cannot limit itself to the ranks the hunter has reached (**Needs:** the save's hunter rank found, and a quest's rank, which is not
   decoded).
-- **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards. Not decoded: the stage (map), the
-  zenny reward and fees, the small monsters and the quest's rank (low, high or G) and where it is given (village or hub).
+- **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards, and whether it is a village or a
+  hall quest. Not decoded: the stage (map), the small monsters and the quest's rank (low, high or G; hall quests of 1 to 5 stars have a
+  monster record that ends in 1 and 6 to 8 stars in 2, and village quests in 0, which is not a rank). Four payment numbers are read
+  (`Quest::pay`) but only the last (rank points) is checked, so the money is not shown: **Needs:** the reward and fee the game shows for
+  three or four quests.
 - **Gathering spots and shop stock.** **Needs:** the gather lists (a table of pointers sits just before the capture and break lists in
   the executable's data) and the shop tables decoded.
 

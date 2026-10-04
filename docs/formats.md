@@ -135,8 +135,8 @@ Read by comparing the saves of two hunters with the numbers on their guild cards
 too, but not reliably: 0x7b61 follows the hall count, while 0x7568 (village) lags the card record by a quest in some snapshots and 0x792f (hall) stopped
 at 2 when the card went to 3, so they are something else. A byte at 0x7578 counts hall quests since the first (0, 0, 1, 2) and may be the progress
 towards the next rank. A byte at 0x7569 is 1 for the hunter with rank 1 and 0 for the one with rank 0 and did not change with hall quests, so it
-may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 grows with every quest (170, 230, 275, 475, 595, 805, 1045
-over seven snapshots), perhaps the points towards the next rank. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
+may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 is the **hunter rank points**: it grew with every
+quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
 byte or 16-bit number goes up by one with each quest, so it is stored in some other form or not in this file.
 
 ## Monster hit zones
@@ -192,7 +192,16 @@ The binary part (442 bytes for most quests, longer for 59 with extra data) start
 | 2 | kind: 1 slay, 2 deliver, 4 capture, 5 hunt (others: special goals) | matches the goal text on every quest looked at |
 | 10 + 11 k (k < 5) | large monster records: the first byte is the monster's id in the name table, 0 for none | matches the goal text (including two-monster hunts) |
 | 71 + 4 k (k < 43) | rewards `[item u16, quantity, chance]`; even k is the main box (monster parts), odd k the second box (supplies); chance 0 = always | the boxes add up to 100 on 412 of 413 quests (quest 1707's main box adds up to 110); the Arzuros capture quest matches what a hunter received |
-| 327 on | stage, fees, zenny, spawn lists | not decoded |
+| 327 + 4 k (k < 4) | four u32: 100 to 540 (in the hall a tenth of the next), the next (600 to 19400), a third of that, and the **hunter rank points** the quest gives | the last matched the points a hunter's save gained after 4 of 6 quests, and the sum for two; the other 2 gained less. The first two are probably the fee and the zenny reward, unchecked |
+| 328 on | stage, spawn lists | not decoded |
+
+**Where a quest is taken** follows from its id (also the file name `q_NNNNN`): below 10000 is a village quest, 10000 to 19999 a hall quest
+(the hall's 1★ quests are 111xx, 6★ ones 116xx), 20000 and up are arena and event quests. Checked on a hunter whose guild card showed 8 village
+and 3 hall quests: the 8 titles in its quest history were quests 1101, 1102, 1103, 1202, 1203, 1204, 1205 and 2201, and the 3 hall ones 11105,
+11106 and 11112. The same title can exist in both places (Playing with Fire is quests 1302, 11105 and 11611). In hall quests the last byte of
+the first monster record is 1 for 1 to 5 stars and 2 for 6 to 8 stars; in village quests it is always 0.
+
+The save keeps the points: a 16-bit total at 0x5a46 (see "Guild card").
 
 The quest folders: `quest/us` holds the English quests; `quest/eu` has the same files (byte for byte, for the one compared; every quest holds all five languages); `quest/btl` and
 `quest/support` hold other kinds of files (`.quest_btl`, `.supp`) that are not read. The `DLC/us` folder was empty in this dump.

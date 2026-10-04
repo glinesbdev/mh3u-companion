@@ -37,6 +37,34 @@ impl Kind {
     }
 }
 
+/// Where a quest is taken: the village (Moga Village, quest ids below 10000) or the guild hall (ids 10000 to 19999). Worked out from the
+/// ids and checked against the guild card counts of a hunter whose finished quests were all known: 8 village quests had ids below 10000
+/// and 3 hall quests had ids from 11105 to 11112. Other ids (arena and event quests, 20000 and up) are `Other`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Place {
+    Village,
+    Hall,
+    Other,
+}
+
+impl Place {
+    pub fn of_quest(id: u16) -> Place {
+        match id {
+            0..10_000 => Place::Village,
+            10_000..20_000 => Place::Hall,
+            _ => Place::Other,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            Place::Village => "Village",
+            Place::Hall => "Hall",
+            Place::Other => "Event",
+        }
+    }
+}
+
 /// One thing a quest can give: `percent` is the chance among its box; 0 means every time.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Reward {
@@ -57,6 +85,11 @@ pub struct Quest {
     pub stars: u8,
     pub minutes: u16,
     pub kind: Kind,
+    pub place: Place,
+    /// Four numbers from the end of the file: 100 to 540 (hall: a tenth of the next), 600 to 19400, a third of the second, and the
+    /// hunter rank points the quest gives (4 of the 6 quests a hunter finished added exactly this to the save's rank points; the other
+    /// 2 added less, and the money ones are not checked against the game yet).
+    pub pay: [u32; 4],
     /// Large monsters (ids in the monster name table), in the order the file lists them.
     pub monsters: Vec<u16>,
     /// The two reward boxes: the main one and the second.
@@ -71,6 +104,8 @@ const MONSTER_LEN: usize = 11;
 const MONSTER_SLOTS: usize = 5;
 const REWARDS_AT: usize = 71;
 const REWARD_ENTRIES: usize = 43;
+/// Where the four numbers of `Quest::pay` start in the binary part.
+const PAY_AT: usize = 327;
 
 struct Reader<'a> {
     data: &'a [u8],
@@ -142,6 +177,15 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
         .map(|k| u16::from(tail[MONSTERS_AT + MONSTER_LEN * k]))
         .take_while(|&m| m != 0)
         .collect();
+    ensure!(tail.len() >= PAY_AT + 16, "quest file ends before its payment numbers");
+    let pay = std::array::from_fn(|k| {
+        u32::from_le_bytes([
+            tail[PAY_AT + 4 * k],
+            tail[PAY_AT + 4 * k + 1],
+            tail[PAY_AT + 4 * k + 2],
+            tail[PAY_AT + 4 * k + 3],
+        ])
+    });
     let mut rewards: [Vec<Reward>; 2] = Default::default();
     for k in 0..REWARD_ENTRIES {
         let e = &tail[REWARDS_AT + 4 * k..REWARDS_AT + 4 * k + 4];
@@ -163,6 +207,8 @@ pub fn parse(data: &[u8]) -> Result<Quest> {
         stars,
         minutes,
         kind,
+        place: Place::of_quest(id),
+        pay,
         monsters,
         rewards,
     })
@@ -228,6 +274,15 @@ mod tests {
     }
 
     #[test]
+    fn a_quest_is_in_the_village_or_the_hall_by_its_id() {
+        assert_eq!(Place::of_quest(1202), Place::Village);
+        assert_eq!(Place::of_quest(9999), Place::Village);
+        assert_eq!(Place::of_quest(11112), Place::Hall);
+        assert_eq!(Place::of_quest(60001), Place::Other);
+        assert_eq!(Place::Hall.label(), "Hall");
+    }
+
+    #[test]
     fn bad_files_are_refused_not_trusted() {
         assert!(parse(b"nope").is_err());
         assert!(parse(&sample()[..100]).is_err(), "cut short");
@@ -255,12 +310,15 @@ mod tests {
         };
         let Ok(files) = std::fs::read_dir(&dir) else { return };
         let (mut read, mut off_by) = (0, 0);
+        // the rank points the save gained after these quests (a hunter's rank points went up by exactly these amounts)
+        let mut points = std::collections::HashMap::new();
         for f in files
             .filter_map(|e| e.ok())
             .filter(|e| e.path().extension().is_some_and(|x| x == "quest"))
         {
             let q = parse(&std::fs::read(f.path()).unwrap()).unwrap();
             read += 1;
+            points.insert(q.id, q.pay[3]);
             assert!(q.monsters.iter().all(|&m| m < 100), "{}: monster {:?}", q.title, q.monsters);
             for (box_, rewards) in q.rewards.iter().enumerate() {
                 let total: u32 = rewards.iter().map(|r| u32::from(r.percent)).sum();
@@ -271,6 +329,9 @@ mod tests {
             }
         }
         assert!(read > 300, "read {read} quests");
+        for (id, gained) in [(1205, 60), (11105, 200), (1202, 50), (1203, 70), (11106, 210)] {
+            assert_eq!(points[&id], gained, "quest {id}");
+        }
         assert!(off_by <= 3, "{off_by} boxes do not add up to 100");
     }
 }

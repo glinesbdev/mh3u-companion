@@ -82,7 +82,13 @@ fn quest_lines(app: &App, q: &Quest) -> Vec<Line<'static>> {
         Line::from(vec![
             Span::styled(q.kind.label(), accent()),
             Span::styled(
-                format!("  ·  {}  ·  {} min  ·  quest {}", stars_text(q.stars), q.minutes, q.id),
+                format!(
+                    "  ·  {}  ·  {}  ·  {} min  ·  quest {}",
+                    q.place.label(),
+                    stars_text(q.stars),
+                    q.minutes,
+                    q.id
+                ),
                 muted(),
             ),
         ]),

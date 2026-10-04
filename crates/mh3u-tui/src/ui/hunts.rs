@@ -24,15 +24,15 @@ pub(super) fn draw_hunts(f: &mut Frame, app: &mut App, area: Rect) {
                     rank.label().to_string(),
                 ),
                 Origin::Quest(id) => match app.game.quests().iter().find(|q| q.id == id) {
-                    Some(q) => ("Quest", one_line(&q.title), format!("{}★", q.stars)),
+                    Some(q) => ("Quest", one_line(&q.title), format!("{} {}★", q.place.label(), q.stars)),
                     None => ("Quest", format!("#{id}"), String::new()),
                 },
             };
             ListItem::new(Line::from(vec![
                 Span::styled(format!("{:>2}  ", n + 1), muted()),
                 Span::styled(format!("{what:<6}"), accent()),
-                Span::raw(format!("{:<18}", fit(&name, 17))),
-                Span::styled(format!("{detail:<10}"), muted()),
+                Span::raw(format!("{:<17}", fit(&name, 16))),
+                Span::styled(format!("{detail:<11}"), muted()),
                 Span::styled(format!("{:<8}", plural(step.covers.len() as u32, "item")), warn()),
                 Span::styled(format!("~{}", plural(step.runs(), "run")), muted()),
             ]))
@@ -203,7 +203,7 @@ fn quest_heading(app: &App, id: u16) -> Vec<Line<'static>> {
     let mut lines = vec![
         Line::from(vec![
             Span::styled(one_line(&q.title), bold()),
-            Span::styled(format!("  {}★  {} min", q.stars, q.minutes), muted()),
+            Span::styled(format!("  {}  {}★  {} min", q.place.label(), q.stars, q.minutes), muted()),
         ]),
         Line::raw(one_line(&q.goal)),
     ];
