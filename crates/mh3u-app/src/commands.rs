@@ -3,6 +3,7 @@
 //! ```text
 //! zenny 50000       set the wallet          zenny +500 / zenny -200   change it
 //! give iron ore     fill a stack to 99      give honey 5              add 5 (a stack holds 99)
+//!     give slagtoth hood   an armor piece or weapon: add one to the equipment box
 //!                    (a trailing number that is part of an item's name, like `give tenderizer jwl 3`, is the name)
 //! set honey 5       set exactly 5 (0 removes the item)
 //! stock             make sure the item pouch and box hold everything the wishlist needs
@@ -224,7 +225,53 @@ pub fn resolve_item<'a>(game: &'a GameData, query: &str) -> Option<Resolved<'a>>
     pick(&names, query)
 }
 
+/// The armor piece or weapon a query names as (kind, id, name), by a whole name, the start of one or part of one (no loose matching,
+/// so a typo does not give a stray weapon). The second value is how good the match was: 0 whole, 1 start, 2 inside.
+pub fn resolve_equipment<'a>(game: &'a GameData, query: &str) -> Option<((u8, u16, &'a str), usize)> {
+    let pieces = game.equipment_pieces();
+    let names: Vec<(u16, &str)> = pieces.iter().enumerate().map(|(i, p)| (i as u16, p.2)).collect();
+    let (step, found) = pick_named(&names, query)?;
+    Some((pieces[usize::from(found.id)], step))
+}
+
+/// What `give` adds: an item for the item box, or an armor piece or weapon for the equipment box.
+pub enum Target<'a> {
+    Item(Resolved<'a>),
+    Piece { kind: u8, id: u16, name: &'a str },
+}
+
+/// The item, armor piece or weapon a query names. A piece wins only when its name matches better than the best item's (a whole
+/// name, then the start of one, then part of one); on a tie the item wins, and loose matching is for items only.
+pub fn resolve_give<'a>(game: &'a GameData, query: &str) -> Option<Target<'a>> {
+    let item = resolve_item(game, query);
+    let phrase = query.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase();
+    let item_step = item.as_ref().map(|f| {
+        let name = f.name.to_lowercase();
+        if name == phrase {
+            0
+        } else if name.starts_with(&phrase) {
+            1
+        } else if name.contains(&phrase) {
+            2
+        } else {
+            3
+        }
+    });
+    match resolve_equipment(game, query) {
+        Some(((kind, id, name), step)) if item_step.is_none_or(|s| step < s) => Some(Target::Piece { kind, id, name }),
+        _ => item.map(Target::Item),
+    }
+}
+
 fn pick<'a>(names: &[(u16, &'a str)], query: &str) -> Option<Resolved<'a>> {
+    if let Some((_, found)) = pick_named(names, query) {
+        return Some(found);
+    }
+    pick_loosely(names, query)
+}
+
+/// The best match by whole name, then start, then containing the query, with which of those it was.
+fn pick_named<'a>(names: &[(u16, &'a str)], query: &str) -> Option<(usize, Resolved<'a>)> {
     let phrase = query.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase();
     if phrase.is_empty() {
         return None;
@@ -245,13 +292,25 @@ fn pick<'a>(names: &[(u16, &'a str)], query: &str) -> Option<Resolved<'a>> {
             .collect();
         if !hits.is_empty() {
             hits.sort();
-            return Some(Resolved {
-                id: hits[0].2,
-                name: hits[0].3,
-                others: hits[1..].iter().take(3).map(|h| h.3).collect(),
-            });
+            return Some((
+                step,
+                Resolved {
+                    id: hits[0].2,
+                    name: hits[0].3,
+                    others: hits[1..].iter().take(3).map(|h| h.3).collect(),
+                },
+            ));
         }
     }
+    None
+}
+
+fn pick_loosely<'a>(names: &[(u16, &'a str)], query: &str) -> Option<Resolved<'a>> {
+    let phrase = query.split_whitespace().collect::<Vec<_>>().join(" ").to_lowercase();
+    if phrase.is_empty() {
+        return None;
+    }
+    let lowered: Vec<(u16, &str, String)> = names.iter().map(|&(id, name)| (id, name, name.to_lowercase())).collect();
     let words: Vec<&str> = phrase.split(' ').collect();
     lowered
         .iter()
@@ -427,5 +486,19 @@ mod tests {
         assert_eq!(chosen("hny"), Some(5));
         assert_eq!(chosen("zzzz"), None);
         assert_eq!(chosen("   "), None);
+    }
+}
+
+#[cfg(test)]
+mod give_tests {
+    use super::*;
+
+    #[test]
+    fn a_name_is_matched_whole_then_by_its_start_then_inside() {
+        let names = [(0u16, "Slagtoth Hood"), (1, "Hood of Slagtoth"), (2, "Honey")];
+        assert_eq!(pick_named(&names, "slagtoth hood").map(|(s, f)| (s, f.id)), Some((0, 0)));
+        assert_eq!(pick_named(&names, "slag").map(|(s, f)| (s, f.id)), Some((1, 0)));
+        assert_eq!(pick_named(&names, "of slag").map(|(s, f)| (s, f.id)), Some((2, 1)));
+        assert!(pick_named(&names, "slagtooth").is_none(), "no loose matching");
     }
 }

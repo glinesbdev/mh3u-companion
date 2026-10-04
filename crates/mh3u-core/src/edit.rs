@@ -127,6 +127,25 @@ pub fn new_talisman(data: &[u8], skills: &[(u8, i8)]) -> Result<(usize, Patch)> 
     ))
 }
 
+/// A new armor piece or weapon (not a talisman) in the first empty equipment slot: its kind, the id, and nothing else (no jewels,
+/// not upgraded). Returns the slot and the patch.
+pub fn new_piece(data: &[u8], kind: u8, id: u16) -> Result<(usize, Patch)> {
+    if kind == 0 || kind == TALISMAN_KIND {
+        bail!("kind {kind} is not an armor piece or a weapon");
+    }
+    let slot = first_empty_equipment(data).ok_or_else(|| anyhow::anyhow!("the equipment box is full"))?;
+    let mut record = [0u8; EQUIP_LEN];
+    record[0] = kind;
+    record[2..4].copy_from_slice(&id.to_be_bytes());
+    Ok((
+        slot,
+        Patch {
+            offset: EQUIP_OFFSET + slot * EQUIP_LEN,
+            bytes: record.to_vec(),
+        },
+    ))
+}
+
 /// How many of `id` the item box holds.
 pub fn box_count(data: &[u8], id: u16) -> u16 {
     (0..BOX_SLOTS)
@@ -174,6 +193,10 @@ mod tests {
         assert_eq!(patch.offset, at(2));
         assert_eq!(patch.bytes, [6, 2, 0, 1, 0x25, 10, 0x30, 0xfd, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert!(new_talisman(&d, &[]).is_err());
+        let (slot, patch) = new_piece(&d, 5, 1).unwrap();
+        assert_eq!(patch.bytes[..4], [5, 0, 0, 1]);
+        assert_eq!(patch.offset, EQUIP_OFFSET + slot * EQUIP_LEN);
+        assert!(new_piece(&d, 6, 1).is_err());
         assert!(new_talisman(&d, &[(1, 1); 3]).is_err());
     }
 

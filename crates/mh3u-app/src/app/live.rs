@@ -132,7 +132,21 @@ impl App {
                         Some(whole) if commands::has_item_named(&self.game, &whole) => (whole, None),
                         _ => (item, count),
                     };
-                    let found = commands::resolve_item(&self.game, &item).ok_or(format!("no item matches '{item}'"))?;
+                    let found = match commands::resolve_give(&self.game, &item) {
+                        Some(commands::Target::Piece { kind, id, name }) => {
+                            let copies = count.unwrap_or(1).clamp(1, 20);
+                            let mut slots = Vec::new();
+                            for _ in 0..copies {
+                                let (slot, patch) = edit::new_piece(&data, kind, id).map_err(|e| e.to_string())?;
+                                push(patch, &mut data);
+                                slots.push(slot.to_string());
+                            }
+                            notes.push(format!("{name} x{copies} in the equipment box, slot {}", slots.join(", ")));
+                            return Ok(());
+                        }
+                        Some(commands::Target::Item(found)) => found,
+                        None => return Err(format!("no item matches '{item}'")),
+                    };
                     let have = edit::box_count(&data, found.id);
                     let target = count.map_or(edit::MAX_STACK, |n| have.saturating_add(n));
                     push(edit::set_box_item(&data, found.id, target).map_err(|e| e.to_string())?, &mut data);

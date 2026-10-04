@@ -270,6 +270,16 @@ impl GameData {
         self.equipment_name(kind, id).filter(|n| !n.is_empty() && !n.starts_with("DUMMY"))
     }
 
+    /// Every armor piece and weapon that exists as (kind, id, name); talismans are not included.
+    pub fn equipment_pieces(&self) -> Vec<(u8, u16, &str)> {
+        let mut kinds: Vec<u8> = self.equipment.keys().copied().filter(|&k| k != 6).collect();
+        kinds.sort_unstable();
+        kinds
+            .into_iter()
+            .flat_map(|k| self.piece_ids(k).filter_map(move |id| Some((k, id, self.piece_name(k, id)?))))
+            .collect()
+    }
+
     /// The ids of the pieces of one kind that exist, ascending.
     pub fn piece_ids(&self, kind: u8) -> impl Iterator<Item = u16> + '_ {
         let count = self.equipment.get(&kind).map_or(0, |t| t.names.len());
