@@ -23,7 +23,7 @@ Everything that reads a file or the running game. No terminal code.
 | Module | What it does |
 |---|---|
 | `save` | The save file (and the live copy of it in memory): pouch, item box, equipment box, worn gear, hunt counts. |
-| `arc`, `gmd`, `rpx` | The game's archive, text-table and executable formats. |
+| `arc`, `gmd`, `rpx`, `inflate` | The game's archive, text-table and executable formats, and the bounded zlib unpacking they share. |
 | `gamedata` | Loads a game dump once and answers questions about it: names, descriptions, recipes, stats, drops. Everything else asks `GameData`. |
 | `recipes`, `armor`, `weapons`, `drops` | The tables found in the executable's data section (offsets are for the US v32 build and are checked on load). `drops` also indexes the lists by item and by monster. |
 | `hitzones` | Monster hit zones from each monster archive's `em_status00`. |
