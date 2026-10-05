@@ -91,7 +91,7 @@ Say why in the commit. Currently: `anyhow`, `clap`, `dirs`, `flate2`, `memchr`, 
 
 A feature is not done until:
 
-- the README says what it does, in the user's words (and its screenshot is refreshed if a tab changed);
+- the README says what it does in a line or two, in the user's words, and `docs/features.md` has the details (and the screenshot is refreshed if a tab changed);
 - `docs/ideas.md` no longer lists it. **Ideas that are built are deleted from ideas.md**; ones half built are cut down to what is
   left; new ideas go in;
 - `docs/formats.md` records anything newly decoded, with how sure we are and how it was checked;
