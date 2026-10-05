@@ -503,6 +503,7 @@ mod tests {
             weapon_uses: [0; 12],
             card_title: (0, 0, 0),
             greeting: String::new(),
+            journal: Vec::new(),
             pouch: Vec::new(),
             item_box: items.iter().map(|&(i, c)| stack(i, c)).filter(|s| s.count > 0).collect(),
             hunted: Vec::new(),

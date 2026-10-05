@@ -25,8 +25,8 @@ pub(crate) const WORN_TALISMAN_OFFSET: usize = 0xcc;
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
 /// The guild card's weapon usage: twelve u16 counts of the quests done with each weapon type, first for the village (from here) and then
 /// for the guild hall (twelve u16 from `0x7b60`). The screen shows the two added together. Found by doing a Sword & Shield hall quest
-/// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved) and a bow village quest (the tenth entry of the
-/// village list). Those four are certain (great sword, sword & shield, hammer, bow); the order of the other eight follows the equipment kinds
+/// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved) a bow village quest (the tenth entry of the
+/// village list) and a long sword village quest (the seventh). Those five are certain (great sword, sword & shield, hammer, long sword, bow); the order of the other eight follows the equipment kinds
 /// by guess, which the four that are known agree with.
 const WEAPON_USAGE_VILLAGE: usize = 0x7b48;
 const WEAPON_USAGE_GUILD: usize = 0x7b60;
@@ -43,6 +43,13 @@ const GREETING_MAX: usize = 48;
 /// The hunter rank: a big-endian u16 at 0x5a48, next to the quest points at 0x5a46. 0 for a hunter who never went to the guild hall,
 /// 1 for WornTester until the urgent quest "The Fisherman's Friend", 2 after it (the card agreed each time).
 const HUNTER_RANK_OFFSET: usize = 0x5a48;
+/// The guild card's Hunter's Journal: the last quests done, newest first, in records of 0xa0 bytes from here. A record has the quest's
+/// title as text from byte 3 and, at byte 0x34, the date it was done on as day, month and a u16 year (`04 0a 07 ea` is 4 October 2026).
+/// There are nine records; the oldest of the ten title strings in that area has no date and is left over. A quest done with a Shakalaka
+/// sidekick took two records, the second with no title. The other fields (a u32 at 0x38, small numbers at 0x2e and 0x3c) are not understood.
+const JOURNAL: usize = 0x7c00;
+const JOURNAL_RECORD: usize = 0xa0;
+const JOURNAL_RECORDS: usize = 9;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
 const GUILD_QUESTS_OFFSET: usize = 0x7a51;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
@@ -122,6 +129,14 @@ impl Equipment {
     }
 }
 
+/// One quest in the guild card's Hunter's Journal.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JournalEntry {
+    pub title: String,
+    /// (day, month, year), when the record has a date.
+    pub date: Option<(u8, u8, u16)>,
+}
+
 #[derive(Debug, Clone)]
 pub struct Save {
     pub hunter_name: String,
@@ -139,6 +154,8 @@ pub struct Save {
     pub card_title: (u32, u8, u32),
     /// The guild card's greeting.
     pub greeting: String,
+    /// The last quests done, newest first (the Hunter's Journal).
+    pub journal: Vec<JournalEntry>,
     pub pouch: Vec<ItemStack>,
     pub item_box: Vec<ItemStack>,
     pub equipment_box: Vec<Equipment>,
@@ -273,6 +290,19 @@ impl Save {
                 let (first, second) = (be32(d, CARD_TITLE), be32(d, CARD_TITLE + 4));
                 (first & 0x00ff_ffff, (second >> 24) as u8, second & 0x00ff_ffff)
             },
+            journal: (0..JOURNAL_RECORDS)
+                .filter_map(|n| {
+                    let at = JOURNAL + n * JOURNAL_RECORD;
+                    let text = &d[at + 3..at + 0x2c];
+                    let end = text.iter().position(|&b| b == 0).unwrap_or(text.len());
+                    let title = String::from_utf8_lossy(&text[..end]).into_owned();
+                    let (day, month, year) = (d[at + 0x34], d[at + 0x35], be16(d, at + 0x36));
+                    (!title.is_empty()).then_some(JournalEntry {
+                        title,
+                        date: (year != 0).then_some((day, month, year)),
+                    })
+                })
+                .collect(),
             greeting: {
                 let text = &d[CARD_GREETING..CARD_GREETING + GREETING_MAX];
                 let end = text.iter().position(|&b| b == 0).unwrap_or(GREETING_MAX);
@@ -311,6 +341,7 @@ mod tests {
             weapon_uses: [0; 12],
             card_title: (0, 0, 0),
             greeting: String::new(),
+            journal: Vec::new(),
             pouch,
             item_box,
             equipment_box: Vec::new(),
@@ -500,6 +531,23 @@ mod tests {
     }
 
     #[test]
+    fn the_journal_lists_the_last_quests_newest_first() {
+        let s = Save::parse(&fixture!("25-chacha/user2")).unwrap();
+        let titles: Vec<&str> = s.journal.iter().map(|e| e.title.as_str()).collect();
+        assert_eq!(titles[..3], ["Who's the Boss?", "Shakalaka Savior", "The Fisherman's Fiend"]);
+        assert_eq!(
+            titles.last(),
+            Some(&"My Lord's Errand"),
+            "nine records, one of them without a title"
+        );
+        assert_eq!(s.journal.len(), 8);
+        assert_eq!(s.journal[0].date, Some((4, 10, 2026)));
+        assert_eq!(s.journal[6].date, Some((3, 10, 2026)));
+        let none = Save::parse(&fixture!("03-latest/user1")).unwrap();
+        assert!(none.journal.is_empty(), "a hunter with no quests");
+    }
+
+    #[test]
     fn weapon_usage_adds_the_village_and_the_hall_counts() {
         // after the Sword & Shield hall quest the screen showed great sword 14 and sword & shield 1
         let after = Save::parse(&fixture!("20-snS-quest/user2")).unwrap();
@@ -511,6 +559,8 @@ mod tests {
         // a bow village quest: the tenth entry of the village list
         let bow = Save::parse(&fixture!("24-bow/user2")).unwrap();
         assert_eq!((bow.weapon_uses[9], bow.weapon_uses[..3].to_vec()), (1, vec![14, 1, 2]));
+        // a long sword village quest with Cha-Cha: the seventh entry
+        assert_eq!(Save::parse(&fixture!("25-chacha/user2")).unwrap().weapon_uses[6], 1);
         assert_eq!(bow.most_used_weapon(), Some((7, 14)));
         let before = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
         assert_eq!(
