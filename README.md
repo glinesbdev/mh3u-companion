@@ -3,7 +3,7 @@
 [![CI](https://github.com/glinesbdev/mh3u-companion/actions/workflows/ci.yml/badge.svg)](https://github.com/glinesbdev/mh3u-companion/actions/workflows/ci.yml)
 
 A terminal app for Monster Hunter 3 Ultimate (Wii U, played in Cemu). It reads your save file and your own game dump to show
-what you own and what you need to craft or upgrade gear.
+what you own and what you need to craft or upgrade gear. **Linux only for now** (see [Platform](#platform)).
 
 ![Crafting: an armor piece with its stats, blacksmith status, cost and the materials you have](docs/screenshots/crafting-armor.svg)
 
@@ -44,6 +44,20 @@ what you own and what you need to craft or upgrade gear.
 
 The pictures are drawn from the app's own output by `scripts/screenshots.sh` (the hunter name is replaced), using the colors of a
 dark theme; your terminal's own palette applies when you run it.
+
+## Platform
+
+Linux only, for now. It has only been tried on:
+
+- **OS:** Omarchy (an Arch Linux based distribution), kernel 7.2
+- **Terminal:** [Foot](https://codeberg.org/dnkl/foot) 1.28. Other terminals with true color and Unicode should work, but have not been tried; a
+  Nerd Font is needed for the anvil icon unless `icons = plain` is set (see Settings).
+- **Emulator:** Cemu 2.6 for Linux, with the US version of the game (title id 0005000010118300)
+- **Rust:** 1.99 (the 2024 edition)
+
+Live mode (`--live`) reads Cemu's memory through `/proc`, so it cannot work anywhere but Linux. Reading a save file and a game dump needs
+nothing Linux specific and may well work on other systems, but that has not been tried, and the default folders (Cemu's `~/.local/share/Cemu`
+and the settings in `~/.config`) are the Linux ones. Reports from other systems and terminals are welcome.
 
 ## What it does
 
