@@ -7,6 +7,10 @@ version = "0.1.0"
 edition = "2024"
 license = "Unlicense"
 
+[workspace.lints.rust]
+# none of the code needs unsafe; this keeps it that way
+unsafe_code = "forbid"
+
 [workspace.dependencies]
 anyhow = "1"
 mh3u-app = { path = "crates/mh3u-app" }
