@@ -1031,3 +1031,23 @@ fn g_switches_the_hunt_plan_between_the_fewest_steps_and_the_fewest_runs() {
     assert_eq!((app.hunts.plan.steps.len(), app.hunts.plan.total_runs()), steps_plan);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn debug_commands_are_refused_while_online_and_purge_needs_the_game() {
+    let dir = temp_dir("onlineguard");
+    let Some(mut app) = app_in(&dir) else { return };
+    app.run_command("give honey");
+    assert!(app.status.contains("--live"), "{}", app.status);
+    app.guard.online = Some("Cemu has online play turned on".into());
+    app.run_command("give honey");
+    assert!(app.status.contains("off while online"), "{}", app.status);
+    assert!(app.status.contains("online play turned on"));
+    app.run_command("zenny 99999");
+    assert!(app.status.contains("off while online"));
+    // reading commands and purge are still allowed; without the game, purge says what it needs
+    app.run_command("purge");
+    assert!(app.status.contains("--live"), "{}", app.status);
+    app.run_command("purge now");
+    assert!(app.status.contains("no arguments"), "{}", app.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}

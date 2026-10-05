@@ -89,6 +89,9 @@ enum Tool {
     ArmorTodo { game_dir: PathBuf, ledger: PathBuf },
     /// Every monster drop list as `monster<TAB>row<TAB>rank<TAB>kind<TAB>item:quantity:percent,...`.
     Drops { game_dir: PathBuf },
+    /// Take the debug edits recorded in a ledger file (`~/.local/share/mh3u-companion/debug-edits[-N].txt`) out of a save file the game is
+    /// not running on. The save is copied to `<save>.before-purge` first, and the ledger file is removed.
+    PurgeSave { save: PathBuf, ledger: PathBuf },
     /// Every monster's first table of hit zones, one row per zone: monster id, name, row, then the eight values.
     Zones { game_dir: PathBuf },
     /// Every weapon as `kind id name`, for joining with other tables.
@@ -134,8 +137,32 @@ fn main() -> Result<()> {
         Tool::Drops { game_dir } => drops(&game_dir),
         Tool::WeaponNames { game_dir } => weapon_names(&game_dir),
         Tool::Zones { game_dir } => zones(&game_dir),
+        Tool::PurgeSave { save, ledger } => purge_save(&save, &ledger),
         Tool::CemuHost { game_dir, outdir } => cemu_host(&game_dir, &outdir),
     }
+}
+
+fn purge_save(save: &Path, ledger: &Path) -> Result<()> {
+    use mh3u_core::debug_edits::Ledger;
+    let mut bytes = read(save)?;
+    let recorded = Ledger::parse(&std::fs::read_to_string(ledger).with_context(|| ledger.display().to_string())?);
+    if recorded.is_empty() {
+        println!("no debug edits are recorded in {}", ledger.display());
+        return Ok(());
+    }
+    let (patches, report) = recorded.purge(&bytes);
+    let mut backup = save.as_os_str().to_owned();
+    backup.push(".before-purge");
+    std::fs::copy(save, &backup).with_context(|| "copying the save first")?;
+    for patch in &patches {
+        mh3u_core::edit::apply(&mut bytes, patch);
+    }
+    std::fs::write(save, &bytes)?;
+    if report.kept.is_empty() {
+        std::fs::remove_file(ledger)?;
+    }
+    println!("{} (the save before: {})", report.summary(), Path::new(&backup).display());
+    Ok(())
 }
 
 fn zones(game_dir: &Path) -> Result<()> {

@@ -4,22 +4,22 @@ pub const SAVE_LEN: usize = 35364;
 const NAME_OFFSET: usize = 0x2b;
 const NAME_LEN: usize = 0x15;
 pub(crate) const ZENNY_OFFSET: usize = 0x49;
-const POUCH_OFFSET: usize = 0xd0;
-const POUCH_SLOTS: usize = 24;
+pub(crate) const POUCH_OFFSET: usize = 0xd0;
+pub(crate) const POUCH_SLOTS: usize = 24;
 pub(crate) const BOX_OFFSET: usize = 0x1b0;
 pub(crate) const BOX_SLOTS: usize = 1000;
 pub(crate) const EQUIP_OFFSET: usize = 0x1150;
 pub(crate) const EQUIP_SLOTS: usize = 1000;
 pub(crate) const EQUIP_LEN: usize = 16;
 /// u16 pointer to the equipment box slot of the worn weapon; 0xffff = none.
-const WORN_WEAPON_OFFSET: usize = 0xc0;
+pub(crate) const WORN_WEAPON_OFFSET: usize = 0xc0;
 /// Five u16 pointers (body, arms, waist, legs, head) into the equipment box slots; 0xffff = nothing worn.
-const WORN_OFFSET: usize = 0xc2;
-const WORN_SLOTS: usize = 5;
+pub(crate) const WORN_OFFSET: usize = 0xc2;
+pub(crate) const WORN_SLOTS: usize = 5;
 /// The u16 pointer, right after the five armor ones, to the worn talisman's equipment box slot; 0xffff = none. The 16 bytes before the
 /// pointers (from 0xb0) are a copy of the worn talisman's record (kind 6 and zeros when none is worn). Found by comparing a save with
 /// a talisman worn (slot 17) and one without.
-const WORN_TALISMAN_OFFSET: usize = 0xcc;
+pub(crate) const WORN_TALISMAN_OFFSET: usize = 0xcc;
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
 /// byte each, in the guild card's own record). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;

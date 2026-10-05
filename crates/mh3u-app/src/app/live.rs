@@ -43,6 +43,7 @@ impl App {
         self.wish = wish;
         self.builds = builds;
         self.hunts = HuntTab::default();
+        self.guard.ledger = DebugGuard::load(self.files.as_ref()).ledger;
         // the next live data is another hunter's: comparing it with the last would look like a crafting
         self.costs.tracker.reset();
         self.load_gains();
@@ -105,6 +106,12 @@ impl App {
         if let commands::Command::Find { bar } = command {
             return self.run_find(&bar);
         }
+        if let commands::Command::Purge = command {
+            return self.status = self.purge_debug_edits();
+        }
+        if let Some(reason) = &self.guard.online {
+            return self.status = format!("debug edits are off while online ({reason}); purge takes out the ones made before");
+        }
         let connected = self.live_connected();
         let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {
             return self.status = "editing needs the game running through --live".into();
@@ -112,6 +119,7 @@ impl App {
         if !connected {
             return self.status = "editing needs a hunter loaded in the game".into();
         }
+        let before = data.clone();
         let mut patches: Vec<edit::Patch> = Vec::new();
         let mut notes: Vec<String> = Vec::new();
         let mut push = |patch: edit::Patch, data: &mut Vec<u8>| {
@@ -164,7 +172,7 @@ impl App {
                     push(edit::set_box_item(&data, found.id, count).map_err(|e| e.to_string())?, &mut data);
                     notes.push(format!("{} in the box set to {}", found.describe(), count.min(edit::MAX_STACK)));
                 }
-                commands::Command::Scan { .. } | commands::Command::Find { .. } => {}
+                commands::Command::Scan { .. } | commands::Command::Find { .. } | commands::Command::Purge => {}
                 commands::Command::Equip { slot, offset, bytes } => {
                     if bytes.is_empty() {
                         let record = edit::equipment_record(&data, slot).map_err(|e| e.to_string())?;
@@ -221,6 +229,8 @@ impl App {
                 if let Ok(edited) = Save::parse(&data) {
                     self.costs.tracker.rebase(&edited);
                 }
+                self.guard.ledger.record(&before, &data);
+                self.save_ledger();
                 self.status = notes.join("; ");
             }
             Err(e) => self.status = e,

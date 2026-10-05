@@ -52,10 +52,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     let [tabs, body, footer] = Layout::vertical([Constraint::Length(3), Constraint::Min(0), Constraint::Length(1)]).areas(f.area());
 
     let selected = Tab::ALL.iter().position(|&t| t == app.tab).unwrap_or(0);
-    let edit_badge = if app.console.enabled {
-        Span::styled("✎ EDIT ", bad().add_modifier(Modifier::BOLD))
-    } else {
-        Span::raw("")
+    let edit_badge = match (app.console.enabled, app.guard.online.is_some()) {
+        (_, true) => Span::styled("⛔ ONLINE: edits off ", warn().add_modifier(Modifier::BOLD)),
+        (true, false) => Span::styled("✎ EDIT ", bad().add_modifier(Modifier::BOLD)),
+        (false, false) => Span::raw(""),
     };
     let badge = match &app.live {
         Some(l) if l.connected => Span::styled("● live ", good().add_modifier(Modifier::BOLD)),

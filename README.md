@@ -114,7 +114,7 @@ Forging costs for weapons (create and upgrade) and armor are read straight from 
 
 `mh3u-tui --live --debug-edit` adds a debug command line (`:`) that changes the running game's zenny and item box (`zenny 50000`,
 `give iron ore`, `stock` to cover the wishlist, `equip` and `talisman` to write equipment records and find out what their bytes mean) for testing without hours of play. This is the only part that writes to the game;
-it backs up your save slots first, and anything you then save in the game keeps the edits. See `docs/live.md`.
+it backs up your save slots first, and anything you then save in the game keeps the edits. It is for playing alone: everything the commands change is noted per hunter, `purge` takes it all out again, and when Cemu has online play turned on or the game holds a network connection the program takes the edits out by itself and refuses new ones (`--debug-edit` will not even start while Cemu's account has online play on). That is a safeguard for honest users, not protection against someone who changes this open source program. See `docs/live.md`.
 
 ## Running
 

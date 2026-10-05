@@ -184,6 +184,10 @@ pub(super) const EDIT_SECTION: Section = Section {
     title: "Edit mode (--debug-edit)",
     rows: &[
         ("", "Changes go into the running game; saving in the game keeps them."),
+        (
+            ":",
+            "purge (take out everything these commands added; done by itself when the game is online, and edits stay off then)",
+        ),
         (":", "zenny 50000 | zenny +500"),
         (":", "give iron ore [n] | set honey 5"),
         (":", "stock | stock all (cover the wishlist)"),

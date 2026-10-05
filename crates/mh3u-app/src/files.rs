@@ -27,6 +27,8 @@ pub struct Files {
     pub shopping: PathBuf,
     /// What the hunter held when the app last closed (see `changes`); one per hunter, in the data folder.
     pub last_seen: PathBuf,
+    /// What the debug commands changed for this hunter (see `mh3u_core::debug_edits`); one per hunter, in the data folder.
+    pub debug_edits: PathBuf,
     /// Where `--debug-edit` copies the saves before changing the game.
     pub backups: PathBuf,
 }
@@ -75,8 +77,20 @@ impl Files {
             } else {
                 format!("last-seen-{slot}.txt")
             }),
+            debug_edits: data.join(if slot == 1 {
+                "debug-edits.txt".to_string()
+            } else {
+                format!("debug-edits-{slot}.txt")
+            }),
             backups: data.join("backups"),
         }
+    }
+
+    /// Whether some hunter has debug edits on record, so the program must be able to take them out again.
+    pub fn any_debug_edits(&self) -> bool {
+        (1..=3).any(|slot| {
+            std::fs::read_to_string(&self.with_slot(slot).debug_edits).is_ok_and(|t| !mh3u_core::debug_edits::Ledger::parse(&t).is_empty())
+        })
     }
 }
 

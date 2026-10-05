@@ -92,6 +92,28 @@ any other live change. **If you save in the game, the edits are saved with them.
 (`user1`-`user3`, `system`) are copied to `~/.local/share/mh3u-companion/backups/<unix time>/`, and the status line says
 where. It is a good idea to use a spare hunter.
 
+### Debug edits and online play
+
+The debug commands are for playing alone, and the program tries to keep their results out of online play:
+
+- **A ledger.** After every command the program compares the hunter's data before and after and notes the difference in
+  `~/.local/share/mh3u-companion/debug-edits[-N].txt` (one file per save slot): zenny added, items added to the box, equipment made
+  or changed (with the original record). `purge` (on the `:` line) takes all of that out of the game again: the zenny and items that are
+  still there (never more than the hunter has now, the pouch included), the pieces made (taken off first if worn; a worn weapon is
+  swapped for another of the hunter's, and kept, with a note, when it is the only one), and changed records put back unless they changed
+  again since.
+- **Online detection.** Every two seconds the program looks at Cemu's settings (`<OnlineEnabled>` in `~/.config/Cemu/settings.xml`) and at
+  the emulator's sockets (`/proc`: an established TCP connection, or a UDP socket with a peer, to another machine). Either counts as
+  online. The moment it does, `purge` runs by itself, the header shows `⛔ ONLINE: edits off`, and edit commands are refused until the game
+  is offline again. `--debug-edit` does not start at all while Cemu's account has online play on.
+- **Without the flag.** If a ledger is on record, `--live` opens the game's memory for writing even without `--debug-edit`, so that the
+  edits can still be taken out when the game goes online.
+- **A save file.** `mh3u-tools purge-save <save> <ledger file>` does the same to a save file the game is not running on, keeping a copy as
+  `<save>.before-purge`.
+
+This is a safeguard for people who do not want edited gear online, not protection against cheating: the program is open source, and a
+save edited without it, or with its ledger deleted, is not affected. It also cannot tell what the online services will accept.
+
 ### Finding what an equipment record's bytes mean (`equip`, `talisman`)
 
 An equipment box record is 16 bytes: kind, a state byte, the piece id (u16) and 12 bytes that hold a talisman's skills and, probably, a

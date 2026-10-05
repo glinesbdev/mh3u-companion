@@ -110,6 +110,19 @@ fn main() -> Result<()> {
     let game = GameData::load(&game_dir).with_context(|| format!("loading game data from {}", game_dir.display()))?;
     let files = Files::for_slot(slot_of(&save).unwrap_or(slot));
     let backups = files.as_ref().map(|f| f.backups.clone());
+    // Debug edits are for trying things out alone: not while Cemu is set up for online play.
+    if debug_edit
+        && let Some(settings) = mh3u_core::online::cemu_settings_path()
+        && mh3u_core::online::cemu_online_enabled(&settings)
+    {
+        bail!(
+            "--debug-edit is not available while online play is turned on in Cemu ({}). Turn online play off for the account in Cemu's \
+             account settings first.",
+            settings.display()
+        );
+    }
+    // edits recorded earlier must be possible to take out again, so the game's memory is opened for writing in that case too
+    let writable = debug_edit || files.as_ref().is_some_and(|f| f.any_debug_edits());
     let mut app = App::new(game, save.clone(), files)?;
     if live {
         let note = match (debug_edit, backups) {
@@ -117,7 +130,7 @@ fn main() -> Result<()> {
             (true, None) => bail!("--debug-edit needs a home folder to keep backups of the saves in"),
             (false, _) => None,
         };
-        app.set_live(start_live(&game_dir, &save, &cemu, debug_edit)?);
+        app.set_live(start_live(&game_dir, &save, &cemu, writable)?);
         if let Some(note) = note {
             app.enable_edit(note);
         }

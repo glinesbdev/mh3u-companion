@@ -28,6 +28,7 @@ mod blacksmith;
 mod build_manager;
 mod compare;
 mod crafting;
+mod debug_guard;
 mod families;
 mod find;
 #[cfg(test)]
@@ -52,6 +53,7 @@ pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
 pub use compare::{CompareTab, MAX_COMPARED};
 pub use crafting::Crafting;
 pub use crafting::Via;
+pub use debug_guard::DebugGuard;
 pub use families::FamiliesTab;
 pub use gains::GainsTab;
 pub use hunters::HunterChoice;
@@ -172,6 +174,8 @@ pub struct App {
     pub costs: PriceBook,
     /// The debug command line (`--debug-edit`).
     pub console: EditConsole,
+    /// What the debug commands changed, and whether the game is online (see `debug_guard`).
+    pub guard: DebugGuard,
     /// Pieces seen on offer at the blacksmith, per hunter, saved next to the ledger.
     unlocked: Unlocked,
     /// Where the files live; `None` when the system has no home folder, and nothing is kept between sessions.
@@ -234,6 +238,7 @@ impl App {
             gains: GainsTab::new(gains::read_log(files.as_ref())),
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
+            guard: DebugGuard::load(files.as_ref()),
             unlocked,
             slot,
             files,
@@ -267,6 +272,7 @@ impl App {
     /// this about four times a second.
     pub fn tick(&mut self) {
         self.poll_live();
+        self.watch_online();
         self.tick_prices();
         self.reload_if_changed();
     }
