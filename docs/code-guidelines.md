@@ -76,7 +76,7 @@ These are limits to notice, not to game. If you hit one, split by meaning, not b
   the dump through `MH3U_GAME_DIR` (`mh3u_core::gamedata::dump_from_env`); `scripts/check.sh` sets it from your settings' `game_dir`.
 - Files the program reads can be damaged or made by somebody else (a dump, a save, a settings profile): read numbers with `get` and
   checked arithmetic, never trust a size in a file to set aside memory (see `inflate`), and give an error, never a panic. A new
-  parser gets a case in `mh3u-core/src/hostile_tests.rs`. The workspace forbids `unsafe`. See `SECURITY.md`.
+  parser gets a case in `mh3u-core/src/hostile_tests.rs`. The workspace forbids `unsafe`. `scripts/check.sh` runs `cargo audit` (before pushing, if `cargo-audit` is installed); CI always does. See `SECURITY.md`.
 - A new user setting is one entry in `config::DEFS` (key, label, kind, default, help): the config file's commented template, the parser, the checks and the Settings screen (`S`) all come from that table. Say in its `when` whether it applies now or at the next start.
 - Whole-app behaviour (keys in, state out) goes in `app/flow_tests.rs`, with its files in a temporary folder. What is drawn is checked in
   `mh3u-tui/src/ui/screen_tests.rs`, which draws every tab into ratatui's test backend at several terminal sizes (a panic or a missing pane fails it).

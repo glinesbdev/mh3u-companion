@@ -13,7 +13,7 @@ with `--debug-edit`, writes) the memory of a Cemu it started itself. It has no n
   stripped when drawn.
 - **Writes to the game.** Only with `--debug-edit`, only to the Cemu process the program started, and only inside the save block (a write
   past it is refused). It will not start in edit mode while Cemu has online play turned on.
-- **Dependencies.** Few, pinned by `Cargo.lock`, checked against the RustSec advisory database in CI (`cargo audit`, also weekly), and kept
+- **Dependencies.** Few, pinned by `Cargo.lock`, checked against the RustSec advisory database (`cargo audit`) in CI and in `scripts/check.sh`, and kept
   current by Dependabot. CI runs with read-only permissions and its actions are pinned to commits.
 
 ## What it does not protect against

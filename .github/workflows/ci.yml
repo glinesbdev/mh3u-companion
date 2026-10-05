@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  # new advisories arrive without any commit, so the dependency audit also runs on its own
-  schedule:
-    - cron: "17 5 * * 1"
 
 # nothing here needs more than to read the repository
 permissions:
