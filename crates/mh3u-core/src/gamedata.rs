@@ -12,6 +12,8 @@ use std::{collections::HashMap, path::Path};
 
 /// English text for items and equipment lives in this archive, relative to the dump's game folder.
 const TEXT_ARCHIVE: &str = "content/nativeCafe/arc/ID/ID_arena_eng.arc";
+/// The archive with the guild card's text.
+const LOBBY_ARCHIVE: &str = "content/nativeCafe/arc/ID/ID_lb_eng.arc";
 
 /// Equipment `kind` byte -> (display name, GMD file holding that kind's piece names).
 /// Names are internal to the game's files; e.g. the `Lsword` file holds the Great Swords.
@@ -80,6 +82,8 @@ pub struct GameData {
     zone_names: HashMap<(u16, usize), crate::zone_names::Entry>,
     /// Where items can be gathered, by item id.
     gather_spots: HashMap<u16, Vec<crate::gather_spots::Spot>>,
+    /// The words a guild card title is put together from, by number (`CardTitle` in the lobby archive).
+    card_title_words: Vec<String>,
     /// Carry limits and shop prices of items, by item id.
     item_extras: HashMap<u16, crate::item_extras::ItemExtras>,
     /// Songs of the hunting horns, by the horn's notes.
@@ -116,6 +120,21 @@ fn load_quests(game_dir: &Path) -> Vec<crate::quest::Quest> {
         .collect();
     quests.sort_by_key(|q| q.id);
     quests
+}
+
+/// The guild card title words, from the lobby text archive; empty when the dump has none.
+fn card_title_words(game_dir: &Path) -> Vec<String> {
+    let read = || -> Result<Vec<String>> {
+        let bytes = std::fs::read(game_dir.join(LOBBY_ARCHIVE))?;
+        let arc = Arc::parse(&bytes)?;
+        let entry = arc
+            .entries
+            .iter()
+            .find(|e| e.name == "GUI\\font\\lobby\\CardTitle_eng")
+            .context("CardTitle_eng not found in the lobby archive")?;
+        Ok(gmd::parse(&arc.read(entry)?)?.into_iter().map(|w| w.trim().to_string()).collect())
+    };
+    read().unwrap_or_default()
 }
 
 /// Join the game's hard-wrapped text lines into one line. A line ending in a hyphen joins to the next with no space.
@@ -188,6 +207,7 @@ impl GameData {
             weapon_extras: HashMap::new(),
             horn_songs: crate::horn_songs::parse()?,
             item_extras: HashMap::new(),
+            card_title_words: card_title_words(game_dir),
             gather_spots: HashMap::new(),
             zone_names: crate::zone_names::parse()?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
@@ -314,6 +334,21 @@ impl GameData {
     /// Where an item can be gathered (mined, picked, caught, fished); empty for items that cannot.
     pub fn gather_spots(&self, id: u16) -> &[crate::gather_spots::Spot] {
         self.gather_spots.get(&id).map_or(&[], Vec::as_slice)
+    }
+
+    /// A guild card title in words ("Noob to Excited"), from the numbers in the save (see `Save::card_title`). `None` when the dump has
+    /// no title words or a number is outside them.
+    pub fn card_title(&self, title: (u32, u8, u32)) -> Option<String> {
+        let word = |n: u32| self.card_title_words.get(n as usize).filter(|w| !w.is_empty() && *w != "(None)");
+        let (first, join, second) = title;
+        let mut parts = vec![word(first)?.as_str()];
+        if join != 0 {
+            parts.push(word(612 + u32::from(join))?.as_str());
+        }
+        if let Some(w) = word(second) {
+            parts.push(w);
+        }
+        Some(parts.join(" "))
     }
 
     /// The most of an item the hunter can carry in a stack, where the table has it.
@@ -617,6 +652,10 @@ mod tests {
         let tender: i32 = points.iter().filter(|&&(id, _)| id == d.skill).map(|&(_, p)| i32::from(p)).sum();
         assert_eq!(tender, 3);
         assert_eq!(game.decoration(0), None);
+        // guild card titles are put together from words
+        assert_eq!(game.card_title((4, 0, 6)).as_deref(), Some("Fledgling Hunter"));
+        assert_eq!(game.card_title((1, 6, 51)).as_deref(), Some("Noob to Excited"));
+        assert_eq!(game.card_title((99999, 0, 0)), None);
         // gathering spots joined by name
         assert_eq!(game.gather_spots.len(), 155);
         let ore = game.item_names().find(|(_, n)| *n == "Iron Ore").unwrap().0;

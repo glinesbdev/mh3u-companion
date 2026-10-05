@@ -27,6 +27,9 @@ impl App {
                     save.village_quests,
                     save.guild_quests
                 );
+                if let Some(title) = self.game.card_title(save.card_title) {
+                    played = format!("{title} · {played}");
+                }
                 if let Some((kind, quests)) = save.most_used_weapon() {
                     played += &format!(" · {} x{quests}", self.game.equipment_kind_label(kind).unwrap_or("?"));
                 }

@@ -32,6 +32,13 @@ const WEAPON_USAGE_GUILD: usize = 0x7b60;
 /// The equipment kind of each of the twelve types, in that order.
 pub const WEAPON_USAGE_KINDS: [u8; 12] = [7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19];
 
+/// The guild card's title is two big-endian u32 from here: the first is a word (its number in the game's `CardTitle` text, "Noob" is 1 and
+/// "Fledgling" 4); in the second the top byte joins the words (0: nothing, else the word numbered 612 plus it: 6 is "to", 1 "of", 2 "and")
+/// and the rest is the second word ("Hunter" is 6, "Excited" 51). Found by changing the title from "Fledgling Hunter" to "Noob to Excited".
+const CARD_TITLE: usize = 0x7a28;
+/// The greeting on the card: text up to a NUL from here. Its longest length is not known.
+const CARD_GREETING: usize = 0x7ad0;
+const GREETING_MAX: usize = 48;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
 const GUILD_QUESTS_OFFSET: usize = 0x7a51;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
@@ -122,6 +129,10 @@ pub struct Save {
     pub guild_quests: u8,
     /// Quests done with each weapon type, village and guild together, in the order of [`WEAPON_USAGE_KINDS`].
     pub weapon_uses: [u32; 12],
+    /// The guild card's title as numbers into the game's title words: (first word, joining word, second word); see [`CARD_TITLE`].
+    pub card_title: (u32, u8, u32),
+    /// The guild card's greeting.
+    pub greeting: String,
     pub pouch: Vec<ItemStack>,
     pub item_box: Vec<ItemStack>,
     pub equipment_box: Vec<Equipment>,
@@ -131,6 +142,10 @@ pub struct Save {
     pub worn_slots: Vec<u16>,
     /// The equipment box slot of the worn talisman.
     pub worn_talisman: Option<u16>,
+}
+
+fn be32(d: &[u8], o: usize) -> u32 {
+    u32::from_be_bytes([d[o], d[o + 1], d[o + 2], d[o + 3]])
 }
 
 fn be16(d: &[u8], o: usize) -> u16 {
@@ -237,6 +252,15 @@ impl Save {
             weapon_uses: std::array::from_fn(|i| {
                 u32::from(be16(d, WEAPON_USAGE_VILLAGE + 2 * i)) + u32::from(be16(d, WEAPON_USAGE_GUILD + 2 * i))
             }),
+            card_title: {
+                let (first, second) = (be32(d, CARD_TITLE), be32(d, CARD_TITLE + 4));
+                (first & 0x00ff_ffff, (second >> 24) as u8, second & 0x00ff_ffff)
+            },
+            greeting: {
+                let text = &d[CARD_GREETING..CARD_GREETING + GREETING_MAX];
+                let end = text.iter().position(|&b| b == 0).unwrap_or(GREETING_MAX);
+                String::from_utf8_lossy(&text[..end]).into_owned()
+            },
             pouch: read_stacks(d, POUCH_OFFSET, POUCH_SLOTS),
             item_box: read_stacks(d, BOX_OFFSET, BOX_SLOTS),
             equipment_box: read_equipment(d),
@@ -267,6 +291,8 @@ mod tests {
             village_quests: 0,
             guild_quests: 0,
             weapon_uses: [0; 12],
+            card_title: (0, 0, 0),
+            greeting: String::new(),
             pouch,
             item_box,
             equipment_box: Vec::new(),
@@ -411,6 +437,14 @@ mod tests {
         let three = Save::parse(&fixture!("16-jewel3/user2")).unwrap();
         let full = three.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(full.talisman_decorations(), vec![0x91, 0x15, 0x97]);
+    }
+
+    #[test]
+    fn the_guild_card_title_and_greeting_are_read() {
+        let before = Save::parse(&fixture!("20-snS-quest/user2")).unwrap();
+        assert_eq!((before.card_title, before.greeting.as_str()), ((4, 0, 6), "Hello there!"));
+        let after = Save::parse(&fixture!("21-title/user2")).unwrap();
+        assert_eq!((after.card_title, after.greeting.as_str()), ((1, 6, 51), "Bobby the boy"));
     }
 
     #[test]
