@@ -106,6 +106,10 @@ The debug commands are for playing alone, and the program tries to keep their re
   the emulator's sockets (`/proc`: an established TCP connection, or a UDP socket with a peer, to another machine). Either counts as
   online. The moment it does, `purge` runs by itself, the header shows `⛔ ONLINE: edits off`, and edit commands are refused until the game
   is offline again. `--debug-edit` does not start at all while Cemu's account has online play on.
+- **Testing it without an online account.** Online play needs a real Wii U's dump, which most players do not have, so none of this needs
+  the game to go online: turning `<OnlineEnabled>` on by hand in `settings.xml` while the game runs is enough to see the edits come out and
+  the header change (turn it back off afterwards; Cemu writes the file itself on exit). The tests cover the settings file and a connected
+  socket.
 - **Without the flag.** If a ledger is on record, `--live` opens the game's memory for writing even without `--debug-edit`, so that the
   edits can still be taken out when the game goes online.
 - **A save file.** `mh3u-tools purge-save <save> <ledger file>` does the same to a save file the game is not running on, keeping a copy as

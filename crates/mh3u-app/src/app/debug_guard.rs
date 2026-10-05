@@ -36,6 +36,12 @@ impl DebugGuard {
         }
     }
 
+    /// Look at the emulator again at the next tick, whatever the time.
+    #[cfg(test)]
+    pub(super) fn recheck_now(&mut self) {
+        self.checked = None;
+    }
+
     /// Why the game counts as online now, from Cemu's settings and the emulator's connections.
     pub(super) fn reason(&self, emulator: Option<u32>) -> Option<String> {
         let settings = self.settings.clone().or_else(online::cemu_settings_path)?;

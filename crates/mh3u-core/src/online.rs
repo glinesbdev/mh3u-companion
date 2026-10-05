@@ -129,10 +129,19 @@ mod tests {
         assert!(!online_among(&[], &udp, &HashSet::from([201])), "bound, no peer");
     }
 
+    // one test for the live process, so that two tests do not hold sockets at the same time
     #[test]
-    fn this_process_is_not_online_and_a_missing_one_is_not_either() {
-        assert!(!process_is_online(u32::MAX));
-        // a test process holds no connection to another machine
-        assert!(!process_is_online(std::process::id()));
+    fn a_process_is_online_only_while_a_socket_has_a_peer_elsewhere() {
+        assert!(!process_is_online(u32::MAX), "a missing process");
+        assert!(!process_is_online(std::process::id()), "a test process holds no connection");
+        // a UDP socket "connected" to a documentation address (192.0.2.1 is reserved: nothing is ever sent); skipped where there is no route
+        let socket = std::net::UdpSocket::bind("0.0.0.0:0").unwrap();
+        if socket.connect("192.0.2.1:9").is_err() {
+            eprintln!("skipped: no route for a connected UDP socket here");
+            return;
+        }
+        assert!(process_is_online(std::process::id()), "a connected UDP socket to another machine");
+        drop(socket);
+        assert!(!process_is_online(std::process::id()), "gone with the socket");
     }
 }

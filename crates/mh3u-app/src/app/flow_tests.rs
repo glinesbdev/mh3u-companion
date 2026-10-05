@@ -1051,3 +1051,31 @@ fn debug_commands_are_refused_while_online_and_purge_needs_the_game() {
     assert!(app.status.contains("no arguments"), "{}", app.status);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn turning_online_play_on_in_cemus_settings_switches_the_debug_edits_off_until_it_is_turned_off() {
+    let dir = temp_dir("onlinewatch");
+    let Some(mut app) = app_in(&dir) else { return };
+    std::fs::create_dir_all(&dir).unwrap();
+    let settings = dir.join("settings.xml");
+    std::fs::write(&settings, "<Account><OnlineEnabled>false</OnlineEnabled></Account>").unwrap();
+    app.guard.settings = Some(settings.clone());
+    app.console.enabled = true;
+    app.watch_online();
+    assert!(app.guard.online.is_none());
+    // the setting is turned on (by hand, as a player would in Cemu)
+    std::fs::write(&settings, "<Account><OnlineEnabled>true</OnlineEnabled></Account>").unwrap();
+    app.guard.recheck_now();
+    app.watch_online();
+    assert!(app.guard.online.is_some());
+    assert!(app.status.contains("debug edits are off while online"), "{}", app.status);
+    app.run_command("give honey");
+    assert!(app.status.contains("off while online"), "{}", app.status);
+    // and off again
+    std::fs::write(&settings, "<Account><OnlineEnabled>false</OnlineEnabled></Account>").unwrap();
+    app.guard.recheck_now();
+    app.watch_online();
+    assert!(app.guard.online.is_none());
+    assert!(app.status.contains("offline again"), "{}", app.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}
