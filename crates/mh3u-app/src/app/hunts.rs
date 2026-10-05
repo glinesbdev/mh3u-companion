@@ -69,7 +69,7 @@ impl App {
     pub(super) fn hunts_key(&mut self, code: Key) -> bool {
         match code {
             Key::Char('r') => {
-                self.hunts.filter = self.hunts.filter.next();
+                self.hunts.filter = self.hunts.filter.next(self.save.reached_rank());
                 self.refresh_hunts();
             }
             Key::Char('g') => {

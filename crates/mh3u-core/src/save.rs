@@ -39,6 +39,9 @@ const CARD_TITLE: usize = 0x7a28;
 /// The greeting on the card: text up to a NUL from here. Its longest length is not known.
 const CARD_GREETING: usize = 0x7ad0;
 const GREETING_MAX: usize = 48;
+/// The hunter rank: a big-endian u16 at 0x5a48, next to the quest points at 0x5a46. 0 for a hunter who never went to the guild hall,
+/// 1 for WornTester until the urgent quest "The Fisherman's Friend", 2 after it (the card agreed each time).
+const HUNTER_RANK_OFFSET: usize = 0x5a48;
 const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
 const GUILD_QUESTS_OFFSET: usize = 0x7a51;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
@@ -127,6 +130,8 @@ pub struct Save {
     /// Quests done in the village, and in the guild hall (the guild card's two counts).
     pub village_quests: u8,
     pub guild_quests: u8,
+    /// The hunter rank (HR) on the guild card: 0 before the guild hall, then 1 and up.
+    pub hunter_rank: u16,
     /// Quests done with each weapon type, village and guild together, in the order of [`WEAPON_USAGE_KINDS`].
     pub weapon_uses: [u32; 12],
     /// The guild card's title as numbers into the game's title words: (first word, joining word, second word); see [`CARD_TITLE`].
@@ -217,6 +222,16 @@ impl Save {
 
     /// Parse the contents of the `user1` save file.
     /// The play time as the guild card shows it: `1 h 54 min`.
+    /// The highest rank of quest the hunter's hunter rank gives access to: low rank up to HR2, high rank for HR3 to HR5, G rank from HR6
+    /// (the tiers a player described: low rank 1★ and 2★ hall quests, high rank 3★ to 5★, G rank 6★ to 8★).
+    pub fn reached_rank(&self) -> crate::drops::Rank {
+        match self.hunter_rank {
+            0..=2 => crate::drops::Rank::Low,
+            3..=5 => crate::drops::Rank::High,
+            _ => crate::drops::Rank::G,
+        }
+    }
+
     /// The weapon type the hunter has done the most quests with, as (equipment kind, quests); `None` before the first quest.
     pub fn most_used_weapon(&self) -> Option<(u8, u32)> {
         self.weapon_uses
@@ -249,6 +264,7 @@ impl Save {
             ]),
             village_quests: d[VILLAGE_QUESTS_OFFSET],
             guild_quests: d[GUILD_QUESTS_OFFSET],
+            hunter_rank: be16(d, HUNTER_RANK_OFFSET),
             weapon_uses: std::array::from_fn(|i| {
                 u32::from(be16(d, WEAPON_USAGE_VILLAGE + 2 * i)) + u32::from(be16(d, WEAPON_USAGE_GUILD + 2 * i))
             }),
@@ -290,6 +306,7 @@ mod tests {
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,
+            hunter_rank: 0,
             weapon_uses: [0; 12],
             card_title: (0, 0, 0),
             greeting: String::new(),
@@ -437,6 +454,40 @@ mod tests {
         let three = Save::parse(&fixture!("16-jewel3/user2")).unwrap();
         let full = three.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(full.talisman_decorations(), vec![0x91, 0x15, 0x97]);
+    }
+
+    #[test]
+    fn the_hunter_rank_is_read() {
+        assert_eq!(
+            Save::parse(&fixture!("03-latest/user1")).unwrap().hunter_rank,
+            0,
+            "Shamus has not been to the hall"
+        );
+        assert_eq!(Save::parse(&fixture!("09-hr1-worntester/user2")).unwrap().hunter_rank, 1);
+        assert_eq!(
+            Save::parse(&fixture!("22-hammer/user2")).unwrap().hunter_rank,
+            1,
+            "before The Fisherman's Friend"
+        );
+        assert_eq!(Save::parse(&fixture!("23-hr2/user2")).unwrap().hunter_rank, 2);
+    }
+
+    #[test]
+    fn the_reached_rank_follows_the_hunter_rank() {
+        use crate::drops::Rank;
+        let mut s = Save::parse(&fixture!("23-hr2/user2")).unwrap();
+        assert_eq!(s.reached_rank(), Rank::Low);
+        for (hr, rank) in [
+            (0, Rank::Low),
+            (2, Rank::Low),
+            (3, Rank::High),
+            (5, Rank::High),
+            (6, Rank::G),
+            (8, Rank::G),
+        ] {
+            s.hunter_rank = hr;
+            assert_eq!(s.reached_rank(), rank, "HR{hr}");
+        }
     }
 
     #[test]

@@ -13,15 +13,20 @@ use mh3u_core::drops::{Method, Rank, Source};
 pub enum RankFilter {
     All,
     Only(Rank),
+    /// Every rank up to this one: what the hunter's hunter rank has reached.
+    UpTo(Rank),
 }
 
 impl RankFilter {
-    pub fn next(self) -> RankFilter {
+    /// The next filter in the cycle: all ranks, one rank at a time, then (when the hunter has reached high rank but not G rank, so it
+    /// is not the same as a single rank or as all) every rank the hunter has reached.
+    pub fn next(self, reached: Rank) -> RankFilter {
         match self {
             RankFilter::All => RankFilter::Only(Rank::Low),
             RankFilter::Only(Rank::Low) => RankFilter::Only(Rank::High),
             RankFilter::Only(Rank::High) => RankFilter::Only(Rank::G),
-            RankFilter::Only(Rank::G) => RankFilter::All,
+            RankFilter::Only(Rank::G) if reached == Rank::High => RankFilter::UpTo(reached),
+            RankFilter::Only(Rank::G) | RankFilter::UpTo(_) => RankFilter::All,
         }
     }
 
@@ -29,6 +34,7 @@ impl RankFilter {
         match self {
             RankFilter::All => "all ranks",
             RankFilter::Only(rank) => rank.label(),
+            RankFilter::UpTo(_) => "ranks you have reached",
         }
     }
 
@@ -36,6 +42,7 @@ impl RankFilter {
         match self {
             RankFilter::All => true,
             RankFilter::Only(only) => only == rank,
+            RankFilter::UpTo(top) => rank <= top,
         }
     }
 }
@@ -587,8 +594,16 @@ mod tests {
         assert_eq!(run(&table(), &[], RankFilter::All), Plan::default());
         let mut f = RankFilter::All;
         for _ in 0..4 {
-            f = f.next();
+            f = f.next(Rank::Low);
         }
         assert_eq!(f, RankFilter::All);
+        // at high rank the cycle has a fifth stop: both ranks reached
+        let mut f = RankFilter::All;
+        for _ in 0..4 {
+            f = f.next(Rank::High);
+        }
+        assert_eq!(f, RankFilter::UpTo(Rank::High));
+        assert!(f.allows(Rank::Low) && f.allows(Rank::High) && !f.allows(Rank::G));
+        assert_eq!(f.next(Rank::High), RankFilter::All);
     }
 }

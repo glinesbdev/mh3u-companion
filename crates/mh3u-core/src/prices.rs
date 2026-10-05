@@ -499,6 +499,7 @@ mod tests {
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,
+            hunter_rank: 0,
             weapon_uses: [0; 12],
             card_title: (0, 0, 0),
             greeting: String::new(),

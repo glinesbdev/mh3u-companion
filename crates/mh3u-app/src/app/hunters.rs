@@ -22,7 +22,8 @@ impl App {
                 let bytes = std::fs::read(dir.join(format!("user{slot}"))).ok()?;
                 let save = Save::parse(&bytes).ok()?;
                 let mut played = format!(
-                    "{}  {} village · {} guild",
+                    "HR{}  {}  {} village · {} guild",
+                    save.hunter_rank,
                     save.play_time(),
                     save.village_quests,
                     save.guild_quests
