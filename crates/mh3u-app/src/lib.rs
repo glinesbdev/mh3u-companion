@@ -28,7 +28,7 @@ use std::path::PathBuf;
 /// The game's title id (US).
 pub const TITLE_ID: &str = "0005000010118300";
 
-/// Look for a `... [Game] [0005000010118300]` folder under ~/games/wiiu.
+/// Look for a `... [Game] [0005000010118300]` folder in the usual place for game dumps.
 pub fn guess_game_dir() -> Option<PathBuf> {
     let dir = dirs::home_dir()?.join("games/wiiu");
     std::fs::read_dir(dir).ok()?.filter_map(|e| e.ok().map(|e| e.path())).find(|p| {

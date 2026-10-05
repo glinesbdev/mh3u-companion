@@ -1,7 +1,7 @@
 # MH3U Companion settings: the default profile, with every setting at the value the program was made with.
 # Copy this file to ~/.config/mh3u-companion/config.txt (or to config-NAME.txt for a profile called NAME), or point at it with
 # --config PATH. game_dir and cemu are blank on purpose: fill in where your game dump and Cemu are (a blank game_dir is looked for
-# under ~/games/wiiu, a blank cemu starts `Cemu` from the path).
+# in the usual places, a blank cemu starts `Cemu` from the path).
 #
 # One `key = value` per line. Lines that start with # are comments and are ignored. To set something,
 # remove the # in front of its line and change the value. Put a comment on a line of its own, not after a value.
@@ -70,8 +70,8 @@ start_tab = items
 # Example: slot = 2
 slot = 1
 
-# Game folder (next start): The game dump folder (the one with code/ and content/). Left out: it is looked for under
-# ~/games/wiiu. --game-dir and MH3U_GAME_DIR win over this.
+# Game folder (next start): The game dump folder (the one with code/ and content/). Left out: the program looks for it in
+# the usual places. --game-dir and MH3U_GAME_DIR win over this.
 # Example: game_dir = /home/me/games/mh3u
 game_dir =
 

@@ -15,7 +15,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(version)]
 struct Cli {
-    /// The game dump folder (the one with code/ and content/). Default: `game_dir` in config.txt, else found under ~/games/wiiu
+    /// The game dump folder (the one with code/ and content/). Default: `game_dir` in config.txt, else looked for in the usual places
     #[arg(long, env = "MH3U_GAME_DIR", value_name = "DIR")]
     game_dir: Option<PathBuf>,
     /// A save file (userN); overrides --slot

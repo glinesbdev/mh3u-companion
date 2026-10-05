@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate the README screenshots (docs/screenshots/*.svg) by driving the real app in tmux.
 #
-# Needs tmux, a release build of both tools (cargo build --release), the game dump (found under ~/games/wiiu, as the app does)
+# Needs tmux, a release build of both tools (cargo build --release), the game dump (found the way the app finds it)
 # and a save to show. The app runs in a sandbox: its wishlist, price ledger and unlocked-pieces file live in a temporary
 # directory, so your own are never read or changed. The hunter name is replaced with "Hunter" in the pictures, and the plain
 # icons are used (the anvil is a Nerd Font glyph that most viewers of the README would not have).
