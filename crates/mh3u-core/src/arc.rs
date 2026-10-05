@@ -4,8 +4,6 @@
 //! `count` 80-byte entries: name[64], type hash, compressed size, uncompressed size, offset.
 
 use anyhow::{Context, Result, bail};
-use flate2::read::ZlibDecoder;
-use std::io::Read;
 
 const MAGIC: &[u8; 4] = b"\0CRA";
 const HEADER_LEN: usize = 12;
@@ -63,7 +61,7 @@ impl<'a> Arc<'a> {
     /// Decompress one entry's contents.
     pub fn read(&self, e: &ArcEntry) -> Result<Vec<u8>> {
         let start = e.offset as usize;
-        let end = start + e.compressed_size as usize;
+        let end = start.saturating_add(e.compressed_size as usize);
         let raw = self
             .data
             .get(start..end)
@@ -71,10 +69,6 @@ impl<'a> Arc<'a> {
         if e.compressed_size == e.size {
             return Ok(raw.to_vec()); // stored uncompressed
         }
-        let mut out = Vec::with_capacity(e.size as usize);
-        ZlibDecoder::new(raw)
-            .read_to_end(&mut out)
-            .with_context(|| format!("{}: inflate failed", e.name))?;
-        Ok(out)
+        crate::inflate::inflate(raw, e.size as usize).with_context(|| format!("{}: inflate failed", e.name))
     }
 }

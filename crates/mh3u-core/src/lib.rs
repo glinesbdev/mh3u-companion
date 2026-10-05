@@ -30,6 +30,9 @@ pub mod gather_spots;
 pub mod gmd;
 pub mod hitzones;
 pub mod horn_songs;
+#[cfg(test)]
+mod hostile_tests;
+pub mod inflate;
 pub mod item_extras;
 pub mod items;
 pub mod live;
