@@ -24,6 +24,8 @@ impl App {
             self.confirm_quit = false;
         } else if self.tree.is_some() {
             self.tree_key(code);
+        } else if self.settings.is_some() {
+            self.settings_key(code);
         } else if self.hunter_choice.is_some() {
             self.hunter_choice_key(code);
         } else if self.quests.choosing.is_some() {
@@ -236,6 +238,7 @@ impl App {
             }
             Key::Char('?') => self.show_help = true,
             Key::Char('H') => self.open_hunter_picker(),
+            Key::Char('S') => self.open_settings(),
             // put the highlighted weapon in the comparison
             Key::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
             Key::Char('t') if self.tab != Tab::Items => self.open_tree(),

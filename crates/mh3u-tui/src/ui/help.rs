@@ -21,7 +21,7 @@ pub(super) const SECTIONS: &[Section] = &[
             ("x  Esc", "clear the search"),
             ("t", "upgrade tree of a weapon (↑ ↓ scroll, t closes)"),
             ("i", "what each skill does"),
-            ("H", "choose which save slot's hunter to show (not while live)"),
+            ("H  S", "choose which save slot's hunter to show (not while live); settings"),
             ("?", "this help"),
             ("q", "quit"),
         ],

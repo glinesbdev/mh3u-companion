@@ -30,6 +30,8 @@ Everything that reads a file or the running game. No terminal code.
 | `quest` | The quest files (`quest/us/*.quest`): texts, monsters and the two reward boxes. |
 | `blacksmith` | The rule for which pieces the blacksmith offers (a monster that drops the piece's first material has been hunted). |
 | `prices` | The forging-cost ledger and the tracker that learns costs from play. |
+| `decorations`, `weapon_extras`, `item_extras`, `gather_spots`, `horn_songs`, `zone_names`, `skilltiers`, `weaponskills` | Data the game's files do not give where the program can read it: tables taken from Kiranico's and the Monster Hunter Wiki's databases (`mh3u-core/data/*.tsv`, joined to the game's own names and checked on load) and two hand-made lists. `decorations` is the exception: it is in the executable. |
+| `debug_edits`, `online` | The ledger of what the debug commands changed (and how to take it out) and the signs that the emulator is online. |
 | `live`, `livesave`, `procmem`, `edit` | Live mode: find the save in Cemu's memory, follow it, and (debug only) write to it. |
 
 ## `mh3u-app`: the app without a screen
@@ -56,13 +58,15 @@ app/
   blacksmith.rs     what is on offer, and the pieces remembered as seen on offer
   build_manager.rs  Builds tab: BuildManager (its state), templates, the popups that edit them
   live.rs           following the running game, reloading the save, the debug command line
+  settings.rs       the Settings screen's state and keys (`S`); writes `config.txt` through `config`
+  debug_guard.rs    the ledger of debug edits and the online watch
   price_watch.rs    watching for forging costs
   money.rs, sorting.rs   small shared types
 ```
 
 Pure logic with no `App` in sight lives beside them so it can be tested alone: `builds` (the skill search), `hunts` (which monsters to hunt), `upgrade_path` (the cheapest route to a weapon), `families` (armor grouped by the family in its name), `compare` (the best value in a row), `zenny` (what to earn and make first), `gains` (the pickup log and its file format), `changes` (what changed since the app last closed), `templates`
 (saved sets and their file format), `worn` (totals for a set), `tree` (the weapon upgrade tree), `search` (fuzzy matching),
-`unlocked` and `files` (what is kept on disk, and where).
+`unlocked` and `files` (what is kept on disk, and where), `config` (the settings file: the table of settings that gives the file's text, the parser, the checks and the Settings screen, and the in-place editing of one line).
 
 ## `mh3u-tui`: the terminal screen
 

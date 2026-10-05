@@ -27,6 +27,8 @@ pub struct Files {
     pub shopping: PathBuf,
     /// What the hunter held when the app last closed (see `changes`); one per hunter, in the data folder.
     pub last_seen: PathBuf,
+    /// The settings file (`config.txt`, see `crate::config`); one for all hunters, in the config folder.
+    pub settings: PathBuf,
     /// What the debug commands changed for this hunter (see `mh3u_core::debug_edits`); one per hunter, in the data folder.
     pub debug_edits: PathBuf,
     /// Where `--debug-edit` copies the saves before changing the game.
@@ -77,6 +79,7 @@ impl Files {
             } else {
                 format!("last-seen-{slot}.txt")
             }),
+            settings: config.join("config.txt"),
             debug_edits: data.join(if slot == 1 {
                 "debug-edits.txt".to_string()
             } else {
@@ -84,6 +87,11 @@ impl Files {
             }),
             backups: data.join("backups"),
         }
+    }
+
+    /// The settings file in the usual place, before any save slot is known.
+    pub fn settings_path() -> Option<PathBuf> {
+        Some(dirs::config_dir()?.join(APP).join("config.txt"))
     }
 
     /// Whether some hunter has debug edits on record, so the program must be able to take them out again.

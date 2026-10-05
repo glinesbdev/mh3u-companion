@@ -350,15 +350,14 @@
 <text x="544.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">sort</text>
 <text x="601.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
 <text x="620.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
-<text x="697.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="716.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="774.4" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="793.6" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
-<text x="860.8" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
-<text x="937.6" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
-<text x="1004.8" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
-<text x="1062.4" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">to</text>
-<text x="1091.2" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">the</text>
-<text x="1129.6" y="690.4" textLength="19.2" lengthAdjust="spacing" fill="#8a8a8a">co</text>
+<text x="697.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">S</text>
+<text x="716.8" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">settings</text>
+<text x="812.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="832.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="889.6" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="908.8" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="976.0" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
+<text x="1052.8" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
+<text x="1120.0" y="690.4" textLength="28.8" lengthAdjust="spacing" fill="#8a8a8a">add</text>
 </g>
 </svg>

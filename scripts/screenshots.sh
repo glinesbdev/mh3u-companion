@@ -31,13 +31,19 @@ sleep 2
 keys() { tmux send-keys -t "$SESSION" "$@"; sleep 0.6; }
 shot() { # shot <name>
   tmux capture-pane -t "$SESSION" -p -e >"$SANDBOX/$1.ansi"
-  target/release/mh3u-tools ansi2svg "$SANDBOX/$1.ansi" "docs/screenshots/$1.svg" "$NAME=Hunter"
+  target/release/mh3u-tools ansi2svg "$SANDBOX/$1.ansi" "docs/screenshots/$1.svg" "$NAME=Hunter" "$SANDBOX/config=~/.config"
   echo "wrote docs/screenshots/$1.svg"
 }
 
 keys p Down Down Down Down Down Down Down Down   # the pouch, on Jaggi Hide
 shot items
 keys p                    # back to the box
+
+keys S                    # the Settings screen
+keys Right                # icons: plain
+keys Down Right           # the accent color: the next in the list
+shot settings
+keys d Escape
 
 
 keys Right Right Right    # Crafting (Items, Equipment, Worn, Crafting)

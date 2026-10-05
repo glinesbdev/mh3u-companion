@@ -7,6 +7,7 @@ pub mod builds;
 pub mod changes;
 pub mod commands;
 pub mod compare;
+pub mod config;
 pub mod families;
 pub mod files;
 pub mod gains;

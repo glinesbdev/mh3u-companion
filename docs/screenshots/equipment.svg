@@ -330,12 +330,13 @@
 <text x="630.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">info</text>
 <text x="688.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">H</text>
 <text x="707.2" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">hunter</text>
-<text x="784.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
-<text x="803.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
-<text x="860.8" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
-<text x="880.0" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
-<text x="947.2" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
-<text x="1024.0" y="690.4" textLength="57.6" lengthAdjust="spacing" fill="#8a8a8a">Blade+</text>
-<text x="1091.2" y="690.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">added</text>
+<text x="784.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">S</text>
+<text x="803.2" y="690.4" textLength="76.8" lengthAdjust="spacing" fill="#8a8a8a">settings</text>
+<text x="899.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">?</text>
+<text x="918.4" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">help</text>
+<text x="976.0" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7" font-weight="bold">q</text>
+<text x="995.2" y="690.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">quit</text>
+<text x="1062.4" y="690.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">Ravager</text>
+<text x="1139.2" y="690.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">B</text>
 </g>
 </svg>

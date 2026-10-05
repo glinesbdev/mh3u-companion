@@ -6,6 +6,14 @@ use mh3u_app::input::{Key, Mods};
 use mh3u_core::gamedata::GameData;
 use ratatui::{Terminal, backend::TestBackend};
 
+/// The look (colors and icons) is shared by the whole program, and every draw sets it from the app's settings: tests that draw or look at
+/// it take turns.
+static LOOK_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+fn turn() -> std::sync::MutexGuard<'static, ()> {
+    LOOK_LOCK.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 fn app() -> Option<App> {
     let game = GameData::load(&mh3u_app::guess_game_dir()?).ok()?;
     let save = std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2"));
@@ -35,6 +43,7 @@ fn draw_all(app: &mut App, width: u16, height: u16) -> Vec<String> {
 
 #[test]
 fn every_tab_draws_at_every_size_and_shows_its_name() {
+    let _turn = turn();
     let Some(mut app) = app() else { return };
     for _ in 0..Tab::ALL.len() {
         for (width, height) in [(118, 34), (200, 50), (80, 24), (60, 20), (40, 12)] {
@@ -58,6 +67,7 @@ fn every_tab_draws_at_every_size_and_shows_its_name() {
 
 #[test]
 fn the_main_tabs_show_their_panes() {
+    let _turn = turn();
     let Some(mut app) = app() else { return };
     let text = |app: &mut App| draw_all(app, 130, 40).join("\n");
     assert!(text(&mut app).contains("Item Pouch"), "Items");
@@ -70,6 +80,7 @@ fn the_main_tabs_show_their_panes() {
 
 #[test]
 fn the_help_popup_and_a_picker_draw_over_a_tab() {
+    let _turn = turn();
     let Some(mut app) = app() else { return };
     app.on_key(Key::Char('?'), Mods::default());
     let help = draw_all(&mut app, 130, 50).join("\n");
@@ -82,4 +93,43 @@ fn the_help_popup_and_a_picker_draw_over_a_tab() {
     app.on_key(Key::Char('a'), Mods::default());
     let picker = draw_all(&mut app, 130, 40).join("\n");
     assert!(picker.contains("Add a skill"), "the skill picker opens");
+}
+
+#[test]
+fn the_settings_popup_draws_over_a_tab_with_its_values() {
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    app.on_key(Key::Char('S'), Mods::default());
+    let lines = draw_all(&mut app, 130, 40).join("\n");
+    for word in [
+        "Settings",
+        "Icons",
+        "Accent color",
+        "Hunt plan goal",
+        "Start tab",
+        "Game folder",
+        "next start",
+    ] {
+        assert!(lines.contains(word), "{word}");
+    }
+    // and in a small terminal it still draws
+    draw_all(&mut app, 60, 16);
+    // a color setting shows its swatch in the color the setting names
+    app.on_key(Key::Down, Mods::default());
+    app.on_key(Key::Char('d'), Mods::default());
+    app.on_key(Key::Esc, Mods::default());
+    assert!(app.settings.is_none());
+}
+
+#[test]
+fn the_look_follows_the_settings() {
+    use mh3u_app::config::Config;
+    let _turn = turn();
+    theme::apply(&Config::parse("accent = red\nmuted = #8a8a8a\nicons = plain\n"));
+    assert_eq!(theme::accent().fg, Some(ratatui::style::Color::Red));
+    assert_eq!(theme::muted().fg, Some(ratatui::style::Color::Rgb(0x8a, 0x8a, 0x8a)));
+    assert_eq!(theme::anvil().content.as_ref(), "⚒ ");
+    theme::apply(&Config::default());
+    assert_eq!(theme::accent().fg, Some(ratatui::style::Color::LightCyan));
+    assert_eq!(theme::muted().fg, Some(ratatui::style::Color::Indexed(245)));
 }

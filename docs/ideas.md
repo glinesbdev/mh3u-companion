@@ -37,7 +37,6 @@ belong to.
 ## Quality of life
 
 - Search on the Worn tab (it has no list).
-- Config file for colors and icons (the anvil, the muted gray) beside the wishlist.
 - Mouse support for the lists.
 - The zenny cost of upgrading armor, if the game has one (not found).
 

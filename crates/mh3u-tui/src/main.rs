@@ -5,6 +5,7 @@ mod ui;
 use anyhow::{Context, Result, bail};
 use clap::Parser;
 use mh3u_app::app::{App, Live};
+use mh3u_app::config::Config;
 use mh3u_app::files::{Files, slot_of};
 use mh3u_app::{TITLE_ID, guess_game_dir};
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
@@ -14,21 +15,22 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(version)]
 struct Cli {
-    /// The game dump folder (the one with code/ and content/); found under ~/games/wiiu when not given
+    /// The game dump folder (the one with code/ and content/). Default: `game_dir` in config.txt, else found under ~/games/wiiu
     #[arg(long, env = "MH3U_GAME_DIR", value_name = "DIR")]
     game_dir: Option<PathBuf>,
     /// A save file (userN); overrides --slot
     #[arg(long, env = "MH3U_SAVE", value_name = "FILE")]
     save: Option<PathBuf>,
-    /// Which of Cemu's three save slots to read (with --live the app follows the hunter the game loads, so this is only the start)
-    #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u8).range(1..=3))]
-    slot: u8,
+    /// Which of Cemu's three save slots to read (with --live the app follows the hunter the game loads, so this is only the start).
+    /// Default: `slot` in config.txt, else 1
+    #[arg(long, value_parser = clap::value_parser!(u8).range(1..=3))]
+    slot: Option<u8>,
     /// Start Cemu on the game and follow it live
     #[arg(long)]
     live: bool,
-    /// The Cemu program to start with --live
-    #[arg(long, default_value = "Cemu", requires = "live", value_name = "PATH")]
-    cemu: String,
+    /// The Cemu program to start with --live. Default: `cemu` in config.txt, else Cemu
+    #[arg(long, requires = "live", value_name = "PATH")]
+    cemu: Option<String>,
     /// Allow commands that change the running game (backs up the saves first)
     #[arg(long, requires = "live")]
     debug_edit: bool,
@@ -96,9 +98,19 @@ fn main() -> Result<()> {
         cemu,
         debug_edit,
     } = Cli::parse();
+    // the settings file supplies what was not given on the command line
+    let config = Files::settings_path()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .map(|t| Config::parse(&t))
+        .unwrap_or_default();
+    let slot = slot.unwrap_or_else(|| config.slot());
+    let cemu = cemu
+        .or_else(|| config.text("cemu").map(str::to_string))
+        .unwrap_or_else(|| "Cemu".to_string());
     let game_dir = game_dir
+        .or_else(|| config.text("game_dir").map(PathBuf::from))
         .or_else(guess_game_dir)
-        .context("game dump not found: give --game-dir or set MH3U_GAME_DIR")?;
+        .context("game dump not found: give --game-dir, set MH3U_GAME_DIR or game_dir in config.txt")?;
     let save = match save {
         Some(s) => s,
         None => home()?.join(format!(

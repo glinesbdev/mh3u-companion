@@ -2,13 +2,81 @@
 //! partly, red means missing, cyan marks focus and keys, gray is secondary text. Named terminal colors are used on purpose so
 //! the user's own terminal palette applies. With `NO_COLOR` set only bold, dim and the symbols remain.
 
+use mh3u_app::config::{ColorSpec, Config};
 use ratatui::{
     layout::{Constraint, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, BorderType},
 };
-use std::sync::OnceLock;
+use std::sync::{OnceLock, RwLock};
+
+/// The colors and icons the settings (`config.txt`) can change. The screen sets them from the app's settings before every draw.
+#[derive(Clone, Copy)]
+struct Look {
+    plain_icons: bool,
+    accent: Color,
+    good: Color,
+    warn: Color,
+    bad: Color,
+    muted: Color,
+    faint: Color,
+}
+
+static LOOK: RwLock<Look> = RwLock::new(Look {
+    plain_icons: false,
+    accent: Color::LightCyan,
+    good: Color::Green,
+    warn: Color::Yellow,
+    bad: Color::Red,
+    muted: Color::Indexed(245),
+    faint: Color::DarkGray,
+});
+
+fn look() -> Look {
+    *LOOK.read().unwrap_or_else(|e| e.into_inner())
+}
+
+/// A color of the settings as the screen's own kind.
+pub fn color_of(spec: ColorSpec) -> Color {
+    const NAMED: [Color; 16] = [
+        Color::Black,
+        Color::Red,
+        Color::Green,
+        Color::Yellow,
+        Color::Blue,
+        Color::Magenta,
+        Color::Cyan,
+        Color::Gray,
+        Color::DarkGray,
+        Color::LightRed,
+        Color::LightGreen,
+        Color::LightYellow,
+        Color::LightBlue,
+        Color::LightMagenta,
+        Color::LightCyan,
+        Color::White,
+    ];
+    match spec {
+        ColorSpec::Named(i) => NAMED[usize::from(i).min(15)],
+        ColorSpec::Indexed(n) => Color::Indexed(n),
+        ColorSpec::Rgb(r, g, b) => Color::Rgb(r, g, b),
+    }
+}
+
+/// Take the colors and icons from the settings.
+pub fn apply(config: &Config) {
+    let new = Look {
+        plain_icons: config.plain_icons(),
+        accent: color_of(config.color("accent")),
+        good: color_of(config.color("good")),
+        warn: color_of(config.color("warn")),
+        bad: color_of(config.color("bad")),
+        muted: color_of(config.color("muted")),
+        faint: color_of(config.color("faint")),
+    };
+    *LOOK.write().unwrap_or_else(|e| e.into_inner()) = new;
+}
 
 fn colors_on() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
@@ -21,30 +89,30 @@ fn fg(color: Color) -> Style {
 
 /// Focus, selection and key names.
 pub fn accent() -> Style {
-    // the bright variant: the plain cyan slot is dim in many themes
-    fg(Color::LightCyan)
+    // the bright variant by default: the plain cyan slot is dim in many themes
+    fg(look().accent)
 }
 
 /// Something you have, can afford or can do.
 pub fn good() -> Style {
-    fg(Color::Green)
+    fg(look().good)
 }
 
 /// Partly there.
 pub fn warn() -> Style {
-    fg(Color::Yellow)
+    fg(look().warn)
 }
 
 /// Something missing or out of reach.
 pub fn bad() -> Style {
-    fg(Color::Red)
+    fg(look().bad)
 }
 
 /// Secondary text: counts, separators, key descriptions. A fixed mid gray: the terminal's own "dark gray" is nearly
 /// invisible in many themes and its "gray" is as bright as normal text, so neither is used for text.
 pub fn muted() -> Style {
     if colors_on() {
-        Style::new().fg(Color::Indexed(245))
+        Style::new().fg(look().muted)
     } else {
         Style::new().add_modifier(Modifier::DIM)
     }
@@ -53,7 +121,7 @@ pub fn muted() -> Style {
 /// Decoration that should recede: inactive borders and scroll bars. Darker than `muted`, so never used for text.
 pub fn faint() -> Style {
     if colors_on() {
-        Style::new().fg(Color::DarkGray)
+        Style::new().fg(look().faint)
     } else {
         Style::new().add_modifier(Modifier::DIM)
     }
@@ -86,10 +154,11 @@ pub fn pane<'a>(title: impl Into<Line<'a>>, active: bool) -> Block<'a> {
         .title(title.into().patch_style(base))
 }
 
-/// Which symbols to draw: Nerd Font glyphs by default (the anvil), plain Unicode with `MH3U_ICONS=plain`.
+/// Which symbols to draw: Nerd Font glyphs by default (the anvil), plain Unicode with `MH3U_ICONS=plain` or `icons = plain` in the
+/// settings.
 fn plain_icons() -> bool {
-    static PLAIN: OnceLock<bool> = OnceLock::new();
-    *PLAIN.get_or_init(|| std::env::var("MH3U_ICONS").is_ok_and(|v| v.eq_ignore_ascii_case("plain")))
+    static ENV: OnceLock<bool> = OnceLock::new();
+    *ENV.get_or_init(|| std::env::var("MH3U_ICONS").is_ok_and(|v| v.eq_ignore_ascii_case("plain"))) || look().plain_icons
 }
 
 /// An anvil marks a piece the blacksmith is offering. Two cells wide (the glyph and a space it may spill into), so rows with and

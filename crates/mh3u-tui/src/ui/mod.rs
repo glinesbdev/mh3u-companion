@@ -25,6 +25,7 @@ mod pieces;
 mod quests;
 #[cfg(test)]
 mod screen_tests;
+mod settings;
 mod skills;
 mod tree;
 mod wishlist;
@@ -43,12 +44,14 @@ use items::{draw_items, wrap_items};
 use monsters::draw_monsters;
 use pieces::{cost_spans, piece_details, unlock_line};
 use quests::draw_quests;
+use settings::draw_settings;
 use skills::draw_skills;
 use tree::draw_tree;
 use wishlist::draw_wishlist;
 use worn::{draw_worn, totals_lines};
 
 pub fn draw(f: &mut Frame, app: &mut App) {
+    theme::apply(&app.config);
     let [tabs, body, footer] = Layout::vertical([Constraint::Length(3), Constraint::Min(0), Constraint::Length(1)]).areas(f.area());
 
     let selected = Tab::ALL.iter().position(|&t| t == app.tab).unwrap_or(0);
@@ -143,6 +146,9 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
     if app.hunter_choice.is_some() {
         draw_hunter_choice(f, app);
+    }
+    if app.settings.is_some() {
+        draw_settings(f, app);
     }
     if app.builds.piece_picker.is_some() {
         draw_piece_picker(f, app);
@@ -288,7 +294,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 ]);
             }
         }
-        keys.extend([("H", "hunter"), ("?", "help"), ("q", "quit")]);
+        keys.extend([("H", "hunter"), ("S", "settings"), ("?", "help"), ("q", "quit")]);
         theme::key_hints(&keys)
     };
     spans.push(Span::raw("   "));

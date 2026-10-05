@@ -44,6 +44,7 @@ mod monsters;
 mod price_watch;
 mod quests;
 mod scan;
+mod settings;
 mod skills;
 mod sorting;
 mod wishlist;
@@ -65,6 +66,7 @@ pub use money::{group_digits, signed_zenny};
 pub use monsters::MonsterTab;
 pub use price_watch::PriceBook;
 pub use quests::QuestTab;
+pub use settings::SettingsScreen;
 pub use skills::{SkillsTab, WithSkill};
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
 pub use wishlist::{WishList, WishSort};
@@ -176,6 +178,9 @@ pub struct App {
     pub console: EditConsole,
     /// What the debug commands changed, and whether the game is online (see `debug_guard`).
     pub guard: DebugGuard,
+    /// The settings from `config.txt` (see `crate::config`), and the Settings screen when it is open.
+    pub config: crate::config::Config,
+    pub settings: Option<SettingsScreen>,
     /// Pieces seen on offer at the blacksmith, per hunter, saved next to the ledger.
     unlocked: Unlocked,
     /// Where the files live; `None` when the system has no home folder, and nothing is kept between sessions.
@@ -239,6 +244,8 @@ impl App {
             costs: PriceBook::new(prices),
             console: EditConsole::default(),
             guard: DebugGuard::load(files.as_ref()),
+            config: crate::config::Config::default(),
+            settings: None,
             unlocked,
             slot,
             files,
@@ -253,6 +260,8 @@ impl App {
             confirm_quit: false,
             quit: false,
         };
+        app.load_config();
+        app.tab = Tab::ALL[app.config.start_tab()];
         app.refresh_families();
         app.refresh_quests();
         app.refresh_skills();
@@ -265,6 +274,12 @@ impl App {
         app.refresh_equipment();
         app.refresh_pieces();
         app.report_changes();
+        // a tab that works its content out when it is shown needs that done for the start tab too
+        match app.tab {
+            Tab::Builds => app.refresh_builds(),
+            Tab::Hunts => app.refresh_hunts(),
+            _ => {}
+        }
         Ok(app)
     }
 

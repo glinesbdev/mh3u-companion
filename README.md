@@ -38,6 +38,8 @@ what you own and what you need to craft or upgrade gear.
 
 ![A saved build template, slot by slot](docs/screenshots/templates.svg)
 
+![Settings: colors, icons and defaults, kept in a commented text file](docs/screenshots/settings.svg)
+
 </details>
 
 The pictures are drawn from the app's own output by `scripts/screenshots.sh` (the hunter name is replaced), using the colors of a
@@ -95,7 +97,8 @@ dark theme; your terminal's own palette applies when you run it.
 - **Look**: green means you have it or can afford it, yellow partly, red missing, cyan marks focus and keys. Materials show a
   small bar (`███░░░ 3/5`), armor shows its rarity (`R5`), gem slots (`◆◆◇`), element-colored resistances and one skill per
   line, and a forging cost turns red with the shortfall when you can't pay it. The terminal's own color scheme is used; set
-  `NO_COLOR=1` for plain text. The anvil is a Nerd Font glyph (Unicode has no anvil); `MH3U_ICONS=plain` draws a hammer and pick instead for terminals without a Nerd Font. Below 100 columns the panes stack instead of sitting side by side.
+  `NO_COLOR=1` for plain text. The anvil is a Nerd Font glyph (Unicode has no anvil); `icons = plain` in the settings (or `MH3U_ICONS=plain`) draws a hammer and pick instead for terminals without a Nerd Font. Below 100 columns the panes stack instead of sitting side by side.
+- **Settings**: `S` opens the Settings screen: the colors (accent, good, warning, bad, muted, faint), the icons (Nerd Font or plain), the Hunt plan goal, the tab and save slot to start on, the game folder and the Cemu program. Left and Right (or Enter) step through a setting's choices, Enter types a text one, `d` puts a setting back to its default and `w` writes the file. The same settings live in a plain text file, `~/.config/mh3u-companion/config.txt` (`$XDG_CONFIG_HOME/mh3u-companion/config.txt`): one `key = value` per line, `#` comments on their own lines. The file lists every setting with a comment, the choices, an example and its default as a commented-out line, so setting one means removing the `#` in front of it; the Settings screen edits only the line it changes and keeps your comments and everything else. A color is a name (`lightcyan`), a number from the 256-color palette (`245`) or `#rrggbb`. The command line (`--game-dir`, `--slot`, `--cemu`) and the environment (`MH3U_GAME_DIR`, `MH3U_ICONS`) win over the file. Colors, icons and the goal change at once; the start tab, slot, game folder and Cemu program at the next start. A line the program cannot read is reported on the status line and skipped.
 - **Sorting**: `s` on the Items tab sorts the item box by box order, name or quantity.
 - `Home`/`End` (or `g`/`G`) jump to the top and bottom of a list. `?` shows a key reference.
 - The screen reloads on its own whenever the game writes the save.

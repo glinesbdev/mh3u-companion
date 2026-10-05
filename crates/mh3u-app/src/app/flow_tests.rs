@@ -1079,3 +1079,82 @@ fn turning_online_play_on_in_cemus_settings_switches_the_debug_edits_off_until_i
     assert!(app.status.contains("offline again"), "{}", app.status);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn the_settings_screen_edits_the_config_file_in_place_and_the_start_tab_comes_from_it() {
+    let dir = temp_dir("settings");
+    let Some(mut app) = app_in(&dir) else { return };
+    let file = app.files.as_ref().unwrap().settings.clone();
+    assert!(!file.exists());
+    press(&mut app, "S");
+    assert!(app.settings.is_some());
+    // the first setting is the icons: Right steps it, and the file is made from the commented template with that one line set
+    key(&mut app, Key::Right);
+    assert_eq!(app.config.get("icons"), "plain");
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert!(text.lines().any(|l| l == "icons = plain"), "{text}");
+    assert!(
+        text.contains("# Example: icons = plain") && text.contains("# accent = lightcyan"),
+        "the comments are there"
+    );
+    // a color: down to accent, Right steps to the next name in the list (lightcyan -> white)
+    key(&mut app, Key::Down);
+    key(&mut app, Key::Right);
+    assert_eq!(app.config.get("accent"), "white");
+    // d puts it back to the default and turns the line back into a comment
+    press(&mut app, "d");
+    assert!(!app.config.is_set("accent"));
+    let text = std::fs::read_to_string(&file).unwrap();
+    assert!(
+        text.lines().any(|l| l == "# accent = lightcyan") && !text.lines().any(|l| l.starts_with("accent")),
+        "{text}"
+    );
+    // the hunt plan goal applies at once
+    while app.selected_setting().map(|d| d.key) != Some("hunt_goal") {
+        key(&mut app, Key::Down);
+    }
+    key(&mut app, Key::Enter);
+    assert_eq!(app.hunts.goal, crate::hunts::Goal::FewestRuns);
+    // a text setting is typed: Enter opens it, characters add, Enter keeps it
+    while app.selected_setting().map(|d| d.key) != Some("cemu") {
+        key(&mut app, Key::Down);
+    }
+    key(&mut app, Key::Enter);
+    assert!(app.settings.as_ref().unwrap().editing.is_some());
+    press(&mut app, "/opt/Cemu");
+    key(&mut app, Key::Enter);
+    assert_eq!(app.config.text("cemu"), Some("Cemu/opt/Cemu"));
+    // (typing starts from the current text, "Cemu"); the status says it takes effect at the next start
+    assert!(app.status.contains("next start"), "{}", app.status);
+    key(&mut app, Key::Esc);
+    assert!(app.settings.is_none());
+    // the file is read again by a new app: the start tab and the goal come from it
+    std::fs::write(&file, "# mine\nstart_tab = builds\nhunt_goal = runs\nbad_line\n").unwrap();
+    let game = GameData::load(&crate::guess_game_dir().unwrap()).unwrap();
+    let save = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2"));
+    let files = Files::in_dirs(&dir.join("config"), &dir.join("data"), 2);
+    let again = App::new(game, save, Some(files)).unwrap();
+    assert_eq!(again.tab, Tab::Builds);
+    assert_eq!(again.hunts.goal, crate::hunts::Goal::FewestRuns);
+    assert!(
+        again.status.contains("config.txt: line 4"),
+        "a bad line is reported: {}",
+        again.status
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_bad_value_is_refused_and_the_file_is_left_alone() {
+    let dir = temp_dir("settingsbad");
+    let Some(mut app) = app_in(&dir) else { return };
+    let file = app.files.as_ref().unwrap().settings.clone();
+    app.change_setting("slot", Some("7"));
+    assert!(app.status.contains("1 to 3"), "{}", app.status);
+    app.change_setting("accent", Some("blurple"));
+    assert!(app.status.contains("#rrggbb"), "{}", app.status);
+    assert!(!file.exists(), "nothing was written");
+    app.change_setting("accent", Some("#00afff"));
+    assert!(app.config.is_set("accent") && file.exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}
