@@ -26,9 +26,10 @@ const PLAY_SECONDS_OFFSET: usize = 0x4c;
 /// The guild card's weapon usage: twelve u16 counts of the quests done with each weapon type, first for the village (from here) and then
 /// for the guild hall (twelve u16 from `0x7b60`). The screen shows the two added together. Found by doing a Sword & Shield hall quest
 /// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved) a bow village quest (the tenth entry of the
-/// village list) a long sword village quest (the seventh) a dual blades village quest (the eleventh) a switch axe village quest (the eighth), a gunlance village quest (the ninth) and a hunting horn
-/// village quest (the twelfth). Those nine are certain (great sword, sword & shield, hammer, long sword, switch axe, gunlance, bow, dual
-/// blades, hunting horn); the three left are the lance and the two bowguns, in the entries 4 to 6, in the order of the equipment kinds; the order of the other eight follows the equipment kinds
+/// village list) a long sword village quest (the seventh) a dual blades village quest (the eleventh) a switch axe village quest (the eighth), a gunlance village quest (the ninth), a hunting horn
+/// village quest (the twelfth) and a lance village quest (the fourth). Those ten are certain (great sword, sword & shield, hammer, lance,
+/// long sword, switch axe, gunlance, bow, dual blades, hunting horn); the two left are the bowguns, in the entries 5 and 6, heavy first as in
+/// the equipment kinds; the order of the other eight follows the equipment kinds
 /// by guess, which the four that are known agree with.
 const WEAPON_USAGE_VILLAGE: usize = 0x7b48;
 const WEAPON_USAGE_GUILD: usize = 0x7b60;
@@ -572,6 +573,8 @@ mod tests {
         assert_eq!(Save::parse(&fixture!("28-gl/user2")).unwrap().weapon_uses[8], 1);
         // and a hunting horn village quest: the twelfth
         assert_eq!(Save::parse(&fixture!("29-hh/user2")).unwrap().weapon_uses[11], 1);
+        // and a lance village quest: the fourth
+        assert_eq!(Save::parse(&fixture!("30-lance/user2")).unwrap().weapon_uses[3], 1);
         let before = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
         assert_eq!(
             before.weapon_uses[..2],
