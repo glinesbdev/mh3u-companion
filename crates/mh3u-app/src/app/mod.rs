@@ -41,6 +41,7 @@ mod keys;
 mod live;
 mod money;
 mod monsters;
+mod pointer;
 mod price_watch;
 mod quests;
 mod scan;
@@ -198,6 +199,10 @@ pub struct App {
     /// Open while choosing which save slot's hunter to show.
     pub hunter_choice: Option<HunterChoice>,
     pub show_help: bool,
+    /// Where the last frame put its tabs and lists (filled in by the screen), for the mouse.
+    pub hits: crate::hits::Hits,
+    /// The last click on a list row: when, which cell, which row (to tell a double click).
+    last_click: Option<(Instant, (u16, u16), usize)>,
     /// First visible line of the help screen (the drawing code keeps it inside the text).
     pub help_scroll: u16,
     /// The recent change in zenny and when it happened (see `zenny_change`).
@@ -255,6 +260,8 @@ impl App {
             tree: None,
             hunter_choice: None,
             show_help: false,
+            hits: crate::hits::Hits::default(),
+            last_click: None,
             help_scroll: 0,
             zenny_change: None,
             confirm_quit: false,

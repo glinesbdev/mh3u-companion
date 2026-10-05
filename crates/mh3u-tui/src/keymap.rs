@@ -24,3 +24,16 @@ pub fn from_terminal(code: ratatui::crossterm::event::KeyCode) -> Option<Key> {
         _ => return None,
     })
 }
+
+/// What the mouse did, if the app has a use for it (the left button going down, the wheel).
+pub fn pointer_from_terminal(mouse: ratatui::crossterm::event::MouseEvent) -> Option<mh3u_app::input::Pointer> {
+    use mh3u_app::input::Pointer;
+    use ratatui::crossterm::event::{MouseButton, MouseEventKind as M};
+    let (col, row) = (mouse.column, mouse.row);
+    match mouse.kind {
+        M::Down(MouseButton::Left) => Some(Pointer::Click { col, row }),
+        M::ScrollDown => Some(Pointer::Scroll { col, row, down: true }),
+        M::ScrollUp => Some(Pointer::Scroll { col, row, down: false }),
+        _ => None,
+    }
+}

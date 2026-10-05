@@ -1,5 +1,6 @@
 use crate::theme::{self, accent, bad, bold, good, muted, warn};
 use mh3u_app::app::{App, Availability, Offer, Tab, TreeView, Via, group_digits, signed_zenny};
+use mh3u_app::hits::{Area as HitArea, Focus, Hits, ListHit};
 use mh3u_app::select::ListState;
 use mh3u_core::prices::{Route, Source};
 use ratatui::{
@@ -50,8 +51,18 @@ use tree::draw_tree;
 use wishlist::draw_wishlist;
 use worn::{draw_worn, totals_lines};
 
+thread_local! {
+    /// What this frame has drawn that can be clicked; handed to the app when the frame is done.
+    static HITS: std::cell::RefCell<Hits> = std::cell::RefCell::new(Hits::default());
+}
+
+fn hit_area(a: Rect) -> HitArea {
+    HitArea::new(a.x, a.y, a.width, a.height)
+}
+
 pub fn draw(f: &mut Frame, app: &mut App) {
     theme::apply(&app.config);
+    HITS.with(|h| *h.borrow_mut() = Hits::default());
     let [tabs, body, footer] = Layout::vertical([Constraint::Length(3), Constraint::Min(0), Constraint::Length(1)]).areas(f.area());
 
     let selected = Tab::ALL.iter().position(|&t| t == app.tab).unwrap_or(0);
@@ -108,6 +119,17 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     if first > 0 {
         tab_titles[0].spans.insert(0, Span::styled("‹ ", muted()));
     }
+    // each tab is its title with a cell of padding either side, and a divider after it
+    let mut x = tabs.x + 1;
+    let right = tabs.x + tabs.width.saturating_sub(1);
+    for (title, &tab) in tab_titles.iter().zip(&Tab::ALL[first..]) {
+        let width = (title.width() + 2) as u16;
+        if x + width > right {
+            break;
+        }
+        HITS.with(|h| h.borrow_mut().tabs.push((HitArea::new(x, tabs.y + 1, width, 1), tab)));
+        x += width + 1;
+    }
     f.render_widget(
         Tabs::new(tab_titles)
             .select(selected - first)
@@ -134,6 +156,10 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
 
     draw_footer(f, app, footer);
+    HITS.with(|h| {
+        let mut h = h.borrow_mut();
+        h.tab_lists = h.lists.len();
+    });
 
     if app.show_help {
         draw_help(f, app);
@@ -154,6 +180,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_piece_picker(f, app);
     }
     draw_name_prompt(f, app);
+    app.hits = HITS.with(|h| std::mem::take(&mut *h.borrow_mut()));
 }
 
 /// The first tab to draw so that the selected one is on screen. `widths` are the tab titles' widths; each takes two cells of padding
@@ -336,11 +363,26 @@ fn empty_pane(f: &mut Frame, area: Rect, title: String, active: bool, lines: Vec
 /// Draw a list with the app's own selection state. ratatui keeps the scroll position in a state of its own, so it is copied in and
 /// the new position copied back.
 fn render_list(f: &mut Frame, list: List, area: Rect, state: &mut ListState) {
+    render_list_for(f, list, area, state, None);
+}
+
+/// [`render_list`] for one of several lists on a tab: `focus` is what a click on it gives the keys to, and whether it has them now.
+fn render_list_for(f: &mut Frame, list: List, area: Rect, state: &mut ListState, focus: Option<(Focus, bool)>) {
+    let len = list.len();
     let mut drawn = ratatui::widgets::ListState::default()
         .with_offset(state.offset())
         .with_selected(state.selected());
     f.render_stateful_widget(list, area, &mut drawn);
     state.set_offset(drawn.offset());
+    HITS.with(|h| {
+        h.borrow_mut().lists.push(ListHit {
+            area: hit_area(area),
+            offset: drawn.offset(),
+            len,
+            selected: state.selected().filter(|_| focus.is_none_or(|(_, has_keys)| has_keys)),
+            focus: focus.map(|(f, _)| f),
+        });
+    });
 }
 
 /// A list pane's look: the highlighted row only stands out in the list that has the keys.

@@ -71,7 +71,7 @@ Pure logic with no `App` in sight lives beside them so it can be tested alone: `
 ## `mh3u-tui`: the terminal screen
 
 `main.rs` parses arguments (clap), opens the files, makes the `App` and runs the loop: draw, wait a moment for a key, `on_key`, `tick`.
-`keymap.rs` turns the terminal's keys into `input::Key`. `theme.rs` is the colours and shared widgets.
+`keymap.rs` turns the terminal's keys into `input::Key` and its mouse events into `input::Pointer`. While drawing, `ui` records where the tabs and lists are (`hits::Hits`, kept on the app); `app/pointer.rs` turns a click or wheel turn into the keys that do the same, so every tab and popup moves as it does from the keyboard. `theme.rs` is the colours and shared widgets.
 
 ```
 ui/

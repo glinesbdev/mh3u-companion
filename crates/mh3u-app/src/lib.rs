@@ -11,6 +11,7 @@ pub mod config;
 pub mod families;
 pub mod files;
 pub mod gains;
+pub mod hits;
 pub mod hunts;
 pub mod input;
 pub mod search;

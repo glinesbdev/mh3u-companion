@@ -17,6 +17,7 @@ pub(super) const SECTIONS: &[Section] = &[
             ("PgUp PgDn", "move ten rows"),
             ("Home End  g G", "top, bottom"),
             ("← →  h l  Tab", "switch tab"),
+            ("mouse", "click a tab or row; double-click a row for Enter; wheel moves"),
             ("/", "search (Items, Crafting, Quests, Families)"),
             ("x  Esc", "clear the search"),
             ("t", "upgrade tree of a weapon (↑ ↓ scroll, t closes)"),

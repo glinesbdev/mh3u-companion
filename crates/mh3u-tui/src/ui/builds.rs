@@ -31,11 +31,12 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             })
             .collect()
     };
-    render_list(
+    render_list_for(
         f,
         focused_list(rows, " Skills wanted ".to_string(), app.builds.focus == BuildFocus::Skills),
         top,
         &mut app.builds.target_state,
+        Some((Focus::Builds(BuildFocus::Skills), app.builds.focus == BuildFocus::Skills)),
     );
 
     let mut pool = String::from(app.builds.settings.pool.label());
@@ -82,11 +83,12 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         })
         .collect();
     let len = rows.len();
-    render_list(
+    render_list_for(
         f,
         focused_list(rows, format!(" Sets ({len}) · {pool} "), app.builds.focus == BuildFocus::Sets),
         middle,
         &mut app.builds.result_state,
+        Some((Focus::Builds(BuildFocus::Sets), app.builds.focus == BuildFocus::Sets)),
     );
     scrollbar(f, middle, len, app.builds.result_state.selected());
 
@@ -109,11 +111,12 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
             .collect()
     };
     let count = app.builds.templates.len();
-    render_list(
+    render_list_for(
         f,
         focused_list(rows, format!(" Templates ({count}) "), app.builds.focus == BuildFocus::Templates),
         bottom,
         &mut app.builds.template_state,
+        Some((Focus::Builds(BuildFocus::Templates), app.builds.focus == BuildFocus::Templates)),
     );
 
     let (title, lines) = if app.builds.focus == BuildFocus::Templates {

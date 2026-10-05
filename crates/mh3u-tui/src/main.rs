@@ -193,8 +193,22 @@ fn main() -> Result<()> {
             app.enable_edit(note);
         }
     }
+    let mouse = app.config.mouse();
     let mut terminal = ratatui::init();
+    if mouse {
+        use ratatui::crossterm::{event::EnableMouseCapture, execute};
+        execute!(std::io::stdout(), EnableMouseCapture)?;
+        // a panic must give the mouse back too (ratatui's own hook only restores the screen)
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| {
+            let _ = ratatui::crossterm::execute!(std::io::stdout(), ratatui::crossterm::event::DisableMouseCapture);
+            previous(info);
+        }));
+    }
     let result = run(&mut app, &mut terminal);
+    if mouse {
+        let _ = ratatui::crossterm::execute!(std::io::stdout(), ratatui::crossterm::event::DisableMouseCapture);
+    }
     ratatui::restore();
     app.finish();
     result
@@ -205,17 +219,25 @@ fn run(app: &mut App, terminal: &mut ratatui::DefaultTerminal) -> Result<()> {
     use ratatui::crossterm::event::{self, Event, KeyEventKind};
     while !app.wants_quit() {
         terminal.draw(|f| ui::draw(f, app))?;
-        if event::poll(std::time::Duration::from_millis(250))?
-            && let Event::Key(key) = event::read()?
-            && key.kind == KeyEventKind::Press
-            && let Some(code) = keymap::from_terminal(key.code)
-        {
-            app.on_key(
-                code,
-                mh3u_app::input::Mods {
-                    ctrl: key.modifiers.contains(event::KeyModifiers::CONTROL),
-                },
-            );
+        if event::poll(std::time::Duration::from_millis(250))? {
+            match event::read()? {
+                Event::Key(key) if key.kind == KeyEventKind::Press => {
+                    if let Some(code) = keymap::from_terminal(key.code) {
+                        app.on_key(
+                            code,
+                            mh3u_app::input::Mods {
+                                ctrl: key.modifiers.contains(event::KeyModifiers::CONTROL),
+                            },
+                        );
+                    }
+                }
+                Event::Mouse(mouse) => {
+                    if let Some(pointer) = keymap::pointer_from_terminal(mouse) {
+                        app.on_pointer(pointer);
+                    }
+                }
+                _ => {}
+            }
         }
         app.tick();
     }

@@ -59,6 +59,11 @@ faint = darkgray
 # Example: hunt_goal = runs
 hunt_goal = steps
 
+# Mouse (next start): Click tabs and rows, double-click a row for Enter, and turn the wheel to move. `off` leaves the
+# mouse to the terminal, for selecting text with it.
+# Choices: on, off
+mouse = on
+
 # Start tab (next start): The tab shown when the program starts.
 # Choices: items, equipment, worn, crafting, wishlist, monsters, hunts, quests, families, skills, compare, builds, pickups
 # Example: start_tab = builds

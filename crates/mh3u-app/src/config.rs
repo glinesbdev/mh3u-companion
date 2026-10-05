@@ -147,6 +147,14 @@ pub const DEFS: &[Def] = &[
         when: When::Now,
     },
     Def {
+        key: "mouse",
+        label: "Mouse",
+        kind: Kind::Choice(&["on", "off"]),
+        default: "on",
+        help: "Click tabs and rows, double-click a row for Enter, and turn the wheel to move. `off` leaves the mouse to the terminal, for selecting text with it.",
+        when: When::NextStart,
+    },
+    Def {
         key: "start_tab",
         label: "Start tab",
         kind: Kind::Choice(&TAB_WORDS),
@@ -332,6 +340,11 @@ impl Config {
         ColorSpec::parse(self.get(key))
             .or_else(|| def(key).and_then(|d| ColorSpec::parse(d.default)))
             .unwrap_or(ColorSpec::Indexed(7))
+    }
+
+    /// Whether the program takes the mouse.
+    pub fn mouse(&self) -> bool {
+        self.get("mouse") != "off"
     }
 
     /// Whether the plain icons are chosen.

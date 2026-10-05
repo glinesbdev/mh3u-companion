@@ -64,7 +64,13 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     } else {
         let mut unfocused = ListState::default();
         let state = if focus_pouch { &mut app.inv.pouch_state } else { &mut unfocused };
-        render_list(f, list(pouch, pouch_title, focus_pouch), left, state);
+        render_list_for(
+            f,
+            list(pouch, pouch_title, focus_pouch),
+            left,
+            state,
+            Some((Focus::ItemsPouch, focus_pouch)),
+        );
         scrollbar(f, left, pouch_len, app.inv.pouch_state.selected().filter(|_| focus_pouch));
     }
     if item_box.is_empty() {
@@ -77,7 +83,13 @@ pub(super) fn draw_items(f: &mut Frame, app: &mut App, area: Rect) {
     } else {
         let mut unfocused = ListState::default();
         let state = if focus_pouch { &mut unfocused } else { &mut app.inv.box_state };
-        render_list(f, list(item_box, box_title, !focus_pouch), box_area, state);
+        render_list_for(
+            f,
+            list(item_box, box_title, !focus_pouch),
+            box_area,
+            state,
+            Some((Focus::ItemsBox, !focus_pouch)),
+        );
         scrollbar(f, box_area, box_len, app.inv.box_state.selected().filter(|_| !focus_pouch));
     }
 

@@ -25,3 +25,12 @@ pub enum Key {
 pub struct Mods {
     pub ctrl: bool,
 }
+
+/// Something done with the mouse, at a cell of the screen.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Pointer {
+    /// The left button went down.
+    Click { col: u16, row: u16 },
+    /// The wheel turned one notch.
+    Scroll { col: u16, row: u16, down: bool },
+}

@@ -134,3 +134,73 @@ fn the_look_follows_the_settings() {
     assert_eq!(theme::accent().fg, Some(ratatui::style::Color::LightCyan));
     assert_eq!(theme::muted().fg, Some(ratatui::style::Color::Indexed(245)));
 }
+
+#[test]
+fn clicking_a_tab_opens_it_and_clicking_a_row_selects_it() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    draw_all(&mut app, 140, 40);
+    // every tab that is drawn can be clicked to
+    let tabs = app.hits.tabs.clone();
+    assert_eq!(tabs.len(), Tab::ALL.len(), "all the tabs fit at this width");
+    for (area, tab) in tabs.iter().rev() {
+        app.on_pointer(Pointer::Click {
+            col: area.x + 1,
+            row: area.y,
+        });
+        assert_eq!(app.tab, *tab);
+        draw_all(&mut app, 140, 40);
+    }
+    // a row of the Equipment list: click it, and it is the highlighted one
+    let to = tabs.iter().find(|(_, t)| *t == Tab::Equipment).unwrap().0;
+    app.on_pointer(Pointer::Click { col: to.x + 1, row: to.y });
+    draw_all(&mut app, 140, 40);
+    let list = app.hits.lists[0];
+    assert!(list.len > 3, "the test save has equipment");
+    app.on_pointer(Pointer::Click {
+        col: list.area.x + 3,
+        row: list.area.y + 3,
+    });
+    draw_all(&mut app, 140, 40);
+    assert_eq!(app.hits.lists[0].selected, Some(list.offset + 2));
+    // the wheel moves by three
+    app.on_pointer(Pointer::Scroll {
+        col: list.area.x + 3,
+        row: list.area.y + 3,
+        down: true,
+    });
+    draw_all(&mut app, 140, 40);
+    assert_eq!(app.hits.lists[0].selected, Some(list.offset + 5));
+    // a popup takes the clicks: the tab row underneath does nothing
+    app.on_key(Key::Char('?'), Mods::default());
+    draw_all(&mut app, 140, 40);
+    app.on_pointer(Pointer::Click {
+        col: tabs[0].0.x + 1,
+        row: tabs[0].0.y,
+    });
+    assert_eq!(app.tab, Tab::Equipment);
+    assert!(app.show_help);
+}
+
+#[test]
+fn clicking_the_other_item_list_gives_it_the_keys() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    assert_eq!(app.tab, Tab::Items);
+    draw_all(&mut app, 140, 40);
+    let box_hit = *app
+        .hits
+        .lists
+        .iter()
+        .find(|l| l.focus == Some(mh3u_app::hits::Focus::ItemsBox))
+        .expect("the box list is drawn");
+    app.on_pointer(Pointer::Click {
+        col: box_hit.area.x + 3,
+        row: box_hit.area.y + 3,
+    });
+    draw_all(&mut app, 140, 40);
+    assert!(!app.items_on_pouch());
+    assert_eq!(app.inv.box_state.selected(), Some(box_hit.offset + 2));
+}
