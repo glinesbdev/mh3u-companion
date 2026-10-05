@@ -6,7 +6,7 @@ use mh3u_app::config::{self, Kind, When};
 pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
     let Some(mut screen) = app.settings.take() else { return };
     let area = f.area();
-    let rows_needed = config::DEFS.len() as u16;
+    let rows_needed = app.setting_rows() as u16;
     let (w, h) = (area.width.min(104), area.height.min(rows_needed + 12));
     let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
     f.render_widget(Clear, popup);
@@ -15,43 +15,58 @@ pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
     let [list, details] = Layout::vertical([Constraint::Min(4), Constraint::Length(8)]).areas(inner);
 
     let selected = screen.state.selected().unwrap_or(0);
-    let items: Vec<ListItem> = config::DEFS
-        .iter()
-        .enumerate()
-        .map(|(i, def)| {
-            let value = app.config.get(def.key);
-            let set = app.config.is_set(def.key);
-            let mut spans = vec![Span::raw(format!("{:<18}", def.label))];
-            if i == selected && screen.editing.is_some() {
-                spans.push(Span::styled(
-                    format!("{}_", screen.editing.as_deref().unwrap_or("")),
-                    accent().add_modifier(Modifier::UNDERLINED),
-                ));
-            } else {
-                if def.kind == Kind::Color {
-                    let color = theme::color_of(app.config.color(def.key));
-                    spans.push(Span::styled("██ ", Style::new().fg(color)));
-                }
-                let shown = if value.is_empty() {
-                    "(automatic)".to_string()
-                } else {
-                    value.to_string()
-                };
-                spans.push(if set {
-                    Span::styled(shown, bold())
-                } else {
-                    Span::styled(shown, muted())
-                });
-                if !set {
-                    spans.push(Span::styled("  default", muted()));
-                }
-                if def.when == When::NextStart {
-                    spans.push(Span::styled("  ↻ next start", muted()));
-                }
+    let mut items: Vec<ListItem> = Vec::new();
+    // the first row is the profile: which settings file is in use
+    {
+        let mut spans = vec![Span::raw(format!("{:<18}", "Profile"))];
+        if selected == 0 && screen.editing.is_some() {
+            spans.push(Span::styled(
+                format!("new: {}_", screen.editing.as_deref().unwrap_or("")),
+                accent().add_modifier(Modifier::UNDERLINED),
+            ));
+        } else {
+            spans.push(Span::styled(app.profile_name().to_string(), bold()));
+            let others = app.profile_names().len().saturating_sub(1);
+            if others > 0 {
+                spans.push(Span::styled(format!("  of {} (←/→)", others + 1), muted()));
             }
-            ListItem::new(Line::from(spans))
-        })
-        .collect();
+        }
+        items.push(ListItem::new(Line::from(spans)));
+    }
+    for (i, def) in config::DEFS.iter().enumerate() {
+        let row = i + 1;
+        let value = app.config.get(def.key);
+        let set = app.config.is_set(def.key);
+        let mut spans = vec![Span::raw(format!("{:<18}", def.label))];
+        if row == selected && screen.editing.is_some() {
+            spans.push(Span::styled(
+                format!("{}_", screen.editing.as_deref().unwrap_or("")),
+                accent().add_modifier(Modifier::UNDERLINED),
+            ));
+        } else {
+            if def.kind == Kind::Color {
+                let color = theme::color_of(app.config.color(def.key));
+                spans.push(Span::styled("██ ", Style::new().fg(color)));
+            }
+            let shown = if value.is_empty() {
+                "(automatic)".to_string()
+            } else {
+                value.to_string()
+            };
+            spans.push(if set {
+                Span::styled(shown, bold())
+            } else {
+                Span::styled(shown, muted())
+            });
+            if !set {
+                spans.push(Span::styled("  default", muted()));
+            }
+            if def.when == When::NextStart {
+                spans.push(Span::styled("  ↻ next start", muted()));
+            }
+        }
+        items.push(ListItem::new(Line::from(spans)));
+    }
     render_list(
         f,
         List::new(items)
@@ -62,7 +77,17 @@ pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
     );
 
     let mut lines: Vec<Line> = Vec::new();
-    if let Some(def) = config::DEFS.get(selected) {
+    if selected == 0 {
+        lines.push(Line::styled(
+            "A profile is a settings file: config.txt is `default`, config-NAME.txt is the profile NAME. Switching applies the colors and icons at once and is remembered for the next start (--config NAME or a path overrides).",
+            muted(),
+        ));
+        lines.push(Line::raw(""));
+        lines.push(Line::styled(
+            "←/→: switch profile   Enter or n: make a new one from this one (type its name)",
+            accent(),
+        ));
+    } else if let Some(def) = config::DEFS.get(selected - 1) {
         lines.push(Line::styled(def.help.to_string(), muted()));
         lines.push(Line::raw(""));
         let how = match def.kind {
@@ -72,8 +97,11 @@ pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
             Kind::Text => "Enter: type it (an empty text is the default again)".to_string(),
         };
         lines.push(Line::styled(how, accent()));
-        lines.push(Line::styled("d: default   w: write the commented file   Esc: close", muted()));
     }
+    lines.push(Line::styled(
+        "d: default   w: save the file now   r: read it again   Esc: close",
+        muted(),
+    ));
     if let Some(path) = app.config_file() {
         lines.push(Line::styled(format!("File: {}", path.display()), muted()));
     }

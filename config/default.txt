@@ -1,0 +1,81 @@
+# MH3U Companion settings: the default profile, with every setting at the value the program was made with.
+# Copy this file to ~/.config/mh3u-companion/config.txt (or to config-NAME.txt for a profile called NAME), or point at it with
+# --config PATH. game_dir and cemu are blank on purpose: fill in where your game dump and Cemu are (a blank game_dir is looked for
+# under ~/games/wiiu, a blank cemu starts `Cemu` from the path).
+#
+# One `key = value` per line. Lines that start with # are comments and are ignored. To set something,
+# remove the # in front of its line and change the value. Put a comment on a line of its own, not after a value.
+# The Settings screen of the program (press S) edits this file for you and leaves the comments alone.
+# Settings marked "next start" take effect when the program is started again.
+
+# Icons: The anvil that marks a piece the blacksmith offers. `nerd` needs a Nerd Font in the terminal;
+# `plain` draws a hammer and pick that any font has. The MH3U_ICONS environment variable (plain)
+# wins over this.
+# Choices: nerd, plain
+# Example: icons = plain
+icons = nerd
+
+# Accent color: Focus, selection and key names. A color name (black, red, green, yellow, blue, magenta, cyan,
+# gray, darkgray, lightred, lightgreen, lightyellow, lightblue, lightmagenta, lightcyan, white), a
+# number from 0 to 255 (the 256-color palette) or #rrggbb.
+# Example: accent = #00afff
+accent = lightcyan
+
+# Good color: Something you have, can afford or can do. A color name (black, red, green, yellow, blue,
+# magenta, cyan, gray, darkgray, lightred, lightgreen, lightyellow, lightblue, lightmagenta,
+# lightcyan, white), a number from 0 to 255 (the 256-color palette) or #rrggbb.
+# Example: good = lightgreen
+good = green
+
+# Warning color: Something partly there. A color name (black, red, green, yellow, blue, magenta, cyan, gray,
+# darkgray, lightred, lightgreen, lightyellow, lightblue, lightmagenta, lightcyan, white), a
+# number from 0 to 255 (the 256-color palette) or #rrggbb.
+# Example: warn = 214
+warn = yellow
+
+# Bad color: Something missing or out of reach. A color name (black, red, green, yellow, blue, magenta, cyan,
+# gray, darkgray, lightred, lightgreen, lightyellow, lightblue, lightmagenta, lightcyan, white), a
+# number from 0 to 255 (the 256-color palette) or #rrggbb.
+# Example: bad = lightred
+bad = red
+
+# Muted color: Secondary text: counts, separators, key descriptions. A mid gray by default, because the
+# terminal's own dark gray is nearly invisible in many themes. A color name (black, red, green,
+# yellow, blue, magenta, cyan, gray, darkgray, lightred, lightgreen, lightyellow, lightblue,
+# lightmagenta, lightcyan, white), a number from 0 to 255 (the 256-color palette) or #rrggbb.
+# Example: muted = #8a8a8a
+muted = 245
+
+# Faint color: Borders and scroll bars of the panes that do not have focus. Never used for text. A color name
+# (black, red, green, yellow, blue, magenta, cyan, gray, darkgray, lightred, lightgreen,
+# lightyellow, lightblue, lightmagenta, lightcyan, white), a number from 0 to 255 (the 256-color
+# palette) or #rrggbb.
+# Example: faint = 238
+faint = darkgray
+
+# Hunt plan goal: What the Hunt plan keeps small: the number of hunts and quests (steps) or the number of runs in
+# all (runs). `g` on the Hunt plan tab switches it for the session.
+# Choices: steps, runs
+# Example: hunt_goal = runs
+hunt_goal = steps
+
+# Start tab (next start): The tab shown when the program starts.
+# Choices: items, equipment, worn, crafting, wishlist, monsters, hunts, quests, families, skills, compare, builds, pickups
+# Example: start_tab = builds
+start_tab = items
+
+# Start slot (next start): Which of Cemu's three save slots to read at the start (--slot overrides). With --live the
+# program follows the hunter the game loads.
+# A number from 1 to 3.
+# Example: slot = 2
+slot = 1
+
+# Game folder (next start): The game dump folder (the one with code/ and content/). Left out: it is looked for under
+# ~/games/wiiu. --game-dir and MH3U_GAME_DIR win over this.
+# Example: game_dir = /home/me/games/mh3u
+game_dir =
+
+# Cemu program (next start): The program --live starts (--cemu overrides). A name found on the path, or a full path such as
+# /opt/cemu/Cemu.AppImage.
+# Example: cemu = /opt/cemu/Cemu.AppImage
+cemu =

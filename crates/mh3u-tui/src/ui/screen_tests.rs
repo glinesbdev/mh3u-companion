@@ -103,6 +103,7 @@ fn the_settings_popup_draws_over_a_tab_with_its_values() {
     let lines = draw_all(&mut app, 130, 40).join("\n");
     for word in [
         "Settings",
+        "Profile",
         "Icons",
         "Accent color",
         "Hunt plan goal",

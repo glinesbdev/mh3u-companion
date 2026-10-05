@@ -8,4 +8,5 @@ license.workspace = true
 anyhow.workspace = true
 clap.workspace = true
 memchr = "2.8.3"
+mh3u-app.workspace = true
 mh3u-core.workspace = true

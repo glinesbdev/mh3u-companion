@@ -221,6 +221,37 @@ impl ColorSpec {
     }
 }
 
+/// The name of the profile kept in `config.txt`; any other profile `x` is `config-x.txt`.
+pub const DEFAULT_PROFILE: &str = "default";
+
+/// The file name of a profile.
+pub fn profile_file(profile: &str) -> String {
+    if profile == DEFAULT_PROFILE {
+        "config.txt".to_string()
+    } else {
+        format!("config-{profile}.txt")
+    }
+}
+
+/// The profile a file name stands for (`config.txt`, `config-work.txt`), if it is one.
+pub fn profile_of_file(name: &str) -> Option<String> {
+    if name == "config.txt" {
+        return Some(DEFAULT_PROFILE.to_string());
+    }
+    let profile = name.strip_prefix("config-")?.strip_suffix(".txt")?;
+    valid_profile_name(profile).is_ok().then(|| profile.to_string())
+}
+
+/// Whether a name can be a profile name: 1 to 24 letters, digits, `-` or `_`.
+pub fn valid_profile_name(name: &str) -> Result<(), String> {
+    let ok = (1..=24).contains(&name.chars().count()) && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+    if ok {
+        Ok(())
+    } else {
+        Err("a profile name is 1 to 24 letters, digits, - or _".to_string())
+    }
+}
+
 /// Whether `value` is allowed for the setting `key`; otherwise why not, in words for the status line.
 pub fn check(key: &str, value: &str) -> Result<(), String> {
     let Some(def) = def(key) else {
@@ -361,8 +392,34 @@ pub fn template() -> String {
         if let Some(example) = example(def) {
             out += &format!("# Example: {} = {example}\n", def.key);
         }
-        out += &format!("# {} = {}\n", def.key, def.default);
+        out += format!("# {} = {}", def.key, def.default).trim_end();
+        out.push('\n');
     }
+    out
+}
+
+/// The profile shipped in the repo (`config/default.txt`) for a start: every setting written out at the value the program was made with,
+/// with its comment, instead of commented out. Two are left blank on purpose: where the game dump and Cemu are is not known, so
+/// the program looks (`game_dir` under ~/games/wiiu) or asks the path (`cemu` as `Cemu`) until they are filled in.
+pub fn default_profile_text() -> String {
+    let mut out = template();
+    for def in DEFS {
+        let value = match def.key {
+            "game_dir" | "cemu" => "",
+            _ => def.default,
+        };
+        let shown = format!("{} = {value}", def.key).trim_end().to_string();
+        let commented = format!("# {} = {}", def.key, def.default).trim_end().to_string();
+        out = out.replacen(&format!("{commented}\n"), &format!("{shown}\n"), 1);
+    }
+    out = out.replacen(
+        "# MH3U Companion settings.\n",
+        "# MH3U Companion settings: the default profile, with every setting at the value the program was made with.\n\
+         # Copy this file to ~/.config/mh3u-companion/config.txt (or to config-NAME.txt for a profile called NAME), or point at it with\n\
+         # --config PATH. game_dir and cemu are blank on purpose: fill in where your game dump and Cemu are (a blank game_dir is looked for\n\
+         # under ~/games/wiiu, a blank cemu starts `Cemu` from the path).\n",
+        1,
+    );
     out
 }
 
@@ -426,7 +483,7 @@ pub fn edit_text(text: &str, key: &str, value: Option<&str>) -> String {
         },
         (None, Some(i)) => {
             let default = def(key).map_or("", |d| d.default);
-            lines[i] = format!("# {key} = {default}");
+            lines[i] = format!("# {key} = {default}").trim_end().to_string();
         }
         (None, None) => {}
     }
@@ -507,7 +564,8 @@ mod tests {
     fn the_template_has_every_setting_commented_out_and_reads_as_all_defaults() {
         let t = template();
         for d in DEFS {
-            assert!(t.contains(&format!("# {} = {}\n", d.key, d.default)), "{}", d.key);
+            let line = format!("# {} = {}", d.key, d.default);
+            assert!(t.contains(&format!("{}\n", line.trim_end())), "{}", d.key);
             assert!(t.contains(&format!("# {}", d.label)));
         }
         assert!(t.contains("# Example: icons = plain"));
@@ -565,6 +623,55 @@ mod tests {
             "a custom color steps in from the start of the list"
         );
         assert_eq!(step(d("game_dir"), "", 1), None, "text is typed");
+    }
+
+    #[test]
+    fn profile_names_and_their_files() {
+        assert_eq!(profile_file("default"), "config.txt");
+        assert_eq!(profile_file("work"), "config-work.txt");
+        assert_eq!(profile_of_file("config.txt").as_deref(), Some("default"));
+        assert_eq!(profile_of_file("config-work.txt").as_deref(), Some("work"));
+        assert_eq!(profile_of_file("config-.txt"), None);
+        assert_eq!(profile_of_file("config-a b.txt"), None);
+        assert_eq!(profile_of_file("wishlist.txt"), None);
+        assert!(valid_profile_name("my_profile-2").is_ok());
+        for bad in ["", "a b", "a/b", "..", &"x".repeat(25)] {
+            assert!(valid_profile_name(bad).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn the_shipped_default_profile_is_every_setting_at_its_default_with_two_blanks() {
+        let text = default_profile_text();
+        let c = Config::parse(&text);
+        assert!(c.problems.is_empty(), "{:?}", c.problems);
+        for d in DEFS {
+            assert!(c.is_set(d.key), "{} is written out", d.key);
+            let expect = if matches!(d.key, "game_dir" | "cemu") { "" } else { d.default };
+            assert_eq!(c.get(d.key), expect, "{}", d.key);
+        }
+        assert_eq!((c.slot(), c.start_tab(), c.hunt_goal()), (1, 0, Goal::FewestSteps));
+        assert_eq!(
+            (c.text("cemu"), c.text("game_dir")),
+            (None, None),
+            "blank means look for it / use Cemu"
+        );
+        assert!(text.lines().any(|l| l == "cemu =") && text.lines().any(|l| l == "game_dir ="));
+        assert!(
+            text.lines().any(|l| l == "icons = nerd")
+                && text.lines().any(|l| l == "slot = 1")
+                && text.lines().any(|l| l == "start_tab = items")
+        );
+        assert!(
+            text.contains("# Example: cemu = /opt/cemu/Cemu.AppImage"),
+            "the comments are still there"
+        );
+        // the copy kept in the repo is this text; to renew it: cargo run -p mh3u-tools -- default-config > config/default.txt
+        let shipped = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../config/default.txt")).unwrap_or_default();
+        assert_eq!(
+            shipped, text,
+            "config/default.txt is out of date: cargo run -p mh3u-tools -- default-config > config/default.txt"
+        );
     }
 
     #[test]

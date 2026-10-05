@@ -92,6 +92,8 @@ enum Tool {
     /// Take the debug edits recorded in a ledger file (`~/.local/share/mh3u-companion/debug-edits[-N].txt`) out of a save file the game is
     /// not running on. The save is copied to `<save>.before-purge` first, and the ledger file is removed.
     PurgeSave { save: PathBuf, ledger: PathBuf },
+    /// Print the default settings profile (what `config/default.txt` in the repo holds): `cargo run -p mh3u-tools -- default-config > config/default.txt`.
+    DefaultConfig,
     /// Every monster's first table of hit zones, one row per zone: monster id, name, row, then the eight values.
     Zones { game_dir: PathBuf },
     /// Every weapon as `kind id name`, for joining with other tables.
@@ -137,6 +139,10 @@ fn main() -> Result<()> {
         Tool::Drops { game_dir } => drops(&game_dir),
         Tool::WeaponNames { game_dir } => weapon_names(&game_dir),
         Tool::Zones { game_dir } => zones(&game_dir),
+        Tool::DefaultConfig => {
+            print!("{}", mh3u_app::config::default_profile_text());
+            Ok(())
+        }
         Tool::PurgeSave { save, ledger } => purge_save(&save, &ledger),
         Tool::CemuHost { game_dir, outdir } => cemu_host(&game_dir, &outdir),
     }

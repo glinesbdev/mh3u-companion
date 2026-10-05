@@ -1088,7 +1088,10 @@ fn the_settings_screen_edits_the_config_file_in_place_and_the_start_tab_comes_fr
     assert!(!file.exists());
     press(&mut app, "S");
     assert!(app.settings.is_some());
-    // the first setting is the icons: Right steps it, and the file is made from the commented template with that one line set
+    // the first row is the profile; the first setting is the icons: Right steps it, and the file is made from the commented template with
+    // that one line set
+    assert!(app.on_profile_row());
+    key(&mut app, Key::Down);
     key(&mut app, Key::Right);
     assert_eq!(app.config.get("icons"), "plain");
     let text = std::fs::read_to_string(&file).unwrap();
@@ -1156,5 +1159,88 @@ fn a_bad_value_is_refused_and_the_file_is_left_alone() {
     assert!(!file.exists(), "nothing was written");
     app.change_setting("accent", Some("#00afff"));
     assert!(app.config.is_set("accent") && file.exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn w_saves_the_file_and_says_so_even_when_it_is_there_already() {
+    let dir = temp_dir("settingssave");
+    let Some(mut app) = app_in(&dir) else { return };
+    let file = app.files.as_ref().unwrap().settings.clone();
+    press(&mut app, "S");
+    press(&mut app, "w");
+    assert!(file.exists());
+    assert!(
+        app.status.starts_with("saved ") && app.status.contains("commented out"),
+        "{}",
+        app.status
+    );
+    assert!(!app.status.contains("already"));
+    app.change_setting("slot", Some("2"));
+    press(&mut app, "w");
+    assert!(app.status.starts_with("saved 1 setting(s) to "), "{}", app.status);
+    assert!(std::fs::read_to_string(&file).unwrap().lines().any(|l| l == "slot = 2"));
+    // a file edited by hand is read again with r
+    let text = std::fs::read_to_string(&file).unwrap().replace("slot = 2", "slot = 3");
+    std::fs::write(&file, text).unwrap();
+    press(&mut app, "r");
+    assert_eq!(app.config.slot(), 3);
+    assert!(app.status.starts_with("read "), "{}", app.status);
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn profiles_can_be_made_switched_and_remembered() {
+    let dir = temp_dir("profiles");
+    let Some(mut app) = app_in(&dir) else { return };
+    let files = app.files.clone().unwrap();
+    assert_eq!(app.profile_name(), "default");
+    press(&mut app, "S");
+    // set a color in the default profile, then make a profile "lan" from it
+    app.change_setting("good", Some("blue"));
+    assert!(app.on_profile_row());
+    key(&mut app, Key::Enter);
+    assert!(app.settings.as_ref().unwrap().editing.is_some());
+    press(&mut app, "lan");
+    key(&mut app, Key::Enter);
+    assert_eq!(app.profile_name(), "lan");
+    let lan = dir.join("config").join("config-lan.txt");
+    assert_eq!(app.files.as_ref().unwrap().settings, lan);
+    assert!(lan.exists(), "the new profile is a copy of the one in use");
+    assert_eq!(app.config.get("good"), "blue", "with its settings");
+    // a change now goes to the new profile's file only
+    app.change_setting("good", Some("red"));
+    assert!(std::fs::read_to_string(&lan).unwrap().lines().any(|l| l == "good = red"));
+    assert!(
+        std::fs::read_to_string(&files.settings)
+            .unwrap()
+            .lines()
+            .any(|l| l == "good = blue")
+    );
+    // the choice is remembered for the next start
+    assert_eq!(std::fs::read_to_string(dir.join("config").join("profile")).unwrap().trim(), "lan");
+    // Left/Right on the profile row switch between the profiles that exist (default, lan)
+    key(&mut app, Key::Up);
+    key(&mut app, Key::Home);
+    assert!(app.on_profile_row());
+    key(&mut app, Key::Right);
+    assert_eq!(app.profile_name(), "default");
+    assert_eq!(app.config.get("good"), "blue");
+    key(&mut app, Key::Left);
+    assert_eq!(app.profile_name(), "lan");
+    assert_eq!(app.config.get("good"), "red");
+    // a bad name is refused and nothing changes
+    key(&mut app, Key::Enter);
+    press(&mut app, "no good");
+    key(&mut app, Key::Enter);
+    assert!(app.status.contains("1 to 24"), "{}", app.status);
+    assert_eq!(app.profile_name(), "lan");
+    // an existing name just switches
+    key(&mut app, Key::Enter);
+    press(&mut app, "default");
+    key(&mut app, Key::Enter);
+    assert_eq!(app.profile_name(), "default");
+    // other slots of the same app keep using the profile
+    assert_eq!(app.files.as_ref().unwrap().with_slot(3).settings, files.settings);
     let _ = std::fs::remove_dir_all(&dir);
 }

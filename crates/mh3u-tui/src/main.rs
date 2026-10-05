@@ -28,6 +28,10 @@ struct Cli {
     /// Start Cemu on the game and follow it live
     #[arg(long)]
     live: bool,
+    /// The settings profile to use: a name (`work` is config-work.txt in the config folder) or a path to a settings file. Default: the
+    /// profile last chosen on the Settings screen, else config.txt
+    #[arg(long, env = "MH3U_CONFIG", value_name = "NAME|FILE")]
+    config: Option<String>,
     /// The Cemu program to start with --live. Default: `cemu` in config.txt, else Cemu
     #[arg(long, requires = "live", value_name = "PATH")]
     cemu: Option<String>,
@@ -97,10 +101,13 @@ fn main() -> Result<()> {
         live,
         cemu,
         debug_edit,
+        config: config_choice,
     } = Cli::parse();
     // the settings file supplies what was not given on the command line
-    let config = Files::settings_path()
-        .and_then(|p| std::fs::read_to_string(p).ok())
+    let profile = Files::resolve_settings(config_choice.as_deref());
+    let config = profile
+        .as_ref()
+        .and_then(|(path, _)| std::fs::read_to_string(path).ok())
         .map(|t| Config::parse(&t))
         .unwrap_or_default();
     let slot = slot.unwrap_or_else(|| config.slot());
@@ -120,7 +127,11 @@ fn main() -> Result<()> {
     };
 
     let game = GameData::load(&game_dir).with_context(|| format!("loading game data from {}", game_dir.display()))?;
-    let files = Files::for_slot(slot_of(&save).unwrap_or(slot));
+    let mut files = Files::for_slot(slot_of(&save).unwrap_or(slot));
+    if let (Some(files), Some((path, name))) = (&mut files, &profile) {
+        files.use_settings_file(path.clone());
+        files.profile = name.clone();
+    }
     let backups = files.as_ref().map(|f| f.backups.clone());
     // Debug edits are for trying things out alone: not while Cemu is set up for online play.
     if debug_edit
