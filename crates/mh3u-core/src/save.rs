@@ -27,9 +27,8 @@ const PLAY_SECONDS_OFFSET: usize = 0x4c;
 /// for the guild hall (twelve u16 from `0x7b60`). The screen shows the two added together. Found by doing a Sword & Shield hall quest
 /// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved) a bow village quest (the tenth entry of the
 /// village list) a long sword village quest (the seventh) a dual blades village quest (the eleventh) a switch axe village quest (the eighth), a gunlance village quest (the ninth), a hunting horn
-/// village quest (the twelfth) and a lance village quest (the fourth). Those ten are certain (great sword, sword & shield, hammer, lance,
-/// long sword, switch axe, gunlance, bow, dual blades, hunting horn); the two left are the bowguns, in the entries 5 and 6, heavy first as in
-/// the equipment kinds; the order of the other eight follows the equipment kinds
+/// village quest (the twelfth) a lance village quest (the fourth) and a light bowgun village quest (the sixth). That is eleven of the
+/// twelve types seen; the heavy bowgun is the entry left (the fifth), so the order is that of the equipment kinds; the order of the other eight follows the equipment kinds
 /// by guess, which the four that are known agree with.
 const WEAPON_USAGE_VILLAGE: usize = 0x7b48;
 const WEAPON_USAGE_GUILD: usize = 0x7b60;
@@ -575,6 +574,9 @@ mod tests {
         assert_eq!(Save::parse(&fixture!("29-hh/user2")).unwrap().weapon_uses[11], 1);
         // and a lance village quest: the fourth
         assert_eq!(Save::parse(&fixture!("30-lance/user2")).unwrap().weapon_uses[3], 1);
+        // and a light bowgun village quest: the sixth, with the fifth (the heavy bowgun, not seen) still empty
+        let lbg = Save::parse(&fixture!("31-lbg/user2")).unwrap();
+        assert_eq!((lbg.weapon_uses[5], lbg.weapon_uses[4]), (1, 0));
         let before = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
         assert_eq!(
             before.weapon_uses[..2],

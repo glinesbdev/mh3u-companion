@@ -28,7 +28,7 @@ belong to.
   monsters first. The game's own source for part names was searched for and not found (the monster archive's `em_status00` and
   `em_hitdata00`, and the executable's data and read-only sections).
 - Monster **hit points** and the zones of other states (enraged, broken); `em_status00` has no names, and the zone names shown come from Kiranico (33 rows have none).
-- Shakalaka (Cha-Cha and Kayamba, the game's two sidekicks; there is no Palico) gear, and the rest of the guild card (the hunter rank, title, greeting and weapon usage are read; the order of the last two weapon types of the usage (the two bowguns) is assumed, ten are certain; the quest points at 0x5a46 and the 0x7569 counter are not understood).
+- Shakalaka (Cha-Cha and Kayamba, the game's two sidekicks; there is no Palico) gear, and the rest of the guild card (the hunter rank, title, greeting and weapon usage are read; the weapon usage list is fully read; the heavy bowgun is its fifth entry by elimination, never seen; the quest points at 0x5a46 and the 0x7569 counter are not understood).
 - **Which shop sells what.** The Items tab shows an item's shop price and carry limit (from Kiranico), but not where it is sold or when it appears. **Needs:** the shop tables.
 - How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the hunt rule).
 - Other languages: the text archive also has French, German, Italian and Spanish names and descriptions; a language option would only
