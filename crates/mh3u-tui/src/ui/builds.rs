@@ -124,6 +124,23 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     } else {
         (" The set ".to_string(), build_details(app))
     };
+    // the template's slot rows can be clicked: each is a line of the pane, which may have wrapped
+    if app.builds.focus == BuildFocus::Templates && app.builds.template_state.selected().is_some() {
+        let inner = right.inner(Margin {
+            vertical: 1,
+            horizontal: 1,
+        });
+        let wide = usize::from(inner.width).max(1);
+        let mut y = inner.y;
+        for (n, line) in lines.iter().take(mh3u_app::templates::Slot::ALL.len()).enumerate() {
+            let height = line.width().div_ceil(wide).max(1) as u16;
+            if y + height > inner.y + inner.height {
+                break;
+            }
+            HITS.with(|h| h.borrow_mut().slots.push((HitArea::new(inner.x, y, inner.width, height), n)));
+            y += height;
+        }
+    }
     f.render_widget(
         Paragraph::new(lines).wrap(Wrap { trim: false }).block(theme::pane(title, false)),
         right,

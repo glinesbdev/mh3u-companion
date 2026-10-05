@@ -62,6 +62,10 @@ impl App {
         if popup || typing {
             return;
         }
+        if let Some(&(_, slot)) = self.hits.slots.iter().find(|(a, _)| a.contains(col, row)) {
+            self.click_template_slot(slot, (col, row));
+            return;
+        }
         if let Some(&(_, tab)) = self.hits.tabs.iter().find(|(a, _)| a.contains(col, row)) {
             self.go_to_tab(tab);
         }
@@ -70,6 +74,22 @@ impl App {
     fn go_to_tab(&mut self, tab: Tab) {
         let at = |t: Tab| Tab::ALL.iter().position(|&x| x == t).unwrap_or(0) as isize;
         self.switch_tab(at(tab) - at(self.tab));
+    }
+
+    /// A slot of the template on the Builds tab: pick it (what `[` and `]` do); a second click asks for the piece to swap, as Enter does.
+    fn click_template_slot(&mut self, slot: usize, cell: (u16, u16)) {
+        if self.tab != Tab::Builds || self.builds.focus != BuildFocus::Templates {
+            return;
+        }
+        let now = Instant::now();
+        let again = self
+            .last_click
+            .is_some_and(|(when, c, i)| c == cell && i == slot && now.duration_since(when) < DOUBLE_CLICK);
+        self.last_click = if again { None } else { Some((now, cell, slot)) };
+        self.builds.template_slot = slot;
+        if again {
+            self.on_key(Key::Enter, Mods::default());
+        }
     }
 
     fn click_row(&mut self, list: ListHit, at: usize, cell: (u16, u16)) {

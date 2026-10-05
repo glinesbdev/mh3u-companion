@@ -64,6 +64,8 @@ impl ListHit {
 pub struct Hits {
     pub tabs: Vec<(Area, Tab)>,
     pub lists: Vec<ListHit>,
+    /// The piece slots of the template shown on the Builds tab (head ... weapon), numbered as `Slot::ALL`.
+    pub slots: Vec<(Area, usize)>,
     /// How many of `lists` belong to the tab itself: the ones after them are in popups, drawn on top.
     pub tab_lists: usize,
 }

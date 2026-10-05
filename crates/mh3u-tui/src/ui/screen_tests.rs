@@ -204,3 +204,45 @@ fn clicking_the_other_item_list_gives_it_the_keys() {
     assert!(!app.items_on_pouch());
     assert_eq!(app.inv.box_state.selected(), Some(box_hit.offset + 2));
 }
+
+#[test]
+fn clicking_a_slot_of_a_template_picks_it() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    let key = |app: &mut App, k: Key| app.on_key(k, Mods::default());
+    while app.tab != Tab::Builds {
+        key(&mut app, Key::Right);
+    }
+    key(&mut app, Key::Char('f'));
+    key(&mut app, Key::Char('f'));
+    key(&mut app, Key::Char('n')); // a template from what is worn
+    for c in "Test".chars() {
+        key(&mut app, Key::Char(c));
+    }
+    key(&mut app, Key::Enter);
+    draw_all(&mut app, 140, 40);
+    if app.hits.slots.is_empty() {
+        eprintln!("skipped: no template could be made from this save");
+        return;
+    }
+    assert_eq!(app.hits.slots.len(), mh3u_app::templates::Slot::ALL.len());
+    let (area, _) = app.hits.slots[3];
+    app.on_pointer(Pointer::Click {
+        col: area.x + 2,
+        row: area.y,
+    });
+    assert_eq!(app.builds.template_slot, 3);
+    let (area, _) = app.hits.slots[5];
+    app.on_pointer(Pointer::Click {
+        col: area.x + 2,
+        row: area.y,
+    });
+    assert_eq!(app.builds.template_slot, 5);
+    // a second click on it opens the piece picker, as Enter does
+    app.on_pointer(Pointer::Click {
+        col: area.x + 2,
+        row: area.y,
+    });
+    assert!(app.builds.piece_picker.is_some());
+}
