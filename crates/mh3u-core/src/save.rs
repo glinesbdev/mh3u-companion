@@ -25,8 +25,9 @@ pub(crate) const WORN_TALISMAN_OFFSET: usize = 0xcc;
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
 /// The guild card's weapon usage: twelve u16 counts of the quests done with each weapon type, first for the village (from here) and then
 /// for the guild hall (twelve u16 from `0x7b60`). The screen shows the two added together. Found by doing a Sword & Shield hall quest
-/// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved). The first
-/// three types are certain (great sword, sword & shield, hammer); the order of the rest is the weapon menu's by guess and not checked.
+/// after four with the great sword (only the second type's hall count moved), then a hammer hall quest (only the third moved) and a bow village quest (the tenth entry of the
+/// village list). Those four are certain (great sword, sword & shield, hammer, bow); the order of the other eight follows the equipment kinds
+/// by guess, which the four that are known agree with.
 const WEAPON_USAGE_VILLAGE: usize = 0x7b48;
 const WEAPON_USAGE_GUILD: usize = 0x7b60;
 /// The equipment kind of each of the twelve types, in that order.
@@ -507,6 +508,10 @@ mod tests {
         // and a hammer hall quest after that moved the third entry
         let hammer = Save::parse(&fixture!("22-hammer/user2")).unwrap();
         assert_eq!(hammer.weapon_uses[..4], [14, 1, 1, 0]);
+        // a bow village quest: the tenth entry of the village list
+        let bow = Save::parse(&fixture!("24-bow/user2")).unwrap();
+        assert_eq!((bow.weapon_uses[9], bow.weapon_uses[..3].to_vec()), (1, vec![14, 1, 2]));
+        assert_eq!(bow.most_used_weapon(), Some((7, 14)));
         let before = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
         assert_eq!(
             before.weapon_uses[..2],
