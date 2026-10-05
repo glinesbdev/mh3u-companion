@@ -372,7 +372,7 @@ pub(super) fn draw_piece_picker(f: &mut Frame, app: &mut App) {
             ]))
         })
         .collect();
-    render_list(
+    render_list_plain(
         f,
         List::new(rows)
             .highlight_style(theme::selection())
@@ -422,7 +422,7 @@ pub(super) fn draw_skill_picker(f: &mut Frame, app: &mut App) {
     if let Some(i) = picker.state.selected() {
         picker.state.select(Some(i.min(last)));
     }
-    render_list(
+    render_list_plain(
         f,
         List::new(rows)
             .highlight_style(theme::selection())

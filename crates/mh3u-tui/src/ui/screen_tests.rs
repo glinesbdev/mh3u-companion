@@ -264,3 +264,23 @@ fn the_empty_skills_list_can_be_clicked_to_add_a_skill() {
     });
     assert!(app.builds.skill_picker.is_some());
 }
+
+#[test]
+fn a_click_in_a_popup_list_without_a_border_picks_the_row_under_it() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    while app.tab != Tab::Builds {
+        app.on_key(Key::Right, Mods::default());
+    }
+    app.on_key(Key::Char('p'), Mods::default()); // the weapon picker
+    draw_all(&mut app, 140, 40);
+    let list = *app.hits.lists.last().expect("the picker's list");
+    assert!(!list.bordered && list.len > 4);
+    app.on_pointer(Pointer::Click {
+        col: list.area.x + 5,
+        row: list.area.y + 3,
+    });
+    draw_all(&mut app, 140, 40);
+    assert_eq!(app.hits.lists.last().unwrap().selected, Some(list.offset + 3));
+}

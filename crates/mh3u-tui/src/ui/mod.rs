@@ -366,8 +366,17 @@ fn render_list(f: &mut Frame, list: List, area: Rect, state: &mut ListState) {
     render_list_for(f, list, area, state, None);
 }
 
+/// [`render_list`] for a list without a border (the rows fill `area`), such as one under a popup's input line.
+fn render_list_plain(f: &mut Frame, list: List, area: Rect, state: &mut ListState) {
+    draw_list(f, list, area, state, None, false);
+}
+
 /// [`render_list`] for one of several lists on a tab: `focus` is what a click on it gives the keys to, and whether it has them now.
 fn render_list_for(f: &mut Frame, list: List, area: Rect, state: &mut ListState, focus: Option<(Focus, bool)>) {
+    draw_list(f, list, area, state, focus, true);
+}
+
+fn draw_list(f: &mut Frame, list: List, area: Rect, state: &mut ListState, focus: Option<(Focus, bool)>, bordered: bool) {
     let len = list.len();
     let mut drawn = ratatui::widgets::ListState::default()
         .with_offset(state.offset())
@@ -381,6 +390,7 @@ fn render_list_for(f: &mut Frame, list: List, area: Rect, state: &mut ListState,
             len,
             selected: state.selected().filter(|_| focus.is_none_or(|(_, has_keys)| has_keys)),
             focus: focus.map(|(f, _)| f),
+            bordered,
         });
     });
 }

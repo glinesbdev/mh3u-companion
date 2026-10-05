@@ -31,7 +31,7 @@ pub enum Focus {
     Builds(BuildFocus),
 }
 
-/// A list pane as drawn, with a one-cell border all round.
+/// A list as drawn: a pane with a one-cell border all round, or just its rows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ListHit {
     pub area: Area,
@@ -41,16 +41,18 @@ pub struct ListHit {
     /// The highlighted row, when this list has the keys.
     pub selected: Option<usize>,
     pub focus: Option<Focus>,
+    pub bordered: bool,
 }
 
 impl ListHit {
     /// The row under the cell, if it is one of the list's rows (not the border).
     pub fn row_at(&self, col: u16, row: u16) -> Option<usize> {
+        let edge = u16::from(self.bordered);
         let inside = Area::new(
-            self.area.x.saturating_add(1),
-            self.area.y.saturating_add(1),
-            self.area.width.saturating_sub(2),
-            self.area.height.saturating_sub(2),
+            self.area.x.saturating_add(edge),
+            self.area.y.saturating_add(edge),
+            self.area.width.saturating_sub(2 * edge),
+            self.area.height.saturating_sub(2 * edge),
         );
         if !inside.contains(col, row) {
             return None;
@@ -86,6 +88,7 @@ mod tests {
             len: 6,
             selected: None,
             focus: None,
+            bordered: true,
         };
         assert_eq!(hit.row_at(12, 5), None, "top border");
         assert_eq!(hit.row_at(12, 6), Some(3));
@@ -93,5 +96,9 @@ mod tests {
         assert_eq!(hit.row_at(12, 9), None, "past the last row");
         assert_eq!(hit.row_at(10, 6), None, "left border");
         assert_eq!(hit.row_at(29, 6), None, "right border");
+        let plain = ListHit { bordered: false, ..hit };
+        assert_eq!(plain.row_at(10, 5), Some(3), "no border: the first cell is the first row");
+        assert_eq!(plain.row_at(12, 7), Some(5));
+        assert_eq!(plain.row_at(12, 8), None, "past the last row");
     }
 }

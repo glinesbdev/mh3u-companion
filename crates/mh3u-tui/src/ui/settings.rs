@@ -67,7 +67,7 @@ pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
         }
         items.push(ListItem::new(Line::from(spans)));
     }
-    render_list(
+    render_list_plain(
         f,
         List::new(items)
             .highlight_style(theme::selection())
