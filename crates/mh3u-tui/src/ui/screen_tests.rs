@@ -246,3 +246,21 @@ fn clicking_a_slot_of_a_template_picks_it() {
     });
     assert!(app.builds.piece_picker.is_some());
 }
+
+#[test]
+fn the_empty_skills_list_can_be_clicked_to_add_a_skill() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    while app.tab != Tab::Builds {
+        app.on_key(Key::Right, Mods::default());
+    }
+    assert!(app.builds.settings.targets.is_empty(), "the test save starts with no wanted skills");
+    draw_all(&mut app, 140, 40);
+    let (area, _, _) = app.hits.actions[0];
+    app.on_pointer(Pointer::Click {
+        col: area.x + 2,
+        row: area.y,
+    });
+    assert!(app.builds.skill_picker.is_some());
+}

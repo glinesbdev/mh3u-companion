@@ -1,6 +1,7 @@
 //! The Builds tab: the wanted skills, the sets found and the templates, with the popups that edit them.
 
 use super::*;
+use mh3u_app::input::Key;
 
 /// The build manager: the skills you want, the sets that reach them, the saved templates, and the highlighted set in full.
 pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
@@ -17,7 +18,7 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     .areas(left);
 
     let rows: Vec<ListItem> = if app.builds.settings.targets.is_empty() {
-        vec![ListItem::new(Line::styled("press a to add a skill", muted()))]
+        vec![ListItem::new(Line::styled("click here or press a to add a skill", muted()))]
     } else {
         app.builds
             .settings
@@ -38,6 +39,9 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         &mut app.builds.target_state,
         Some((Focus::Builds(BuildFocus::Skills), app.builds.focus == BuildFocus::Skills)),
     );
+    if app.builds.settings.targets.is_empty() {
+        click_to_press(top, None, Key::Char('a'));
+    }
 
     let mut pool = String::from(app.builds.settings.pool.label());
     if app.builds.settings.use_talisman {
@@ -93,7 +97,10 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
     scrollbar(f, middle, len, app.builds.result_state.selected());
 
     let rows: Vec<ListItem> = if app.builds.templates.is_empty() {
-        vec![ListItem::new(Line::styled("s on a set, or n for what you wear", muted()))]
+        vec![ListItem::new(Line::styled(
+            "click here or press n to save what you wear (s saves a found set)",
+            muted(),
+        ))]
     } else {
         app.builds
             .templates
@@ -118,6 +125,9 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         &mut app.builds.template_state,
         Some((Focus::Builds(BuildFocus::Templates), app.builds.focus == BuildFocus::Templates)),
     );
+    if app.builds.templates.is_empty() {
+        click_to_press(bottom, Some(Focus::Builds(BuildFocus::Templates)), Key::Char('n'));
+    }
 
     let (title, lines) = if app.builds.focus == BuildFocus::Templates {
         template_details(app)
@@ -145,6 +155,12 @@ pub(super) fn draw_builds(f: &mut Frame, app: &mut App, area: Rect) {
         Paragraph::new(lines).wrap(Wrap { trim: false }).block(theme::pane(title, false)),
         right,
     );
+}
+
+/// Make the first row of a list pane (inside its border) do what pressing `key` does when clicked.
+fn click_to_press(pane: Rect, focus: Option<Focus>, key: Key) {
+    let row = HitArea::new(pane.x + 1, pane.y + 1, pane.width.saturating_sub(2), 1);
+    HITS.with(|h| h.borrow_mut().actions.push((row, focus, key)));
 }
 
 /// One slot of a set to show: the piece and its stats.

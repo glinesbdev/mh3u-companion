@@ -43,6 +43,16 @@ impl App {
     fn click(&mut self, col: u16, row: u16) {
         let popup = self.popup_open();
         let typing = self.console.active || self.searching;
+        if !popup && !typing {
+            let action = self.hits.actions.iter().find(|(a, _, _)| a.contains(col, row)).copied();
+            if let Some((_, focus, key)) = action {
+                if let Some(focus) = focus {
+                    self.give_keys_to(focus);
+                }
+                self.on_key(key, Mods::default());
+                return;
+            }
+        }
         let first_list = if popup { self.hits.tab_lists } else { 0 };
         let found = self
             .hits
@@ -92,6 +102,14 @@ impl App {
         }
     }
 
+    fn give_keys_to(&mut self, focus: Focus) {
+        match focus {
+            Focus::ItemsPouch => self.inv.pouch_focus = true,
+            Focus::ItemsBox => self.inv.pouch_focus = false,
+            Focus::Builds(f) => self.builds.focus = f,
+        }
+    }
+
     fn click_row(&mut self, list: ListHit, at: usize, cell: (u16, u16)) {
         let now = Instant::now();
         let again = self
@@ -117,11 +135,7 @@ impl App {
             }
             // a list that did not have the keys: give them over, then go to the row from the top
             (None, Some(focus)) => {
-                match focus {
-                    Focus::ItemsPouch => self.inv.pouch_focus = true,
-                    Focus::ItemsBox => self.inv.pouch_focus = false,
-                    Focus::Builds(f) => self.builds.focus = f,
-                }
+                self.give_keys_to(focus);
                 step(self, Key::Home, 1);
                 step(self, Key::Down, at);
             }

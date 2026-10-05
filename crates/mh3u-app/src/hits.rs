@@ -2,6 +2,7 @@
 //! where a terminal put its tabs and lists) and the app reads it when the pointer is used.
 
 use crate::app::{BuildFocus, Tab};
+use crate::input::Key;
 
 /// A rectangle of the screen in cells.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -66,6 +67,9 @@ pub struct Hits {
     pub lists: Vec<ListHit>,
     /// The piece slots of the template shown on the Builds tab (head ... weapon), numbered as `Slot::ALL`.
     pub slots: Vec<(Area, usize)>,
+    /// Text that tells what a key does, drawn where a click should do it: the key to press, after giving the list the keys if it is one of
+    /// several.
+    pub actions: Vec<(Area, Option<Focus>, Key)>,
     /// How many of `lists` belong to the tab itself: the ones after them are in popups, drawn on top.
     pub tab_lists: usize,
 }
