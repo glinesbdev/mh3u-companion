@@ -125,8 +125,9 @@ it backs up your save slots first, and anything you then save in the game keeps 
 cargo run --release -p mh3u-tui
 ```
 
-It looks for the game dump in the usual places (a folder whose name contains `[Game] [0005000010118300]`; if it is not found, give it
-with `--game-dir`, `MH3U_GAME_DIR` or the `game_dir` setting) and the save in Cemu's own folder
+It needs to be told where your game dump is: the `game_dir` setting (press `S`, or see `config/default.txt`), `--game-dir` or
+`MH3U_GAME_DIR`. That can be the dump itself (the folder with `content/`) or a folder that holds dumps, in which case the one whose name
+contains `[Game] [0005000010118300]` is used; a leading `~` is your home folder. The save is read from Cemu's own folder
 (`~/.local/share/Cemu/mlc01/usr/save/00050000/10118300/user/80000001/user1`). Override either:
 
 ```

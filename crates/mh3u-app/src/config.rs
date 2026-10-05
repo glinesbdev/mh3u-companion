@@ -167,7 +167,7 @@ pub const DEFS: &[Def] = &[
         label: "Game folder",
         kind: Kind::Text,
         default: "",
-        help: "The game dump folder (the one with code/ and content/). Left out: the program looks for it in the usual places. --game-dir and MH3U_GAME_DIR win over this.",
+        help: "The folder with the game: the dump itself (the one with code/ and content/) or a folder that holds dumps, in which case the one named like `... [Game] [0005000010118300]` is used. A leading ~ is your home folder. --game-dir and MH3U_GAME_DIR win over this.",
         when: When::NextStart,
     },
     Def {
@@ -400,7 +400,7 @@ pub fn template() -> String {
 
 /// The profile shipped in the repo (`config/default.txt`) for a start: every setting written out at the value the program was made with,
 /// with its comment, instead of commented out. Two are left blank on purpose: where the game dump and Cemu are is not known, so
-/// the program looks (`game_dir` in the usual places) or asks the path (`cemu` as `Cemu`) until they are filled in.
+/// the program asks for the folder (`game_dir`) or uses the path (`cemu` as `Cemu`) until they are filled in.
 pub fn default_profile_text() -> String {
     let mut out = template();
     for def in DEFS {
@@ -416,8 +416,8 @@ pub fn default_profile_text() -> String {
         "# MH3U Companion settings.\n",
         "# MH3U Companion settings: the default profile, with every setting at the value the program was made with.\n\
          # Copy this file to ~/.config/mh3u-companion/config.txt (or to config-NAME.txt for a profile called NAME), or point at it with\n\
-         # --config PATH. game_dir and cemu are blank on purpose: fill in where your game dump and Cemu are (a blank game_dir is looked for\n\
-         # in the usual places, a blank cemu starts `Cemu` from the path).\n",
+         # --config PATH. game_dir and cemu are blank on purpose: fill in where your game dump and Cemu are (the program needs a game_dir, from\n\
+         # here, --game-dir or MH3U_GAME_DIR; a blank cemu starts `Cemu` from the path).\n",
         1,
     );
     out

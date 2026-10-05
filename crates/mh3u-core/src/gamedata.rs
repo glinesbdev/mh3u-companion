@@ -8,7 +8,10 @@ use crate::{
     rpx,
 };
 use anyhow::{Context, Result};
-use std::{collections::HashMap, path::Path};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 /// English text for items and equipment lives in this archive, relative to the dump's game folder.
 const TEXT_ARCHIVE: &str = "content/nativeCafe/arc/ID/ID_arena_eng.arc";
@@ -147,6 +150,40 @@ fn unwrap_text(text: &str) -> String {
         out.push_str(line.trim_start());
     }
     out
+}
+
+/// The game's title id (US).
+pub const TITLE_ID: &str = "0005000010118300";
+
+/// A path as typed, with a leading `~` meaning the home folder.
+pub fn expand_home(text: &str) -> PathBuf {
+    let text = text.trim();
+    if let Some(rest) = text.strip_prefix("~/").or_else(|| (text == "~").then_some(""))
+        && let Some(home) = std::env::var_os("HOME")
+    {
+        return PathBuf::from(home).join(rest);
+    }
+    PathBuf::from(text)
+}
+
+/// The game dump a folder is or holds: the folder itself when it has the game's `content` (a dump), else the dump inside it whose name
+/// has `[Game]` and the game's title id, so that a folder of dumps works as well as one dump.
+pub fn find_dump(folder: &Path) -> Option<PathBuf> {
+    let is_dump = |p: &Path| p.join("content/nativeCafe").is_dir();
+    if is_dump(folder) {
+        return Some(folder.to_path_buf());
+    }
+    std::fs::read_dir(folder).ok()?.filter_map(|e| e.ok().map(|e| e.path())).find(|p| {
+        p.file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(|n| n.contains("[Game]") && n.contains(TITLE_ID))
+            && is_dump(p)
+    })
+}
+
+/// The dump named by the `MH3U_GAME_DIR` environment variable, for the tests that need the game's files: they skip when it is not set.
+pub fn dump_from_env() -> Option<PathBuf> {
+    find_dump(&expand_home(&std::env::var("MH3U_GAME_DIR").ok()?))
 }
 
 impl GameData {
@@ -587,7 +624,36 @@ impl GameData {
 
 #[cfg(test)]
 mod tests {
-    use super::unwrap_text;
+    use super::{dump_from_env, expand_home, find_dump, unwrap_text};
+
+    #[test]
+    fn a_folder_of_dumps_works_as_well_as_a_dump() {
+        let root = std::env::temp_dir().join(format!("mh3u-dumps-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let game = root.join("MONSTER HUNTER 3 ULTIMATE [Game] [0005000010118300]");
+        let update = root.join("MONSTER HUNTER 3 ULTIMATE [Update] [0005000e10118300]");
+        for dump in [&game, &update] {
+            std::fs::create_dir_all(dump.join("content/nativeCafe")).unwrap();
+        }
+        assert_eq!(find_dump(&game), Some(game.clone()), "a dump is itself");
+        assert_eq!(
+            find_dump(&root),
+            Some(game.clone()),
+            "a folder of dumps gives the game, not the update"
+        );
+        assert_eq!(find_dump(&root.join("nothing")), None);
+        assert_eq!(find_dump(&update.join("content")), None);
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn a_leading_tilde_is_the_home_folder() {
+        let home = std::env::var("HOME").unwrap_or_default();
+        assert_eq!(expand_home("~/games/x"), std::path::Path::new(&home).join("games/x"));
+        assert_eq!(expand_home("  ~ "), std::path::PathBuf::from(&home));
+        assert_eq!(expand_home("/abs/path"), std::path::PathBuf::from("/abs/path"));
+        assert_eq!(expand_home("a/~/b"), std::path::PathBuf::from("a/~/b"));
+    }
 
     #[test]
     fn hard_wrapped_text_becomes_one_line() {
@@ -605,16 +671,7 @@ mod tests {
     /// Every note in the table is the note of its monster: it contains the word the table gives (skips without a dump).
     #[test]
     fn hunters_notes_are_matched_to_their_monsters() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         for &(monster, note, word) in crate::notes::TABLE {
             let text = game
@@ -633,16 +690,7 @@ mod tests {
     /// The decoration a save held in a talisman (number 0x91) is the Tenderizer Jwl 1 (skips without a dump).
     #[test]
     fn a_decoration_number_from_a_save_names_the_jewel() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         let d = game.decoration(0x91).expect("decoration 145");
         assert_eq!(game.item_name(d.item), Some("Tenderizer Jwl 1"));
@@ -694,16 +742,7 @@ mod tests {
     /// Sell prices of real items, as a published list gives them (Rathian Scale 490, Potion 5... checked by name), skips without a dump.
     #[test]
     fn items_have_their_sell_prices() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         let price = |name: &str| game.item_names().find(|&(_, n)| n == name).and_then(|(id, _)| game.sell_price(id));
         assert_eq!(price("Rathian Scale"), Some(490));
@@ -716,16 +755,7 @@ mod tests {
     /// armor piece with a recipe has one (skips without a dump).
     #[test]
     fn armor_maximum_defense_is_read_for_real_pieces() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         let max = |kind: u8, name: &str| {
             let id = game
@@ -753,16 +783,7 @@ mod tests {
     #[test]
     fn break_part_names_fit_the_break_lists_in_the_dump() {
         use crate::drops::{Method, Rank};
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         let (mut monsters, mut named) = (0, 0);
         for &monster in game.drops().monsters() {
@@ -797,16 +818,7 @@ mod tests {
     /// Real hit zones, as read from the dump (skipped without one): Rathian's first zone and Arzuros's five.
     #[test]
     fn monsters_have_hit_zones_in_the_dump() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Some(dir) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu"))
-            .ok()
-            .and_then(|d| {
-                d.filter_map(|e| e.ok().map(|e| e.path()))
-                    .find(|p| p.to_string_lossy().contains("10118300"))
-            })
-        else {
-            return;
-        };
+        let Some(dir) = dump_from_env() else { return };
         let Ok(game) = super::GameData::load(&dir) else { return };
         let rathian = game.hit_zones(1);
         assert_eq!(rathian.len(), 7);

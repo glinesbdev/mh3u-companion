@@ -49,7 +49,7 @@ pub(super) fn draw_settings(f: &mut Frame, app: &mut App) {
                 spans.push(Span::styled("██ ", Style::new().fg(color)));
             }
             let shown = if value.is_empty() {
-                "(automatic)".to_string()
+                "(not set)".to_string()
             } else {
                 value.to_string()
             };

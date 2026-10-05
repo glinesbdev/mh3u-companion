@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Regenerate the README screenshots (docs/screenshots/*.svg) by driving the real app in tmux.
 #
-# Needs tmux, a release build of both tools (cargo build --release), the game dump (found the way the app finds it)
+# Needs tmux, a release build of both tools (cargo build --release), the game dump (the game_dir of your settings, or MH3U_GAME_DIR)
 # and a save to show. The app runs in a sandbox: its wishlist, price ledger and unlocked-pieces file live in a temporary
 # directory, so your own are never read or changed. The hunter name is replaced with "Hunter" in the pictures, and the plain
 # icons are used (the anvil is a Nerd Font glyph that most viewers of the README would not have).
@@ -25,7 +25,7 @@ printf '%s\n' '4 11' '4 12' '1 10' '7 6' '7 5 auto' '7 4 auto' '7 3 auto' '7 2 a
 
 tmux kill-session -t "$SESSION" 2>/dev/null || true
 tmux new-session -d -s "$SESSION" -x "$COLS" -y "$ROWS" \
-  "MH3U_ICONS=plain XDG_CONFIG_HOME=$SANDBOX/config XDG_DATA_HOME=$SANDBOX/data target/release/mh3u-tui --save $SAVE; sleep 600"
+  "MH3U_ICONS=plain MH3U_GAME_DIR='$(scripts/dump-dir.sh)' XDG_CONFIG_HOME=$SANDBOX/config XDG_DATA_HOME=$SANDBOX/data target/release/mh3u-tui --save $SAVE; sleep 600"
 sleep 2
 
 keys() { tmux send-keys -t "$SESSION" "$@"; sleep 0.6; }

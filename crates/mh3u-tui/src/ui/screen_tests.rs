@@ -15,7 +15,7 @@ fn turn() -> std::sync::MutexGuard<'static, ()> {
 }
 
 fn app() -> Option<App> {
-    let game = GameData::load(&mh3u_app::guess_game_dir()?).ok()?;
+    let game = GameData::load(&mh3u_core::gamedata::dump_from_env()?).ok()?;
     let save = std::path::PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2"));
     if !save.exists() {
         eprintln!("skipped: snapshots/08-after-quest2/user2 is not available");

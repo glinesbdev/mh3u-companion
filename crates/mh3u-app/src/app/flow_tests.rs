@@ -14,7 +14,7 @@ fn key(app: &mut App, code: Key) {
 
 /// An app on the second hunter's save (after the Arzuros quest) with its files in a fresh temporary folder.
 fn app_in(dir: &std::path::Path) -> Option<App> {
-    let game = GameData::load(&crate::guess_game_dir()?).ok()?;
+    let game = GameData::load(&mh3u_core::gamedata::dump_from_env()?).ok()?;
     let save = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2"));
     if !save.exists() {
         eprintln!("skipped: snapshots/08-after-quest2/user2 is not available");
@@ -105,7 +105,7 @@ fn a_build_is_searched_saved_as_a_template_edited_and_remembered_for_the_hunter(
 
     // a new app on the same hunter's files sees all of it; another hunter's files are separate
     let again = App::new(
-        GameData::load(&crate::guess_game_dir().unwrap()).unwrap(),
+        GameData::load(&mh3u_core::gamedata::dump_from_env().unwrap()).unwrap(),
         PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2")),
         Some(Files::in_dirs(&dir.join("config"), &dir.join("data"), 2)),
     )
@@ -443,7 +443,9 @@ fn live_mode_follows_the_hunter_the_game_loads_to_that_slots_lists() {
         eprintln!("skipped: the snapshots are not available");
         return;
     };
-    let Some(game_dir) = crate::guess_game_dir() else { return };
+    let Some(game_dir) = mh3u_core::gamedata::dump_from_env() else {
+        return;
+    };
     let dir = temp_dir("follow");
     let saves = dir.join("saves");
     std::fs::create_dir_all(&saves).unwrap();
@@ -596,7 +598,9 @@ fn h_lists_the_hunters_in_the_save_slots_and_shows_the_one_picked() {
         eprintln!("skipped: the snapshots are not available");
         return;
     };
-    let Some(game_dir) = crate::guess_game_dir() else { return };
+    let Some(game_dir) = mh3u_core::gamedata::dump_from_env() else {
+        return;
+    };
     let dir = temp_dir("picker");
     let saves = dir.join("saves");
     std::fs::create_dir_all(&saves).unwrap();
@@ -780,7 +784,7 @@ fn the_shopping_list_is_written_as_text_and_what_changed_is_told_at_the_next_sta
     before.items.remove(&some_item);
     std::fs::write(&app.files.as_ref().unwrap().last_seen, before.format()).unwrap();
     let again = App::new(
-        GameData::load(&crate::guess_game_dir().unwrap()).unwrap(),
+        GameData::load(&mh3u_core::gamedata::dump_from_env().unwrap()).unwrap(),
         app.save_path.clone(),
         app.files.clone(),
     )
@@ -789,7 +793,7 @@ fn the_shopping_list_is_written_as_text_and_what_changed_is_told_at_the_next_sta
     // closing writes the state, so the next start has nothing to say
     again.finish();
     let third = App::new(
-        GameData::load(&crate::guess_game_dir().unwrap()).unwrap(),
+        GameData::load(&mh3u_core::gamedata::dump_from_env().unwrap()).unwrap(),
         app.save_path.clone(),
         app.files.clone(),
     )
@@ -1133,7 +1137,7 @@ fn the_settings_screen_edits_the_config_file_in_place_and_the_start_tab_comes_fr
     assert!(app.settings.is_none());
     // the file is read again by a new app: the start tab and the goal come from it
     std::fs::write(&file, "# mine\nstart_tab = builds\nhunt_goal = runs\nbad_line\n").unwrap();
-    let game = GameData::load(&crate::guess_game_dir().unwrap()).unwrap();
+    let game = GameData::load(&mh3u_core::gamedata::dump_from_env().unwrap()).unwrap();
     let save = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../snapshots/08-after-quest2/user2"));
     let files = Files::in_dirs(&dir.join("config"), &dir.join("data"), 2);
     let again = App::new(game, save, Some(files)).unwrap();

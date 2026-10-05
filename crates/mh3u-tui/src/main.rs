@@ -4,10 +4,10 @@ mod ui;
 
 use anyhow::{Context, Result, bail};
 use clap::Parser;
+use mh3u_app::TITLE_ID;
 use mh3u_app::app::{App, Live};
 use mh3u_app::config::Config;
 use mh3u_app::files::{Files, slot_of};
-use mh3u_app::{TITLE_ID, guess_game_dir};
 use mh3u_core::{gamedata, gamedata::GameData, live, procmem::ProcMem, save::Save};
 use std::path::PathBuf;
 
@@ -15,7 +15,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(version)]
 struct Cli {
-    /// The game dump folder (the one with code/ and content/). Default: `game_dir` in config.txt, else looked for in the usual places
+    /// The game dump folder (the one with code/ and content/). Default: `game_dir` in the settings file. A folder of dumps is fine
     #[arg(long, env = "MH3U_GAME_DIR", value_name = "DIR")]
     game_dir: Option<PathBuf>,
     /// A save file (userN); overrides --slot
@@ -114,10 +114,14 @@ fn main() -> Result<()> {
     let cemu = cemu
         .or_else(|| config.text("cemu").map(str::to_string))
         .unwrap_or_else(|| "Cemu".to_string());
-    let game_dir = game_dir
-        .or_else(|| config.text("game_dir").map(PathBuf::from))
-        .or_else(guess_game_dir)
-        .context("game dump not found: give --game-dir, set MH3U_GAME_DIR or game_dir in config.txt")?;
+    // the game folder: --game-dir (or MH3U_GAME_DIR), else the `game_dir` setting; a folder of dumps is fine, the game's is used
+    let asked = game_dir
+        .map(|p| p.to_string_lossy().into_owned())
+        .or_else(|| config.text("game_dir").map(str::to_string))
+        .context("no game folder: give --game-dir, set MH3U_GAME_DIR, or set game_dir in the settings file (press S in the app, or see config/default.txt)")?;
+    let game_dir = gamedata::find_dump(&gamedata::expand_home(&asked)).with_context(|| {
+        format!("no game dump in {asked}: it should have content/nativeCafe in it, or hold a folder named like `... [Game] [{TITLE_ID}]`")
+    })?;
     let save = match save {
         Some(s) => s,
         None => home()?.join(format!(

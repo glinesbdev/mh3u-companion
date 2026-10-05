@@ -369,15 +369,7 @@ mod tests {
     /// Every quest in the player's dump reads, its box chances add up to 100, and the monsters are known ids. Skips without the dump.
     #[test]
     fn every_quest_in_the_dump_reads_and_its_rewards_add_up() {
-        let Some(home) = std::env::var_os("HOME") else { return };
-        let Ok(dumps) = std::fs::read_dir(std::path::Path::new(&home).join("games/wiiu")) else {
-            return;
-        };
-        let Some(dir) = dumps
-            .filter_map(|e| e.ok().map(|e| e.path()))
-            .find(|p| p.to_string_lossy().contains("[Game]"))
-            .map(|p| p.join("content/nativeCafe/quest/us"))
-        else {
+        let Some(dir) = crate::gamedata::dump_from_env().map(|p| p.join("content/nativeCafe/quest/us")) else {
             return;
         };
         let Ok(files) = std::fs::read_dir(&dir) else { return };

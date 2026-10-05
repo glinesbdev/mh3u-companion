@@ -65,14 +65,7 @@ mod tests {
     use crate::{gamedata::GameData, save::Save};
 
     fn game() -> Option<GameData> {
-        let dir = std::fs::read_dir(format!("{}/games/wiiu", std::env::var("HOME").ok()?))
-            .ok()?
-            .filter_map(|e| e.ok().map(|e| e.path()))
-            .find(|p| {
-                p.file_name()
-                    .and_then(|n| n.to_str())
-                    .is_some_and(|n| n.contains("[Game]") && n.contains("10118300"))
-            })?;
+        let dir = crate::gamedata::dump_from_env()?;
         GameData::load(&dir).ok()
     }
 

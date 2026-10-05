@@ -174,11 +174,12 @@
 <text x="83.2" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="121.6" y="350.4" textLength="38.4" lengthAdjust="spacing" fill="#c0caf5">Game</text>
 <text x="169.6" y="350.4" textLength="57.6" lengthAdjust="spacing" fill="#c0caf5">folder</text>
-<text x="294.4" y="350.4" textLength="105.6" lengthAdjust="spacing" fill="#8a8a8a">(automatic)</text>
-<text x="419.2" y="350.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">default</text>
-<text x="505.6" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">↻</text>
-<text x="524.8" y="350.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">next</text>
-<text x="572.8" y="350.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">start</text>
+<text x="294.4" y="350.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">(not</text>
+<text x="342.4" y="350.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">set)</text>
+<text x="400.0" y="350.4" textLength="67.2" lengthAdjust="spacing" fill="#8a8a8a">default</text>
+<text x="486.4" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#8a8a8a">↻</text>
+<text x="505.6" y="350.4" textLength="38.4" lengthAdjust="spacing" fill="#8a8a8a">next</text>
+<text x="553.6" y="350.4" textLength="48.0" lengthAdjust="spacing" fill="#8a8a8a">start</text>
 <text x="1072.0" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="1139.2" y="350.4" textLength="9.6" lengthAdjust="spacing" fill="#0db9d7">│</text>
 <text x="16.0" y="370.4" textLength="9.6" lengthAdjust="spacing" fill="#414868">│</text>
