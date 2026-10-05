@@ -21,12 +21,15 @@ impl App {
             .filter_map(|slot| {
                 let bytes = std::fs::read(dir.join(format!("user{slot}"))).ok()?;
                 let save = Save::parse(&bytes).ok()?;
-                let played = format!(
+                let mut played = format!(
                     "{}  {} village · {} guild",
                     save.play_time(),
                     save.village_quests,
                     save.guild_quests
                 );
+                if let Some((kind, quests)) = save.most_used_weapon() {
+                    played += &format!(" · {} x{quests}", self.game.equipment_kind_label(kind).unwrap_or("?"));
+                }
                 Some((slot, save.hunter_name, played))
             })
             .filter(|(_, name, _)| !name.is_empty())

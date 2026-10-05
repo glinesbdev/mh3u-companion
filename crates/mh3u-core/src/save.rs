@@ -23,6 +23,15 @@ const WORN_TALISMAN_OFFSET: usize = 0xcc;
 /// The guild card: play time in seconds (u32, right after the zenny), and the quests done in the village and in the guild hall (one
 /// byte each, in the guild card's own record). Found by comparing saves with the numbers on the guild card, which matched (docs/formats.md).
 const PLAY_SECONDS_OFFSET: usize = 0x4c;
+/// The guild card's weapon usage: twelve u16 counts of the quests done with each weapon type, first for the village (from here) and then
+/// for the guild hall (twelve u16 from `0x7b60`). The screen shows the two added together. Found by doing a Sword & Shield hall quest
+/// after four with the great sword: only the second type's hall count moved. The first two types are certain (great sword, sword &
+/// shield); the order of the rest is the weapon menu's by guess and not checked.
+const WEAPON_USAGE_VILLAGE: usize = 0x7b48;
+const WEAPON_USAGE_GUILD: usize = 0x7b60;
+/// The equipment kind of each of the twelve types, in that order.
+pub const WEAPON_USAGE_KINDS: [u8; 12] = [7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19];
+
 const VILLAGE_QUESTS_OFFSET: usize = 0x7a4d;
 const GUILD_QUESTS_OFFSET: usize = 0x7a51;
 /// One u16 per monster from here; entry `n` is for the monster with name id `n + 6`: how many times it was killed or captured.
@@ -111,6 +120,8 @@ pub struct Save {
     /// Quests done in the village, and in the guild hall (the guild card's two counts).
     pub village_quests: u8,
     pub guild_quests: u8,
+    /// Quests done with each weapon type, village and guild together, in the order of [`WEAPON_USAGE_KINDS`].
+    pub weapon_uses: [u32; 12],
     pub pouch: Vec<ItemStack>,
     pub item_box: Vec<ItemStack>,
     pub equipment_box: Vec<Equipment>,
@@ -191,6 +202,16 @@ impl Save {
 
     /// Parse the contents of the `user1` save file.
     /// The play time as the guild card shows it: `1 h 54 min`.
+    /// The weapon type the hunter has done the most quests with, as (equipment kind, quests); `None` before the first quest.
+    pub fn most_used_weapon(&self) -> Option<(u8, u32)> {
+        self.weapon_uses
+            .iter()
+            .enumerate()
+            .filter(|&(_, &n)| n > 0)
+            .max_by_key(|&(i, &n)| (n, std::cmp::Reverse(i)))
+            .map(|(i, &n)| (WEAPON_USAGE_KINDS[i], n))
+    }
+
     pub fn play_time(&self) -> String {
         let minutes = self.play_seconds / 60;
         format!("{} h {:02} min", minutes / 60, minutes % 60)
@@ -213,6 +234,9 @@ impl Save {
             ]),
             village_quests: d[VILLAGE_QUESTS_OFFSET],
             guild_quests: d[GUILD_QUESTS_OFFSET],
+            weapon_uses: std::array::from_fn(|i| {
+                u32::from(be16(d, WEAPON_USAGE_VILLAGE + 2 * i)) + u32::from(be16(d, WEAPON_USAGE_GUILD + 2 * i))
+            }),
             pouch: read_stacks(d, POUCH_OFFSET, POUCH_SLOTS),
             item_box: read_stacks(d, BOX_OFFSET, BOX_SLOTS),
             equipment_box: read_equipment(d),
@@ -242,6 +266,7 @@ mod tests {
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,
+            weapon_uses: [0; 12],
             pouch,
             item_box,
             equipment_box: Vec::new(),
@@ -386,6 +411,30 @@ mod tests {
         let three = Save::parse(&fixture!("16-jewel3/user2")).unwrap();
         let full = three.equipment_box.iter().find(|e| e.slot == 0).unwrap();
         assert_eq!(full.talisman_decorations(), vec![0x91, 0x15, 0x97]);
+    }
+
+    #[test]
+    fn weapon_usage_adds_the_village_and_the_hall_counts() {
+        // after the Sword & Shield hall quest the screen showed great sword 14 and sword & shield 1
+        let after = Save::parse(&fixture!("20-snS-quest/user2")).unwrap();
+        assert_eq!(after.weapon_uses[..3], [14, 1, 0]);
+        assert_eq!(after.most_used_weapon(), Some((7, 14)));
+        let before = Save::parse(&fixture!("12-hall-quest-2/user2")).unwrap();
+        assert_eq!(
+            before.weapon_uses[..2],
+            [14, 0],
+            "the same great sword count, no sword & shield yet"
+        );
+        // the first quests of the series: one more with each village (+2 in that save's counter) and hall quest
+        let village = Save::parse(&fixture!("10-village-quest/user2")).unwrap();
+        assert_eq!(village.weapon_uses[0], 12);
+        assert_eq!(Save::parse(&fixture!("11-hall-quest/user2")).unwrap().weapon_uses[0], 13);
+        let none = Save::parse(&fixture!("03-latest/user1")).unwrap();
+        assert_eq!(
+            (none.weapon_uses, none.most_used_weapon()),
+            ([0; 12], None),
+            "a hunter with no quests"
+        );
     }
 
     #[test]

@@ -499,6 +499,7 @@ mod tests {
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,
+            weapon_uses: [0; 12],
             pouch: Vec::new(),
             item_box: items.iter().map(|&(i, c)| stack(i, c)).filter(|s| s.count > 0).collect(),
             hunted: Vec::new(),

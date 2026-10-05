@@ -160,8 +160,7 @@ too, but not reliably: 0x7b61 follows the hall count, while 0x7568 (village) lag
 at 2 when the card went to 3, so they are something else. A byte at 0x7578 counts hall quests since the first (0, 0, 1, 2) and may be the progress
 towards the next rank. A byte at 0x7569 is 1 for the hunter with rank 1 and 0 for the one with rank 0 and did not change with hall quests, so it
 may be the **hunter rank**; that waits for a rank-up to be sure. A 16-bit number at 0x5a46 is a total of the quest points: it grew with every
-quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests, village ones included, so it is not the hall's hunter rank points alone. The weapon usage list (great sword 11 to 14 over four saves) is not found: no
-byte or 16-bit number goes up by one with each quest, so it is stored in some other form or not in this file.
+quest (170, 230, 275, 475, 595, 805, 1045 over seven snapshots), by the amount the quest file gives (see "Quests") for 4 of the 6 quests, village ones included, so it is not the hall's hunter rank points alone. The **weapon usage** is two lists of twelve u16 counts, one for the village from 0x7b48 and one for the guild hall from 0x7b60, with one entry per weapon type; the screen shows the two added together (great sword 12, 13, 14, 14 and sword & shield 0, 0, 0, 1 over the saves; 0x7b61, mentioned above, is the great sword's hall count). A Sword & Shield hall quest moved only the second entry of the hall list, so the first two types are great sword and sword & shield; the order of the other ten is the weapon menu's by guess (equipment kinds 9, 10, 11, 13, 14, 15, 16, 17, 18, 19) and not checked. The first save of the series showed 11 on the screen where the lists add to 10 (the village count of that save also read one low against the card): saves made right after a quest can lag by one.
 
 ## Which part a break list is
 
