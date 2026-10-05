@@ -40,6 +40,31 @@ struct Cli {
     debug_edit: bool,
 }
 
+/// What to say when the game folder is missing, or `asked` (and where it came from) holds no game dump: what a game folder is and every
+/// way of giving it, the flag first.
+fn game_dir_help(asked: Option<(&str, &str)>) -> String {
+    let what = format!(
+        "A game folder is the game dump itself (the folder with content/nativeCafe in it) or a folder that holds dumps, in which case the one \
+         named like `... [Game] [{TITLE_ID}]` is used."
+    );
+    let how = format!(
+        "Give it with the --game-dir flag, for example:\n    mh3u-tui --game-dir \"/path/to/MONSTER HUNTER 3 ULTIMATE [Game] [{TITLE_ID}]\"\n\
+         or set it once: MH3U_GAME_DIR in the environment, or game_dir in the settings file (press S in the app, or see config/default.txt)."
+    );
+    match asked {
+        None => format!("no game folder was given.\n{what}\n{how}"),
+        Some((folder, source)) => {
+            let exists = gamedata::expand_home(folder).exists();
+            let problem = if exists {
+                "it holds no game dump"
+            } else {
+                "that folder does not exist"
+            };
+            format!("no game dump in {folder} (from {source}): {problem}.\n{what}\n{how}")
+        }
+    }
+}
+
 fn home() -> Result<PathBuf> {
     dirs::home_dir().context("no home folder")
 }
@@ -115,13 +140,19 @@ fn main() -> Result<()> {
         .or_else(|| config.text("cemu").map(str::to_string))
         .unwrap_or_else(|| "Cemu".to_string());
     // the game folder: --game-dir (or MH3U_GAME_DIR), else the `game_dir` setting; a folder of dumps is fine, the game's is used
+    let from_command_line = game_dir.is_some();
     let asked = game_dir
         .map(|p| p.to_string_lossy().into_owned())
         .or_else(|| config.text("game_dir").map(str::to_string))
-        .context("no game folder: give --game-dir, set MH3U_GAME_DIR, or set game_dir in the settings file (press S in the app, or see config/default.txt)")?;
-    let game_dir = gamedata::find_dump(&gamedata::expand_home(&asked)).with_context(|| {
-        format!("no game dump in {asked}: it should have content/nativeCafe in it, or hold a folder named like `... [Game] [{TITLE_ID}]`")
-    })?;
+        .context(game_dir_help(None))?;
+    let source = if !from_command_line {
+        "the game_dir setting"
+    } else if std::env::args().any(|a| a == "--game-dir" || a.starts_with("--game-dir=")) {
+        "--game-dir"
+    } else {
+        "MH3U_GAME_DIR"
+    };
+    let game_dir = gamedata::find_dump(&gamedata::expand_home(&asked)).with_context(|| game_dir_help(Some((&asked, source))))?;
     let save = match save {
         Some(s) => s,
         None => home()?.join(format!(
@@ -189,4 +220,33 @@ fn run(app: &mut App, terminal: &mut ratatui::DefaultTerminal) -> Result<()> {
         app.tick();
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_game_folder_error_says_what_is_wrong_and_suggests_the_flag() {
+        let missing = game_dir_help(Some(("/no/such/folder", "--game-dir")));
+        assert!(
+            missing.starts_with("no game dump in /no/such/folder (from --game-dir): that folder does not exist."),
+            "{missing}"
+        );
+        let empty = game_dir_help(Some((&std::env::temp_dir().to_string_lossy(), "the game_dir setting")));
+        assert!(empty.contains("(from the game_dir setting): it holds no game dump."), "{empty}");
+        for text in [&missing, &empty, &game_dir_help(None)] {
+            assert!(text.contains("--game-dir flag, for example:"), "{text}");
+            assert!(
+                text.contains("mh3u-tui --game-dir \"/path/to/MONSTER HUNTER 3 ULTIMATE [Game] [0005000010118300]\""),
+                "{text}"
+            );
+            assert!(
+                text.contains("MH3U_GAME_DIR") && text.contains("game_dir in the settings file"),
+                "{text}"
+            );
+            assert!(text.contains("content/nativeCafe"));
+        }
+        assert!(game_dir_help(None).starts_with("no game folder was given."));
+    }
 }
