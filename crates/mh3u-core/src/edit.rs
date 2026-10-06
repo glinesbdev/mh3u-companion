@@ -22,8 +22,9 @@ pub fn apply(data: &mut [u8], patch: &Patch) {
     data[patch.offset..patch.offset + patch.bytes.len()].copy_from_slice(&patch.bytes);
 }
 
-/// The most Resource Points the commands set: the game's own limit is not known, so this stays at four digits.
-pub const MAX_RESOURCE_POINTS: u32 = 9999;
+/// The most Resource Points: 9,999,999. Set to that, the points the hunter then earned in the game left it unchanged, and the game
+/// had shown 1,000,001 before.
+pub const MAX_RESOURCE_POINTS: u32 = 9_999_999;
 
 /// Set the Resource Points to `amount` (limited to `MAX_RESOURCE_POINTS`).
 pub fn set_resource_points(amount: u32) -> Patch {
@@ -227,7 +228,8 @@ mod tests {
         let mut d = vec![0u8; SAVE_LEN];
         apply(&mut d, &set_resource_points(20));
         assert_eq!(d[RESOURCE_POINTS_OFFSET..RESOURCE_POINTS_OFFSET + 4], [0, 0, 0, 20]);
-        assert_eq!(set_resource_points(1_000_000).bytes, 9999u32.to_be_bytes());
+        assert_eq!(set_resource_points(50_000_000).bytes, 9_999_999u32.to_be_bytes());
+        assert_eq!(set_resource_points(1_000_001).bytes, 1_000_001u32.to_be_bytes());
     }
 
     #[test]

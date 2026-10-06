@@ -324,7 +324,7 @@ A record at **0x6f68** appeared in the save made after the first quest with a Sh
 
 ### Resource Points (found 2026-10-05)
 
-A big-endian u32 at **0x5b50**. It read 14 in every snapshot from the first quests on (until the hunter earned more), and 20 on the save made when the in-game number went to 20; 0x5b50 is the only 32-, 16- or 8-bit number that went from 14 to 20 between the two saves. A second u32 at 0x5b58 rose by the same 6 (44 to 50): it is probably the total of points ever earned, but that is a guess (what the game shows is the first). The value is in the live save block, so the debug command `rp` writes it like the zenny (`rp 100`, `rp +50`, up to 9999, a limit made up here: the game's own is not known). The ledger notes the points added by commands and `purge` takes them out again (never more than the hunter now has).
+A big-endian u32 at **0x5b50**. It read 14 in every snapshot from the first quests on (until the hunter earned more), and 20 on the save made when the in-game number went to 20; 0x5b50 is the only 32-, 16- or 8-bit number that went from 14 to 20 between the two saves. A second u32 at 0x5b58 rose by the same 6 (44 to 50): it is probably the total of points ever earned, but that is a guess (what the game shows is the first). The value is in the live save block, so the debug command `rp` writes it like the zenny (`rp 100`, `rp +50`, up to 9,999,999, which is the game's limit (the game showed 1,000,001 first; with `rp 9999999` the points earned after that left the number as it was)). The ledger notes the points added by commands and `purge` takes them out again (never more than the hunter now has).
 
 ### The guild card in the running game
 
