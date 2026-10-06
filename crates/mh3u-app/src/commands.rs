@@ -24,12 +24,24 @@ pub enum ZennyOp {
     Add(i64),
 }
 
+/// What `give` adds, once chosen: `label` is how the status line names it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum GiveWhat {
+    Item { id: u16, label: String },
+    Piece { kind: u8, id: u16, name: String },
+}
+
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Zenny(ZennyOp),
     /// Add to the item box; with no count, fill the stack.
     Give {
         item: String,
+        count: Option<u16>,
+    },
+    /// `Give` after the name has been resolved (or picked from a list).
+    GiveTarget {
+        what: GiveWhat,
         count: Option<u16>,
     },
     Set {

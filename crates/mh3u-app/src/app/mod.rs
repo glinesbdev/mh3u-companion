@@ -41,6 +41,8 @@ mod find;
 #[cfg(test)]
 mod flow_tests;
 mod gains;
+#[cfg(feature = "edit")]
+mod give;
 mod hunters;
 mod hunts;
 mod inventory;
@@ -69,6 +71,8 @@ pub use crafting::Via;
 pub use debug_guard::DebugGuard;
 pub use families::FamiliesTab;
 pub use gains::GainsTab;
+#[cfg(feature = "edit")]
+pub use give::{GiveChoice, GivePicker};
 pub use hunters::HunterChoice;
 pub use hunts::HuntTab;
 pub use inventory::Inventory;
@@ -191,6 +195,9 @@ pub struct App {
     /// What the debug commands changed, and whether the game is online (see `debug_guard`).
     #[cfg(feature = "edit")]
     pub guard: DebugGuard,
+    /// The popup that gives an item or a piece of gear, when open.
+    #[cfg(feature = "edit")]
+    pub give: Option<GivePicker>,
     /// The settings from `config.txt` (see `crate::config`), and the Settings screen when it is open.
     pub config: crate::config::Config,
     pub settings: Option<SettingsScreen>,
@@ -263,6 +270,8 @@ impl App {
             console: EditConsole::default(),
             #[cfg(feature = "edit")]
             guard: DebugGuard::load(files.as_ref()),
+            #[cfg(feature = "edit")]
+            give: None,
             config: crate::config::Config::default(),
             settings: None,
             unlocked,

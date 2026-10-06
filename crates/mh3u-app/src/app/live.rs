@@ -120,6 +120,14 @@ impl App {
     #[cfg(not(feature = "edit"))]
     pub(super) fn command_key(&mut self, _code: Key) {}
 
+    #[cfg(not(feature = "edit"))]
+    pub(super) fn give_picker_open(&self) -> bool {
+        false
+    }
+
+    #[cfg(not(feature = "edit"))]
+    pub(super) fn give_key(&mut self, _code: Key) {}
+
     pub fn live_connected(&self) -> bool {
         self.live.as_ref().is_some_and(|l| l.connected)
     }

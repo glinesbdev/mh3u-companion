@@ -17,6 +17,8 @@ mod crafting;
 mod equipment;
 mod families;
 mod gains;
+#[cfg(feature = "edit")]
+mod give;
 mod help;
 mod hunters;
 mod hunts;
@@ -159,6 +161,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     HITS.with(|h| {
         let mut h = h.borrow_mut();
         h.tab_lists = h.lists.len();
+        h.tab_actions = h.actions.len();
     });
 
     if app.show_help {
@@ -180,6 +183,8 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_piece_picker(f, app);
     }
     draw_name_prompt(f, app);
+    #[cfg(feature = "edit")]
+    give::draw_give(f, app);
     app.hits = HITS.with(|h| std::mem::take(&mut *h.borrow_mut()));
 }
 

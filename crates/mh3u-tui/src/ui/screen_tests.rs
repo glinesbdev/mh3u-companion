@@ -284,3 +284,44 @@ fn a_click_in_a_popup_list_without_a_border_picks_the_row_under_it() {
     draw_all(&mut app, 140, 40);
     assert_eq!(app.hits.lists.last().unwrap().selected, Some(list.offset + 3));
 }
+
+#[cfg(feature = "edit")]
+#[test]
+fn the_give_picker_finds_things_by_name_and_its_buttons_can_be_clicked() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    app.enable_edit("test".into());
+    app.on_key(Key::Char('E'), Mods::default());
+    assert!(app.give_picker_open());
+    for c in "tenderizer".chars() {
+        app.on_key(Key::Char(c), Mods::default());
+    }
+    let lines = draw_all(&mut app, 140, 40);
+    let all = lines.join("\n");
+    assert!(all.contains("Give ·") && all.contains("Tenderizer Jwl"), "{all}");
+    let picker = app.give.as_ref().unwrap();
+    assert!(picker.chosen().unwrap().name.to_lowercase().contains("tenderizer"));
+    assert_eq!(picker.count(), 1);
+    // the + button
+    let (plus, _, key) = app.hits.actions[app.hits.tab_actions + 1];
+    assert_eq!(key, Key::Right);
+    app.on_pointer(Pointer::Click {
+        col: plus.x + 1,
+        row: plus.y,
+    });
+    assert_eq!(app.give.as_ref().unwrap().count(), 2);
+    // a click on the second row picks it (two things are called Tenderizer)
+    let list = *app.hits.lists.last().unwrap();
+    app.on_pointer(Pointer::Click {
+        col: list.area.x + 4,
+        row: list.area.y + 1,
+    });
+    assert_eq!(app.give.as_ref().unwrap().state.selected(), Some(1));
+    // giving without the game running says so, and the picker stays for the next one
+    app.on_key(Key::Enter, Mods::default());
+    assert!(app.status.contains("--live"), "{}", app.status);
+    assert!(app.give_picker_open());
+    app.on_key(Key::Esc, Mods::default());
+    assert!(!app.give_picker_open());
+}

@@ -23,10 +23,14 @@ impl App {
 
     /// Run a debug command: work out the patches, then ask the live reader to write them into the game.
     pub(super) fn run_command(&mut self, text: &str) {
-        let command = match commands::parse(text) {
-            Ok(c) => c,
-            Err(e) => return self.status = e,
-        };
+        match commands::parse(text) {
+            Ok(command) => self.run_parsed(command),
+            Err(e) => self.status = e,
+        }
+    }
+
+    /// [`run_command`] for a command that is already parsed (the give picker builds them without text).
+    pub(super) fn run_parsed(&mut self, command: commands::Command) {
         if let commands::Command::Scan { kind, names } = command {
             return self.run_scan(kind, &names);
         }
@@ -39,6 +43,30 @@ impl App {
         if let Some(reason) = &self.guard.online {
             return self.status = format!("debug edits are off while online ({reason}); purge takes out the ones made before");
         }
+        // a name typed after `give` is settled first, so that everything below gives something already chosen
+        let command = match command {
+            commands::Command::Give { item, count } => {
+                // "give tenderizer jwl 3" is the item called that, not 3 of "tenderizer jwl"
+                let (item, count) = match count.map(|n| format!("{item} {n}")) {
+                    Some(whole) if commands::has_item_named(&self.game, &whole) => (whole, None),
+                    _ => (item, count),
+                };
+                let what = match commands::resolve_give(&self.game, &item) {
+                    Some(commands::Target::Piece { kind, id, name }) => commands::GiveWhat::Piece {
+                        kind,
+                        id,
+                        name: name.to_string(),
+                    },
+                    Some(commands::Target::Item(found)) => commands::GiveWhat::Item {
+                        id: found.id,
+                        label: found.describe(),
+                    },
+                    None => return self.status = format!("no item matches '{item}'"),
+                };
+                commands::Command::GiveTarget { what, count }
+            }
+            other => other,
+        };
         let connected = self.live_connected();
         let (Some(live), Some(mut data)) = (&self.live, self.console.live_bytes.clone()) else {
             return self.status = "editing needs the game running through --live".into();
@@ -64,36 +92,25 @@ impl App {
                     push(edit::set_zenny(amount), &mut data);
                     notes.push(format!("zenny set to {}", group_digits(u64::from(amount))));
                 }
-                commands::Command::Give { item, count } => {
-                    // "give tenderizer jwl 3" is the item called that, not 3 of "tenderizer jwl"
-                    let (item, count) = match count.map(|n| format!("{item} {n}")) {
-                        Some(whole) if commands::has_item_named(&self.game, &whole) => (whole, None),
-                        _ => (item, count),
-                    };
-                    let found = match commands::resolve_give(&self.game, &item) {
-                        Some(commands::Target::Piece { kind, id, name }) => {
-                            let copies = count.unwrap_or(1).clamp(1, 20);
-                            let mut slots = Vec::new();
-                            for _ in 0..copies {
-                                let (slot, patch) = edit::new_piece(&data, kind, id).map_err(|e| e.to_string())?;
-                                push(patch, &mut data);
-                                slots.push(slot.to_string());
-                            }
-                            notes.push(format!("{name} x{copies} in the equipment box, slot {}", slots.join(", ")));
-                            return Ok(());
+                commands::Command::Give { .. } => {}
+                commands::Command::GiveTarget { what, count } => match what {
+                    commands::GiveWhat::Piece { kind, id, name } => {
+                        let copies = count.unwrap_or(1).clamp(1, 20);
+                        let mut slots = Vec::new();
+                        for _ in 0..copies {
+                            let (slot, patch) = edit::new_piece(&data, kind, id).map_err(|e| e.to_string())?;
+                            push(patch, &mut data);
+                            slots.push(slot.to_string());
                         }
-                        Some(commands::Target::Item(found)) => found,
-                        None => return Err(format!("no item matches '{item}'")),
-                    };
-                    let have = edit::box_count(&data, found.id);
-                    let target = count.map_or(edit::MAX_STACK, |n| have.saturating_add(n));
-                    push(edit::set_box_item(&data, found.id, target).map_err(|e| e.to_string())?, &mut data);
-                    notes.push(format!(
-                        "{} in the box: {have} -> {}",
-                        found.describe(),
-                        target.min(edit::MAX_STACK)
-                    ));
-                }
+                        notes.push(format!("{name} x{copies} in the equipment box, slot {}", slots.join(", ")));
+                    }
+                    commands::GiveWhat::Item { id, label } => {
+                        let have = edit::box_count(&data, id);
+                        let target = count.map_or(edit::MAX_STACK, |n| have.saturating_add(n));
+                        push(edit::set_box_item(&data, id, target).map_err(|e| e.to_string())?, &mut data);
+                        notes.push(format!("{label} in the box: {have} -> {}", target.min(edit::MAX_STACK)));
+                    }
+                },
                 commands::Command::Set { item, count } => {
                     let found = commands::resolve_item(&self.game, &item).ok_or(format!("no item matches '{item}'"))?;
                     push(edit::set_box_item(&data, found.id, count).map_err(|e| e.to_string())?, &mut data);

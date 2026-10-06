@@ -72,6 +72,8 @@ pub struct Hits {
     /// Text that tells what a key does, drawn where a click should do it: the key to press, after giving the list the keys if it is one of
     /// several.
     pub actions: Vec<(Area, Option<Focus>, Key)>,
+    /// How many of `actions` belong to the tab: the ones after them are in popups.
+    pub tab_actions: usize,
     /// How many of `lists` belong to the tab itself: the ones after them are in popups, drawn on top.
     pub tab_lists: usize,
 }

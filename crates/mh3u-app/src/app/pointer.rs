@@ -38,13 +38,21 @@ impl App {
             || self.builds.name_prompt.is_some()
             || self.builds.piece_picker.is_some()
             || self.show_help
+            || self.give_picker_open()
     }
 
     fn click(&mut self, col: u16, row: u16) {
         let popup = self.popup_open();
         let typing = self.is_commanding() || self.searching;
-        if !popup && !typing {
-            let action = self.hits.actions.iter().find(|(a, _, _)| a.contains(col, row)).copied();
+        if !typing {
+            let first_action = if popup { self.hits.tab_actions } else { 0 };
+            let action = self
+                .hits
+                .actions
+                .iter()
+                .skip(first_action)
+                .find(|(a, _, _)| a.contains(col, row))
+                .copied();
             if let Some((_, focus, key)) = action {
                 if let Some(focus) = focus {
                     self.give_keys_to(focus);

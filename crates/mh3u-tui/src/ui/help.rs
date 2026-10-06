@@ -190,6 +190,10 @@ pub(super) const EDIT_SECTION: Section = Section {
             ":",
             "purge (take out everything these commands added; done by itself when the game is online, and edits stay off then)",
         ),
+        (
+            "E",
+            "give an item or gear from a list (type to find, ← → how many, Enter gives, click works too)",
+        ),
         (":", "zenny 50000 | zenny +500"),
         (":", "give iron ore [n] | set honey 5"),
         (":", "stock | stock all (cover the wishlist)"),
