@@ -511,7 +511,7 @@ impl App {
             NameAction::FromWorn => {
                 let armor = self.worn_armor().into_iter().map(|(kind, e)| (kind, e.id));
                 let weapon = self.worn_weapon().map(|e| (e.kind, e.id));
-                let pieces = armor
+                let mut pieces: Vec<templates::Piece> = armor
                     .chain(weapon)
                     .map(|(kind, id)| templates::Piece {
                         kind,
@@ -519,6 +519,14 @@ impl App {
                         skills: Vec::new(),
                     })
                     .collect();
+                // the worn charm too, with the skills of its record (what a template keeps of a talisman)
+                if let Some(t) = self.worn_talisman() {
+                    pieces.push(templates::Piece {
+                        kind: 6,
+                        id: t.id,
+                        skills: t.talisman_skills(),
+                    });
+                }
                 let mut t = Template {
                     name: name.clone(),
                     pieces,

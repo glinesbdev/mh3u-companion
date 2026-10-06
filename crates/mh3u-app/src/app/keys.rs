@@ -36,6 +36,8 @@ impl App {
             self.name_key(code);
         } else if self.builds.piece_picker.is_some() {
             self.piece_key(code);
+        } else if self.worn_pick_open() {
+            self.worn_pick_key(code);
         } else if self.edit_popup_open() {
             self.edit_popup_key(code);
         } else if self.is_commanding() {

@@ -451,3 +451,55 @@ fn the_worn_tab_says_what_it_takes_to_reach_the_next_tier() {
     }));
     draw_all(&mut app, 140, 40);
 }
+
+#[test]
+fn the_worn_pieces_can_be_compared_with_a_template() {
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    let press = |app: &mut App, k: Key| app.on_key(k, Mods::default());
+    // a template from what is worn
+    while app.tab != Tab::Builds {
+        press(&mut app, Key::Right);
+    }
+    press(&mut app, Key::Char('f'));
+    press(&mut app, Key::Char('f'));
+    press(&mut app, Key::Char('n'));
+    for c in "Mine".chars() {
+        press(&mut app, Key::Char(c));
+    }
+    press(&mut app, Key::Enter);
+    if app.builds.templates.is_empty() {
+        eprintln!("skipped: no template could be made from this save");
+        return;
+    }
+    while app.tab != Tab::Worn {
+        press(&mut app, Key::Left);
+    }
+    // v asks which template, Enter chooses it
+    press(&mut app, Key::Char('v'));
+    assert!(app.worn_pick_open());
+    let shown = draw_all(&mut app, 140, 40).join("\n");
+    let name = app.builds.templates[0].name.clone();
+    assert!(shown.contains("Compare with which template?") && shown.contains(&name), "{shown}");
+    press(&mut app, Key::Enter);
+    assert!(!app.worn_pick_open());
+    let same = app.worn_versus().expect("comparing");
+    assert_eq!(same.template, name);
+    assert!(
+        same.rows.iter().all(|r| r.diff() == 0),
+        "a template of what is worn changes nothing: {same:?}"
+    );
+    assert!(same.pieces.iter().all(|p| p.same()), "{:?}", same.pieces);
+    // take the head piece out of the template: its skills are lost and the slot differs
+    app.builds.templates[0].set(mh3u_app::templates::Slot::Head, None);
+    let less = app.worn_versus().unwrap();
+    assert!(less.rows.iter().any(|r| r.diff() < 0), "{less:?}");
+    assert!(!less.pieces[0].same() && less.pieces[0].template.is_none());
+    let shown = draw_all(&mut app, 140, 40).join("\n");
+    assert!(shown.contains(&format!("Worn vs {name}")) && shown.contains("→"), "{shown}");
+    // the arrows move in the comparison, and v goes back
+    press(&mut app, Key::Down);
+    assert_eq!(app.worn.compare.selected(), Some(1));
+    press(&mut app, Key::Char('v'));
+    assert!(app.worn_versus().is_none());
+}

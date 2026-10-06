@@ -14,6 +14,11 @@ pub struct WornTab {
     pub skills: ListState,
     /// Only the skills that are a few points short of their next tier.
     pub near: bool,
+    /// The name of the template the worn pieces are compared with, when comparing.
+    pub against: Option<String>,
+    pub compare: ListState,
+    /// The list of templates to choose from, while open.
+    pub pick: Option<ListState>,
 }
 
 /// How many points short of the next tier a skill is to count as "near" (key `m`).
@@ -77,9 +82,50 @@ pub struct Missing {
     pub reaches: bool,
 }
 
+/// One skill in the comparison of the worn pieces with a template.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CompareRow {
+    pub skill: u8,
+    pub worn: i32,
+    pub template: i32,
+}
+
+impl CompareRow {
+    pub fn diff(&self) -> i32 {
+        self.template - self.worn
+    }
+}
+
+/// One slot of the comparison: what is worn there and what the template has.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PieceDiff {
+    pub slot: &'static str,
+    pub worn: Option<String>,
+    pub template: Option<String>,
+}
+
+impl PieceDiff {
+    pub fn same(&self) -> bool {
+        self.worn == self.template
+    }
+}
+
+/// The worn armor and charm against a saved template, pieces only: jewels can be moved, so they count on neither side.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Versus {
+    pub template: String,
+    pub rows: Vec<CompareRow>,
+    pub pieces: Vec<PieceDiff>,
+}
+
 impl App {
     /// What the worn armor and charm (with their jewels) add up to.
     pub fn worn_summary(&self) -> Summary {
+        self.worn_summary_with(true)
+    }
+
+    /// The same, with or without what is socketed into the armor and the charm.
+    fn worn_summary_with(&self, jewels: bool) -> Summary {
         let armor = self.worn_armor();
         let talisman = self.worn_talisman();
         let stats: Vec<(u8, &mh3u_core::armor::ArmorStats)> = armor
@@ -88,13 +134,19 @@ impl App {
             .collect();
         let charm = talisman.map(|t| {
             let mut skills = t.talisman_skills();
-            skills.extend(self.game.decoration_points(&t.talisman_decorations()));
+            if jewels {
+                skills.extend(self.game.decoration_points(&t.talisman_decorations()));
+            }
             mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
         });
         // jewels in armor are counted apart from the piece, so Torso Up does not double them
         let armor_jewels = mh3u_core::armor::ArmorStats::talisman(
-            self.game
-                .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>()),
+            if jewels {
+                self.game
+                    .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>())
+            } else {
+                Vec::new()
+            },
             0,
         );
         let mut counted = stats;
@@ -128,12 +180,28 @@ impl App {
                     String::new()
                 };
             }
+            Key::Char('v') => {
+                if self.worn.against.take().is_some() {
+                    self.status = String::new();
+                } else if self.builds.templates.is_empty() {
+                    self.status = "no templates yet: save one on the Builds tab".to_string();
+                } else {
+                    self.worn.pick = Some(ListState::default().with_selected(Some(0)));
+                }
+            }
             _ => return false,
         }
         true
     }
 
     pub(super) fn worn_move(&mut self, step: isize) {
+        if let Some(v) = self.worn_versus() {
+            let at = self.worn.compare.selected();
+            self.worn
+                .compare
+                .select((!v.rows.is_empty()).then(|| stepped(at, step, v.rows.len())));
+            return;
+        }
         let summary = self.worn_summary();
         let len = self.worn_rows(&summary).len();
         let at = self.worn_selected(&summary);
@@ -330,5 +398,112 @@ impl App {
         }
         summary.reaches = summary.gained >= gap;
         summary
+    }
+
+    /// The template the worn pieces are compared with, if one is chosen and still there.
+    pub fn worn_against(&self) -> Option<&crate::templates::Template> {
+        let name = self.worn.against.as_ref()?;
+        self.builds.templates.iter().find(|t| &t.name == name)
+    }
+
+    /// The worn armor and charm (without jewels) against the chosen template: the skills that differ first, and each slot.
+    pub fn worn_versus(&self) -> Option<Versus> {
+        let template = self.worn_against()?;
+        let worn = self.worn_summary_with(false);
+        let theirs: Vec<(u8, mh3u_core::armor::ArmorStats)> = template
+            .pieces
+            .iter()
+            .filter(|p| p.kind != 0 && !(7..=19).contains(&p.kind))
+            .filter_map(|p| self.piece_stats(p).map(|a| (p.kind, a)))
+            .collect();
+        let refs: Vec<(u8, &mh3u_core::armor::ArmorStats)> = theirs.iter().map(|(k, a)| (*k, a)).collect();
+        let template_sum = sums::summarize(&refs);
+        let points = |s: &Summary, id: u8| s.skills.iter().find(|t| t.id == id).map_or(0, |t| t.points);
+        let mut ids: Vec<u8> = worn.skills.iter().chain(&template_sum.skills).map(|t| t.id).collect();
+        ids.sort_unstable();
+        ids.dedup();
+        let mut rows: Vec<CompareRow> = ids
+            .into_iter()
+            .map(|id| CompareRow {
+                skill: id,
+                worn: points(&worn, id),
+                template: points(&template_sum, id),
+            })
+            .collect();
+        // the biggest changes first, then what is the same by the points it has
+        rows.sort_by_key(|r| {
+            (
+                std::cmp::Reverse(r.diff().abs()),
+                std::cmp::Reverse(r.worn.max(r.template)),
+                r.skill,
+            )
+        });
+        let worn_armor = self.worn_armor();
+        let mut pieces = Vec::new();
+        for slot in crate::templates::Slot::ALL {
+            let Some(kind) = slot.kind() else { continue };
+            if (7..=19).contains(&kind) {
+                continue;
+            }
+            let wearing = if kind == CHARM {
+                self.worn_talisman().map(|t| self.charm_label(t.talisman_skills()))
+            } else {
+                worn_armor
+                    .iter()
+                    .find(|&&(k, _)| k == kind)
+                    .map(|&(_, e)| self.game.equipment_name(kind, e.id).unwrap_or("?").to_string())
+            };
+            let planned = template.pieces.iter().find(|p| p.kind == kind).map(|p| {
+                if kind == CHARM {
+                    self.charm_label(p.skills.clone())
+                } else {
+                    self.game.equipment_name(kind, p.id).unwrap_or("?").to_string()
+                }
+            });
+            pieces.push(PieceDiff {
+                slot: slot.label(),
+                worn: wearing,
+                template: planned,
+            });
+        }
+        Some(Versus {
+            template: template.name.clone(),
+            rows,
+            pieces,
+        })
+    }
+
+    /// A charm as the comparison names it: its skills, since a talisman is told apart by them.
+    fn charm_label(&self, skills: Vec<(u8, i8)>) -> String {
+        let names: Vec<String> = skills
+            .iter()
+            .map(|&(id, pts)| format!("{} {pts:+}", self.game.skill_name(id).unwrap_or("?")))
+            .collect();
+        if names.is_empty() {
+            "Talisman".to_string()
+        } else {
+            format!("Talisman ({})", names.join(", "))
+        }
+    }
+
+    pub fn worn_pick_open(&self) -> bool {
+        self.worn.pick.is_some()
+    }
+
+    pub(super) fn worn_pick_key(&mut self, code: Key) {
+        let len = self.builds.templates.len();
+        let Some(state) = &mut self.worn.pick else { return };
+        let at = state.selected().unwrap_or(0);
+        match code {
+            Key::Esc | Key::Char('q') => self.worn.pick = None,
+            Key::Down | Key::Char('j') => state.select(Some((at + 1).min(len.saturating_sub(1)))),
+            Key::Up | Key::Char('k') => state.select(Some(at.saturating_sub(1))),
+            Key::Enter => {
+                self.worn.against = self.builds.templates.get(at).map(|t| t.name.clone());
+                self.worn.pick = None;
+                self.worn.compare.select(Some(0));
+            }
+            _ => {}
+        }
     }
 }

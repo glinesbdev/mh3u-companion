@@ -38,6 +38,7 @@ impl App {
             || self.builds.name_prompt.is_some()
             || self.builds.piece_picker.is_some()
             || self.show_help
+            || self.worn_pick_open()
             || self.edit_popup_open()
     }
 

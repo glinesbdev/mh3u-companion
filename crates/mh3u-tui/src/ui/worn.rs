@@ -188,7 +188,12 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         left,
     );
 
-    // Right: defense and resistances, the skills (one is highlighted), and what lies behind that skill.
+    // Right: while comparing, the pieces against a template; else defense and resistances, the skills (one is highlighted), and
+    // what lies behind that skill.
+    if let Some(versus) = app.worn_versus() {
+        draw_versus(f, app, right, &versus);
+        return;
+    }
     let [header, list_area, detail_area] =
         Layout::vertical([Constraint::Length(4), Constraint::Min(5), Constraint::Length(17)]).areas(right);
     let mut head: Vec<Line> = totals_lines(app, &summary, &[]);
@@ -326,4 +331,95 @@ fn skill_detail_lines(app: &App, t: &mh3u_app::worn::SkillTotal) -> (String, Vec
         lines.push(Line::styled(text.to_string(), muted()));
     }
     (format!(" {name} {:+} ", detail.total), lines)
+}
+
+/// The worn pieces against a template: the skills that differ, then each slot.
+fn draw_versus(f: &mut Frame, app: &mut App, area: Rect, v: &mh3u_app::app::Versus) {
+    let [list_area, pieces_area] = Layout::vertical([Constraint::Min(5), Constraint::Length(9)]).areas(area);
+    let selected = app.worn.compare.selected().unwrap_or(0).min(v.rows.len().saturating_sub(1));
+    app.worn.compare.select((!v.rows.is_empty()).then_some(selected));
+    let effect = |skill: u8, points: i32| {
+        mh3u_core::skilltiers::effect_for(skill, points)
+            .and_then(|e| app.game.effect_name(e))
+            .map(str::to_string)
+    };
+    let title = format!(" Worn vs {} · pieces only, no jewels · v back ", v.template);
+    if v.rows.is_empty() {
+        empty_pane(f, list_area, title, true, vec![Line::styled("Neither has skill points.", muted())]);
+    } else {
+        let rows: Vec<ListItem> = v
+            .rows
+            .iter()
+            .map(|r| {
+                let (was, now) = (effect(r.skill, r.worn), effect(r.skill, r.template));
+                let change = if was == now {
+                    now.map_or(String::new(), |n| format!("{n} (same)"))
+                } else {
+                    format!("{} → {}", was.as_deref().unwrap_or("none"), now.as_deref().unwrap_or("none"))
+                };
+                let diff_style = theme::signed_style(r.diff());
+                ListItem::new(Line::from(vec![
+                    Span::raw(format!("{:<18}", app.game.skill_name(r.skill).unwrap_or("?"))),
+                    Span::styled(format!("{:+4}", r.worn), theme::signed_style(r.worn)),
+                    Span::styled(" → ", muted()),
+                    Span::styled(format!("{:+4}", r.template), theme::signed_style(r.template)),
+                    Span::styled(
+                        if r.diff() == 0 {
+                            "      ".to_string()
+                        } else {
+                            format!("  {:+3} ", r.diff())
+                        },
+                        diff_style,
+                    ),
+                    Span::styled(change, if r.diff() == 0 { muted() } else { bold() }),
+                ]))
+            })
+            .collect();
+        render_list(f, focused_list(rows, title, true), list_area, &mut app.worn.compare);
+        scrollbar(f, list_area, v.rows.len(), Some(selected));
+    }
+    let mut lines: Vec<Line> = Vec::new();
+    for d in &v.pieces {
+        let name = |n: &Option<String>| n.clone().unwrap_or_else(|| "nothing".to_string());
+        let mut spans = vec![Span::styled(format!("{:<9}", d.slot), muted())];
+        if d.same() {
+            spans.push(Span::styled(format!("{} (same)", name(&d.worn)), muted()));
+        } else {
+            spans.push(Span::raw(fit(&name(&d.worn), 24)));
+            spans.push(Span::styled(" → ", muted()));
+            spans.push(Span::styled(fit(&name(&d.template), 40), bold()));
+        }
+        lines.push(Line::from(spans));
+    }
+    f.render_widget(Paragraph::new(lines).block(theme::pane(" Pieces ", false)), pieces_area);
+}
+
+/// The popup that lists the saved templates to compare the worn pieces with.
+pub(super) fn draw_worn_pick(f: &mut Frame, app: &mut App) {
+    let Some(mut state) = app.worn.pick.take() else { return };
+    let area = f.area();
+    let rows: Vec<ListItem> = app
+        .builds
+        .templates
+        .iter()
+        .map(|t| {
+            ListItem::new(Line::from(vec![
+                Span::raw(format!("{:<28}", fit(&t.name, 28))),
+                Span::styled(format!("{} pieces", t.pieces.len()), muted()),
+            ]))
+        })
+        .collect();
+    let (w, h) = (52.min(area.width), (rows.len() as u16 + 2).clamp(3, 16).min(area.height));
+    let popup = Rect::new(area.x + (area.width - w) / 2, area.y + (area.height - h) / 2, w, h);
+    f.render_widget(Clear, popup);
+    render_list(
+        f,
+        List::new(rows)
+            .block(theme::pane(" Compare with which template? · Enter · Esc ", true))
+            .highlight_style(theme::selection())
+            .highlight_symbol(theme::SELECTION_MARK),
+        popup,
+        &mut state,
+    );
+    app.worn.pick = Some(state);
 }

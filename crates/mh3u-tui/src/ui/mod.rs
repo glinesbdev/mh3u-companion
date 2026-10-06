@@ -53,7 +53,7 @@ use settings::draw_settings;
 use skills::draw_skills;
 use tree::draw_tree;
 use wishlist::draw_wishlist;
-use worn::{draw_worn, totals_lines};
+use worn::{draw_worn, draw_worn_pick, totals_lines};
 
 thread_local! {
     /// What this frame has drawn that can be clicked; handed to the app when the frame is done.
@@ -185,6 +185,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
         draw_piece_picker(f, app);
     }
     draw_name_prompt(f, app);
+    draw_worn_pick(f, app);
     #[cfg(feature = "edit")]
     {
         forms::draw_edit_menu(f, app);
@@ -281,7 +282,12 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([("s", "sort"), ("t", "tree"), ("v", "compare"), ("i", "skill info")]);
             }
-            Tab::Worn => keys.extend([("↑/↓", "move"), ("m", "near a tier"), ("i", "skill info")]),
+            Tab::Worn => keys.extend([
+                ("↑/↓", "move"),
+                ("m", "near a tier"),
+                ("v", "compare with a template"),
+                ("i", "skill info"),
+            ]),
             Tab::Monsters => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {
