@@ -43,7 +43,7 @@ pub(super) const SECTIONS: &[Section] = &[
         rows: &[
             ("/ x s", "search by name, clear, sort"),
             ("v", "put a weapon in the comparison"),
-            ("Worn", "totals for what you wear"),
+            ("Worn", "totals; ↑ ↓ picks a skill"),
         ],
     },
     Section {

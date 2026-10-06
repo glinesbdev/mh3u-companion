@@ -63,6 +63,7 @@ mod sorting;
 #[cfg(feature = "edit")]
 mod talisman;
 mod wishlist;
+mod worn_tab;
 
 pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
@@ -93,6 +94,7 @@ pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
 #[cfg(feature = "edit")]
 pub use talisman::{ROW_MAKE, ROW_SLOTS, SkillFind, TalismanForm};
 pub use wishlist::{WishList, WishSort};
+pub use worn_tab::{JEWELS, SkillDetail, SkillSource, TierRow, WornTab};
 
 // the helpers the submodules share (their `use super::*` picks these up)
 use crafting::kind_rank;
@@ -180,6 +182,8 @@ pub struct App {
     /// The Crafting tab.
     pub craft: Crafting,
     pub wish: WishList,
+    /// The Worn tab.
+    pub worn: WornTab,
     pub monsters: MonsterTab,
     /// The Hunt plan tab.
     pub hunts: HuntTab,
@@ -271,6 +275,7 @@ impl App {
             inv: Inventory::default(),
             craft: Crafting::default(),
             wish,
+            worn: WornTab::default(),
             monsters: MonsterTab::default(),
             hunts: HuntTab::default(),
             families: FamiliesTab::new(families),
@@ -359,7 +364,7 @@ impl App {
 
     fn move_selection(&mut self, step: isize) {
         let (state, len) = match self.tab {
-            Tab::Worn => return,
+            Tab::Worn => return self.worn_move(step),
             Tab::Monsters => {
                 let view = self.monster_view();
                 let at = self.highlighted_monster().and_then(|m| view.iter().position(|&(v, _)| v == m));

@@ -281,7 +281,7 @@ fn draw_footer(f: &mut Frame, app: &App, area: Rect) {
                 }
                 keys.extend([("s", "sort"), ("t", "tree"), ("v", "compare"), ("i", "skill info")]);
             }
-            Tab::Worn => keys.push(("i", "skill info")),
+            Tab::Worn => keys.extend([("↑/↓", "move"), ("i", "skill info")]),
             Tab::Monsters => {
                 keys.extend([("↑/↓", "move"), ("/", "search")]);
                 if clear {

@@ -369,3 +369,42 @@ fn the_talisman_form_picks_skills_points_and_slots() {
     press(&mut app, Key::Esc);
     assert!(app.talisman.is_none());
 }
+
+#[test]
+fn the_worn_tab_has_a_highlighted_skill_with_its_sources_and_tiers() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    while app.tab != Tab::Worn {
+        app.on_key(Key::Right, Mods::default());
+    }
+    let summary = app.worn_summary();
+    if summary.skills.len() < 2 {
+        eprintln!("skipped: the test save wears nothing with skills");
+        return;
+    }
+    let shown = draw_all(&mut app, 140, 40).join("\n");
+    let first = app.game.skill_name(summary.skills[0].id).unwrap().to_string();
+    assert!(
+        shown.contains(&format!(" {first} ")),
+        "the detail pane is titled with the highlighted skill: {shown}"
+    );
+    let detail = app.worn_skill_detail(summary.skills[0].id);
+    assert_eq!(detail.total, summary.skills[0].points);
+    assert_eq!(
+        detail.sources.iter().map(|s| s.points).sum::<i32>(),
+        detail.total,
+        "the sources add up to the total"
+    );
+    assert!(detail.tiers.iter().any(|t| t.points > 0));
+    // Down moves to the next skill, and a click on a row picks it
+    app.on_key(Key::Down, Mods::default());
+    assert_eq!(app.worn_selected(&summary), Some(1));
+    draw_all(&mut app, 140, 40);
+    let list = *app.hits.lists.last().unwrap();
+    app.on_pointer(Pointer::Click {
+        col: list.area.x + 3,
+        row: list.area.y + 1,
+    });
+    assert_eq!(app.worn_selected(&summary), Some(0));
+}

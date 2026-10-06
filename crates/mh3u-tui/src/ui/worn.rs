@@ -2,8 +2,7 @@
 
 use super::*;
 
-/// Stands for "the jewels in the armor" where the totals take a piece's equipment kind (0 is no real kind).
-const JEWELS: u8 = 0;
+use mh3u_app::app::JEWELS;
 
 /// Defense, gem slots, resistances and the skill points of a set of armor. Skills in `targets` show whether their goal is reached.
 pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets: &[mh3u_app::builds::Target]) -> Vec<Line<'static>> {
@@ -31,43 +30,7 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
     }
     for t in &summary.skills {
         let goal = targets.iter().find(|g| g.skill == t.id);
-        let (state, style) = if let Some(g) = goal {
-            if t.points >= g.points {
-                (format!("✔ goal {}", g.points), good())
-            } else {
-                (format!("✘ goal {}", g.points), bad())
-            }
-        } else if t.active() || t.penalty() {
-            let name = t.effect().and_then(|e| app.game.effect_name(e));
-            match (name, t.active()) {
-                (Some(n), true) => (format!("● {n}"), good()),
-                (Some(n), false) => (format!("▼ {n}"), bad()),
-                (None, true) => ("● active".to_string(), good()),
-                (None, false) => ("▼ penalty".to_string(), bad()),
-            }
-        } else if t.points > 0 {
-            (format!("{} more to activate", mh3u_app::worn::ACTIVE_AT - t.points), muted())
-        } else {
-            (String::new(), muted())
-        };
-        let parts: Vec<String> = t
-            .parts
-            .iter()
-            .map(|&(kind, p)| {
-                let label = if kind == JEWELS {
-                    "Jewels"
-                } else {
-                    app.game.equipment_kind_label(kind).unwrap_or("?")
-                };
-                format!("{label} {p:+}")
-            })
-            .collect();
-        lines.push(Line::from(vec![
-            Span::raw(format!("{:<18}", app.game.skill_name(t.id).unwrap_or("?"))),
-            Span::styled(format!("{:+4} ", t.points), theme::signed_style(t.points)),
-            Span::styled(format!("{state:<22}"), style),
-            Span::styled(parts.join(", "), muted()),
-        ]));
+        lines.push(skill_row(app, t, goal));
         if app.skill_info
             && let Some(text) = t
                 .effect()
@@ -87,33 +50,45 @@ pub(super) fn totals_lines(app: &App, summary: &mh3u_app::worn::Summary, targets
     lines
 }
 
-/// What the worn armor and charm (with their jewels) add up to.
-fn worn_summary(
-    app: &App,
-    armor: &[(u8, &mh3u_core::save::Equipment)],
-    talisman: Option<&mh3u_core::save::Equipment>,
-) -> mh3u_app::worn::Summary {
-    let stats: Vec<(u8, &mh3u_core::armor::ArmorStats)> = armor
+/// One skill of the totals as a row: its name, points, what the points do (or whether a goal is met) and where they come from.
+pub(super) fn skill_row(app: &App, t: &mh3u_app::worn::SkillTotal, goal: Option<&mh3u_app::builds::Target>) -> Line<'static> {
+    let (state, style) = if let Some(g) = goal {
+        if t.points >= g.points {
+            (format!("✔ goal {}", g.points), good())
+        } else {
+            (format!("✘ goal {}", g.points), bad())
+        }
+    } else if t.active() || t.penalty() {
+        let name = t.effect().and_then(|e| app.game.effect_name(e));
+        match (name, t.active()) {
+            (Some(n), true) => (format!("● {n}"), good()),
+            (Some(n), false) => (format!("▼ {n}"), bad()),
+            (None, true) => ("● active".to_string(), good()),
+            (None, false) => ("▼ penalty".to_string(), bad()),
+        }
+    } else if t.points > 0 {
+        (format!("{} more to activate", mh3u_app::worn::ACTIVE_AT - t.points), muted())
+    } else {
+        (String::new(), muted())
+    };
+    let parts: Vec<String> = t
+        .parts
         .iter()
-        .filter_map(|&(kind, e)| app.game.armor_stats(kind, e.id).map(|a| (kind, a)))
+        .map(|&(kind, p)| {
+            let label = if kind == JEWELS {
+                "Jewels"
+            } else {
+                app.game.equipment_kind_label(kind).unwrap_or("?")
+            };
+            format!("{label} {p:+}")
+        })
         .collect();
-    let charm = talisman.map(|t| {
-        let mut skills = t.talisman_skills();
-        skills.extend(app.game.decoration_points(&t.talisman_decorations()));
-        mh3u_core::armor::ArmorStats::talisman(skills, t.talisman_slots())
-    });
-    // jewels in armor are counted apart from the piece, so Torso Up does not double them
-    let armor_jewels = mh3u_core::armor::ArmorStats::talisman(
-        app.game
-            .decoration_points(&armor.iter().flat_map(|(_, e)| e.decorations()).collect::<Vec<_>>()),
-        0,
-    );
-    let mut counted = stats;
-    counted.push((JEWELS, &armor_jewels));
-    if let Some(c) = &charm {
-        counted.push((6, c));
-    }
-    mh3u_app::worn::summarize(&counted)
+    Line::from(vec![
+        Span::raw(format!("{:<18}", app.game.skill_name(t.id).unwrap_or("?"))),
+        Span::styled(format!("{:+4} ", t.points), theme::signed_style(t.points)),
+        Span::styled(format!("{state:<22}"), style),
+        Span::styled(parts.join(", "), muted()),
+    ])
 }
 
 /// The worn gear and what it adds up to.
@@ -121,7 +96,7 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
     let [left, right] = theme::split(area, 45);
     let armor = app.worn_armor();
     let talisman = app.worn_talisman();
-    let summary = worn_summary(app, &armor, talisman);
+    let summary = app.worn_summary();
 
     // Left: what is worn, slot by slot.
     let mut gear: Vec<Line> = Vec::new();
@@ -213,17 +188,87 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
         left,
     );
 
-    // Right: the totals.
-    let mut lines = totals_lines(app, &summary, &[]);
-    lines.push(Line::raw(""));
-    lines.push(Line::styled(
-        "A skill's first effect starts at 10 points and its penalty at -10; higher tiers start at 15 and 20 where a skill has them. Torso Up has one effect.",
-        muted(),
-    ));
+    // Right: defense and resistances, the skills (one is highlighted), and what lies behind that skill.
+    let [header, list_area, detail_area] =
+        Layout::vertical([Constraint::Length(4), Constraint::Min(5), Constraint::Length(13)]).areas(right);
+    let mut head: Vec<Line> = totals_lines(app, &summary, &[]);
+    head.truncate(2);
+    f.render_widget(Paragraph::new(head).block(theme::pane(" Totals ", false)), header);
+
+    let selected = app.worn_selected(&summary);
+    app.worn.skills.select(selected);
+    if summary.skills.is_empty() {
+        empty_pane(
+            f,
+            list_area,
+            " Skills ".to_string(),
+            true,
+            vec![Line::styled("No skill points.", muted())],
+        );
+    } else {
+        let rows: Vec<ListItem> = summary.skills.iter().map(|t| ListItem::new(skill_row(app, t, None))).collect();
+        render_list(f, focused_list(rows, " Skills ".to_string(), true), list_area, &mut app.worn.skills);
+        scrollbar(f, list_area, summary.skills.len(), selected);
+    }
+
+    let (title, mut lines) = match selected.and_then(|i| summary.skills.get(i)) {
+        Some(t) => skill_detail_lines(app, t),
+        None => (" Skill ".to_string(), Vec::new()),
+    };
+    if summary.torso_doubled {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled(
+            "Torso Up is active: the body piece's skill points count double.",
+            muted(),
+        ));
+    }
     f.render_widget(
-        Paragraph::new(lines)
-            .wrap(Wrap { trim: false })
-            .block(theme::pane(" Totals ", false)),
-        right,
+        Paragraph::new(lines).wrap(Wrap { trim: false }).block(theme::pane(title, false)),
+        detail_area,
     );
+}
+
+/// Behind one skill of the totals: each piece and jewel that adds to it, then its tiers with the next one to reach.
+fn skill_detail_lines(app: &App, t: &mh3u_app::worn::SkillTotal) -> (String, Vec<Line<'static>>) {
+    let detail = app.worn_skill_detail(t.id);
+    let name = app.game.skill_name(t.id).unwrap_or("?");
+    let mut lines: Vec<Line> = Vec::new();
+    for s in &detail.sources {
+        lines.push(Line::from(vec![
+            Span::styled(format!("  {:<44}", fit(&s.label, 44)), muted()),
+            Span::styled(format!("{:+}", s.points), theme::signed_style(s.points)),
+        ]));
+    }
+    if !detail.tiers.is_empty() {
+        lines.push(Line::raw(""));
+    }
+    let next_at = detail.next.map(|(p, ..)| p);
+    for tier in &detail.tiers {
+        let effect = app.game.effect_name(tier.effect).unwrap_or("?");
+        let (mark, style) = if tier.reached {
+            ("●", if tier.points > 0 { good() } else { bad() })
+        } else {
+            ("○", muted())
+        };
+        let mut spans = vec![
+            Span::styled(format!("  {mark} {:>+3}  ", tier.points), style),
+            Span::styled(effect.to_string(), if tier.reached { style } else { muted() }),
+        ];
+        if next_at == Some(tier.points)
+            && let Some((_, _, missing)) = detail.next
+        {
+            spans.push(Span::styled(format!("   ← {missing} more"), accent()));
+        }
+        lines.push(Line::from(spans));
+    }
+    if app.skill_info
+        && let Some(text) = t
+            .effect()
+            .and_then(|e| app.game.effect_description(e))
+            .or_else(|| app.game.skill_description(t.id))
+    {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled(text.to_string(), muted()));
+    }
+    (format!(" {name} {:+} ", detail.total), lines)
 }
