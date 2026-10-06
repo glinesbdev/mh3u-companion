@@ -95,6 +95,15 @@ impl App {
                     push(edit::set_zenny(amount), &mut data);
                     notes.push(format!("zenny set to {}", group_digits(u64::from(amount))));
                 }
+                commands::Command::Points(op) => {
+                    let wanted = match op {
+                        commands::ZennyOp::Set(n) => i64::from(n),
+                        commands::ZennyOp::Add(d) => i64::from(self.save.resource_points) + d,
+                    };
+                    let amount = wanted.clamp(0, i64::from(edit::MAX_RESOURCE_POINTS)) as u32;
+                    push(edit::set_resource_points(amount), &mut data);
+                    notes.push(format!("resource points set to {amount}"));
+                }
                 commands::Command::Give { .. } => {}
                 commands::Command::GiveTarget { what, count } => match what {
                     commands::GiveWhat::Piece { kind, id, name } => {

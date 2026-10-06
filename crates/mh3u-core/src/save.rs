@@ -4,6 +4,8 @@ pub const SAVE_LEN: usize = 35364;
 const NAME_OFFSET: usize = 0x2b;
 const NAME_LEN: usize = 0x15;
 pub(crate) const ZENNY_OFFSET: usize = 0x49;
+/// The Resource Points: a big-endian u32 (14 in every save until the points went to 20, and the number moved with them).
+pub const RESOURCE_POINTS_OFFSET: usize = 0x5b50;
 pub(crate) const POUCH_OFFSET: usize = 0xd0;
 pub(crate) const POUCH_SLOTS: usize = 24;
 pub(crate) const BOX_OFFSET: usize = 0x1b0;
@@ -143,6 +145,8 @@ pub struct JournalEntry {
 pub struct Save {
     pub hunter_name: String,
     pub zenny: u32,
+    /// The Resource Points (see [`RESOURCE_POINTS_OFFSET`]).
+    pub resource_points: u32,
     /// Time played, in seconds.
     pub play_seconds: u32,
     /// Quests done in the village, and in the guild hall (the guild card's two counts).
@@ -276,6 +280,7 @@ impl Save {
         Ok(Save {
             hunter_name: String::from_utf8_lossy(&name_bytes[..end]).into_owned(),
             zenny: u32::from_be_bytes([0, d[ZENNY_OFFSET], d[ZENNY_OFFSET + 1], d[ZENNY_OFFSET + 2]]),
+            resource_points: be32(d, RESOURCE_POINTS_OFFSET),
             play_seconds: u32::from_be_bytes([
                 d[PLAY_SECONDS_OFFSET],
                 d[PLAY_SECONDS_OFFSET + 1],
@@ -336,6 +341,7 @@ mod tests {
         Save {
             hunter_name: String::new(),
             zenny: 0,
+            resource_points: 0,
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,
@@ -616,5 +622,18 @@ mod tests {
         assert!(!save.hunter_name.is_empty());
         assert_eq!(save.worn_slots[0], 11);
         assert_eq!(worn(&save), vec![(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (17, 33)]);
+    }
+
+    /// The Resource Points read 14 until the hunter earned 6 more (checked on two saves in the snapshots; skips without them).
+    #[test]
+    fn the_resource_points_are_read_from_real_saves() {
+        let read = |name: &str| {
+            let path = format!("{}/../../snapshots/{name}/user2", env!("CARGO_MANIFEST_DIR"));
+            std::fs::read(path).ok().and_then(|b| Save::parse(&b).ok())
+        };
+        let (Some(before), Some(after)) = (read("36-cull-the-herd"), read("37-rp-20")) else {
+            return;
+        };
+        assert_eq!((before.resource_points, after.resource_points), (14, 20));
     }
 }

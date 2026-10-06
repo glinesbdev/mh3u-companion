@@ -79,6 +79,7 @@ type a command, or press `E` for the edit menu (clicks work in all of it):
 | Command | Effect |
 |---------|--------|
 | `zenny 50000` | set the wallet (also `zenny +500`, `zenny -200`); limited to 999,999 |
+| `rp 100` | set the Resource Points (also `rp +50`, `rp -20`); limited to 9999, a limit made up here since the game's is not known. The ledger notes the points a command added, and `purge` and going online take them out again |
 | `give iron ore` | fill that item's stack in the item box to 99. The name is matched as a whole: an exact name wins (`monster bone s` is Monster Bone S), then a name that starts with or contains what you typed (shortest first), and only then word by word with typo tolerance. If several names tie, the status line lists the others it could have meant |
 | `give slagtoth hood` | an armor piece or weapon goes to the first empty slot of the equipment box (`give slagtoth hood 3` adds 3, up to 20): kind and id only, no jewels, not upgraded. Items are matched first on a tie; pieces and weapons only by a whole name, its start or part of it, not loosely |
 | `locate Bobby the boy` | read-only: list every place in the game's process that holds this text (at least 4 plain letters), as plain bytes and as 16-bit letters, with the bytes around it and whether it is inside the save block; writes `locate-<time>.txt`. Takes a while (it reads all of the game's memory). Used to look for where the game keeps the guild card; see "Guild card" in `formats.md` |

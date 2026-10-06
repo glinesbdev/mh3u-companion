@@ -34,6 +34,8 @@ pub enum GiveWhat {
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command {
     Zenny(ZennyOp),
+    /// The Resource Points, set or changed by an amount (the same forms as zenny).
+    Points(ZennyOp),
     /// Add to the item box; with no count, fill the stack.
     Give {
         item: String,
@@ -89,7 +91,7 @@ fn number(word: &str) -> Option<u32> {
 pub fn parse(text: &str) -> Result<Command, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     let Some((&verb, args)) = words.split_first() else {
-        return Err("type a command: zenny, give, set, stock, equip, talisman, purge, scan, find or locate".into());
+        return Err("type a command: zenny, rp, give, set, stock, equip, talisman, purge, scan, find or locate".into());
     };
     match verb.to_lowercase().as_str() {
         "zenny" | "z" => {
@@ -98,6 +100,17 @@ pub fn parse(text: &str) -> Result<Command, String> {
             };
             let amount = number(arg.trim_start_matches(['+', '-'])).ok_or("that is not a number")?;
             Ok(Command::Zenny(match arg.chars().next() {
+                Some('+') => ZennyOp::Add(i64::from(amount)),
+                Some('-') => ZennyOp::Add(-i64::from(amount)),
+                _ => ZennyOp::Set(amount),
+            }))
+        }
+        "rp" | "points" => {
+            let [arg] = args else {
+                return Err("rp needs an amount: rp 100, rp +50 or rp -20".into());
+            };
+            let amount = number(arg.trim_start_matches(['+', '-'])).ok_or("that is not a number")?;
+            Ok(Command::Points(match arg.chars().next() {
                 Some('+') => ZennyOp::Add(i64::from(amount)),
                 Some('-') => ZennyOp::Add(-i64::from(amount)),
                 _ => ZennyOp::Set(amount),
@@ -212,7 +225,7 @@ pub fn parse(text: &str) -> Result<Command, String> {
             Ok(Command::Scan { kind, names })
         }
         other => Err(format!(
-            "unknown command '{other}': zenny, give, set, stock, equip, talisman, purge, scan, find or locate"
+            "unknown command '{other}': zenny, rp, give, set, stock, equip, talisman, purge, scan, find or locate"
         )),
     }
 }
@@ -442,6 +455,15 @@ mod tests {
         assert_eq!(parse("zenny -200"), Ok(Command::Zenny(ZennyOp::Add(-200))));
         assert!(parse("zenny").is_err());
         assert!(parse("zenny lots").is_err());
+    }
+
+    #[test]
+    fn parses_resource_points_like_zenny() {
+        assert_eq!(parse("rp 100"), Ok(Command::Points(ZennyOp::Set(100))));
+        assert_eq!(parse("rp +50"), Ok(Command::Points(ZennyOp::Add(50))));
+        assert_eq!(parse("points -20"), Ok(Command::Points(ZennyOp::Add(-20))));
+        assert!(parse("rp").is_err());
+        assert!(parse("rp lots").is_err());
     }
 
     #[test]

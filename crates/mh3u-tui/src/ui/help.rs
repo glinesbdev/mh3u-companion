@@ -194,7 +194,7 @@ pub(super) const EDIT_SECTION: Section = Section {
             "E",
             "give an item or gear from a list (type to find, ← → how many, Enter gives, click works too)",
         ),
-        (":", "zenny 50000 | zenny +500"),
+        (":", "zenny 50000 | zenny +500 | rp 100 (resource points)"),
         (":", "give iron ore [n] | set honey 5"),
         (":", "stock | stock all (cover the wishlist)"),
         (":", "equip N [= hex | @off hex] | talisman skill pts, ... (poke records)"),

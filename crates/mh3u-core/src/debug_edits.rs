@@ -32,6 +32,8 @@ enum Piece {
 pub struct Ledger {
     /// Zenny added (negative if the commands took some away).
     zenny: i64,
+    /// Resource Points added (negative if the commands took some away).
+    points: i64,
     /// Items added to the item box by id (negative: taken away).
     items: BTreeMap<u16, i64>,
     pieces: BTreeMap<usize, Piece>,
@@ -41,6 +43,7 @@ pub struct Ledger {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Report {
     pub zenny: u32,
+    pub points: u32,
     pub items: u32,
     pub made: usize,
     pub restored: usize,
@@ -53,6 +56,9 @@ impl Report {
         let mut parts = Vec::new();
         if self.zenny > 0 {
             parts.push(format!("{}z", self.zenny));
+        }
+        if self.points > 0 {
+            parts.push(format!("{} resource point(s)", self.points));
         }
         if self.items > 0 {
             parts.push(format!("{} item(s)", self.items));
@@ -94,7 +100,7 @@ fn item_counts(save: &Save) -> BTreeMap<u16, i64> {
 
 impl Ledger {
     pub fn is_empty(&self) -> bool {
-        self.zenny == 0 && self.items.is_empty() && self.pieces.is_empty()
+        self.zenny == 0 && self.points == 0 && self.items.is_empty() && self.pieces.is_empty()
     }
 
     /// Note what a command changed: `before` and `after` are the hunter's whole data block either side of it.
@@ -106,6 +112,7 @@ impl Ledger {
             return;
         };
         self.zenny += i64::from(a.zenny) - i64::from(b.zenny);
+        self.points += i64::from(a.resource_points) - i64::from(b.resource_points);
         let (was, now) = (item_counts(&b), item_counts(&a));
         for id in was.keys().chain(now.keys()).copied().collect::<std::collections::BTreeSet<_>>() {
             let delta = now.get(&id).copied().unwrap_or(0) - was.get(&id).copied().unwrap_or(0);
@@ -159,6 +166,15 @@ impl Ledger {
             if take > 0 {
                 put(edit::set_zenny(save.zenny - take), &mut data, &mut patches);
                 report.zenny = take;
+            }
+        }
+        if let Ok(save) = Save::parse(&data)
+            && self.points > 0
+        {
+            let take = self.points.min(i64::from(save.resource_points)) as u32;
+            if take > 0 {
+                put(edit::set_resource_points(save.resource_points - take), &mut data, &mut patches);
+                report.points = take;
             }
         }
         for (&id, &added) in self.items.iter().filter(|(_, n)| **n > 0) {
@@ -242,6 +258,9 @@ impl Ledger {
         if self.zenny != 0 {
             out += &format!("zenny {}\n", self.zenny);
         }
+        if self.points != 0 {
+            out += &format!("points {}\n", self.points);
+        }
         for (id, n) in &self.items {
             out += &format!("item {id} {n}\n");
         }
@@ -270,6 +289,7 @@ impl Ledger {
             let w: Vec<&str> = line.split_whitespace().collect();
             match w[..] {
                 ["zenny", n] => out.zenny = n.parse().unwrap_or(0),
+                ["points", n] => out.points = n.parse().unwrap_or(0),
                 ["item", id, n] => {
                     if let (Ok(id), Ok(n)) = (id.parse(), n.parse::<i64>()) {
                         out.items.insert(id, n);
@@ -393,6 +413,33 @@ mod tests {
         assert!(save.equipment_box.is_empty(), "the made piece is gone");
         assert_eq!((report.zenny, report.items, report.made), (4900, 17, 1));
         assert_eq!(report.summary(), "took out 4900z, 17 item(s), 1 piece(s) of gear");
+    }
+
+    #[test]
+    fn resource_points_added_are_taken_out_again_but_not_those_earned() {
+        let mut before = start();
+        edit::apply(&mut before, &edit::set_resource_points(14));
+        let mut after = before.clone();
+        edit::apply(&mut after, &edit::set_resource_points(5014));
+        let mut ledger = Ledger::default();
+        ledger.record(&before, &after);
+        assert_eq!(ledger.format(), "points 5000\n");
+        assert_eq!(Ledger::parse(&ledger.format()), ledger);
+        // 6 points were earned and 500 spent meanwhile: what can be taken is never more than there is
+        let mut now = after.clone();
+        edit::apply(&mut now, &edit::set_resource_points(3));
+        let (patches, report) = ledger.purge(&now);
+        let mut data = now.clone();
+        apply_all(&mut data, &patches);
+        assert_eq!(Save::parse(&data).unwrap().resource_points, 0);
+        assert_eq!(report.points, 3);
+        assert_eq!(report.summary(), "took out 3 resource point(s)");
+        // with the points as they were, it is back to 14
+        let (patches, report) = ledger.purge(&after);
+        let mut data = after.clone();
+        apply_all(&mut data, &patches);
+        assert_eq!(Save::parse(&data).unwrap().resource_points, 14);
+        assert_eq!(report.points, 5000);
     }
 
     #[test]

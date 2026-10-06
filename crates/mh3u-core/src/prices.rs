@@ -496,6 +496,7 @@ mod tests {
         Save {
             hunter_name: "T".into(),
             zenny,
+            resource_points: 0,
             play_seconds: 0,
             village_quests: 0,
             guild_quests: 0,

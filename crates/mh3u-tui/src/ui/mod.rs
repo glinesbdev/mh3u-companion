@@ -95,6 +95,7 @@ pub fn draw(f: &mut Frame, app: &mut App) {
             warn().add_modifier(Modifier::BOLD),
         ),
         change,
+        Span::styled(format!("{} RP ", app.save.resource_points), muted()),
         edit_badge,
         badge,
     ]);

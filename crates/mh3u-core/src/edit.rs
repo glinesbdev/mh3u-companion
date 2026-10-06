@@ -2,7 +2,7 @@
 //! materials) so features can be tested without hours of play. Nothing here touches a file or memory; a patch is just
 //! "these bytes at this offset", to be applied by whoever holds the live memory.
 
-use crate::save::{BOX_OFFSET, BOX_SLOTS, EQUIP_LEN, EQUIP_OFFSET, EQUIP_SLOTS, SAVE_LEN, ZENNY_OFFSET};
+use crate::save::{BOX_OFFSET, BOX_SLOTS, EQUIP_LEN, EQUIP_OFFSET, EQUIP_SLOTS, RESOURCE_POINTS_OFFSET, SAVE_LEN, ZENNY_OFFSET};
 use anyhow::{Result, bail};
 
 /// The most of one item a stack holds.
@@ -20,6 +20,17 @@ pub struct Patch {
 /// Apply a patch to a copy of the save block (so later patches see the earlier ones).
 pub fn apply(data: &mut [u8], patch: &Patch) {
     data[patch.offset..patch.offset + patch.bytes.len()].copy_from_slice(&patch.bytes);
+}
+
+/// The most Resource Points the commands set: the game's own limit is not known, so this stays at four digits.
+pub const MAX_RESOURCE_POINTS: u32 = 9999;
+
+/// Set the Resource Points to `amount` (limited to `MAX_RESOURCE_POINTS`).
+pub fn set_resource_points(amount: u32) -> Patch {
+    Patch {
+        offset: RESOURCE_POINTS_OFFSET,
+        bytes: amount.min(MAX_RESOURCE_POINTS).to_be_bytes().to_vec(),
+    }
 }
 
 /// Set the wallet to `amount` (limited to `MAX_ZENNY`).
@@ -209,6 +220,14 @@ mod tests {
         assert_eq!(patch.offset, EQUIP_OFFSET + slot * EQUIP_LEN);
         assert!(new_piece(&d, 6, 1).is_err());
         assert!(new_talisman(&d, &[(1, 1); 3], None).is_err());
+    }
+
+    #[test]
+    fn the_resource_points_patch_is_four_big_endian_bytes_and_clamped() {
+        let mut d = vec![0u8; SAVE_LEN];
+        apply(&mut d, &set_resource_points(20));
+        assert_eq!(d[RESOURCE_POINTS_OFFSET..RESOURCE_POINTS_OFFSET + 4], [0, 0, 0, 20]);
+        assert_eq!(set_resource_points(1_000_000).bytes, 9999u32.to_be_bytes());
     }
 
     #[test]
