@@ -102,3 +102,7 @@ the app does not depend on them. Findings are written up in `formats.md` with ho
   (`fixture!` for saves under the git-ignored `snapshots/`).
 - A change that should not alter what is drawn can be checked by re-running `scripts/screenshots.sh` and seeing that
   `docs/screenshots/*.svg` did not change.
+
+## The `edit` feature
+
+Everything that changes the game is behind the cargo feature `edit` (off by default; `mh3u-tui/edit` turns it on in all three crates): `ProcMem::open_writable`/`write` and `LiveReader::write` in `mh3u-core`, the `:` command line (`app/console.rs`, `commands.rs`, `scan.rs`, `find.rs`) and the online guard (`app/debug_guard.rs`) in `mh3u-app`, and `--debug-edit` in `mh3u-tui`. `edit.rs` (byte patches) and `debug_edits.rs` (the ledger) stay in `mh3u-core` whatever the features, because `mh3u-tools purge-save` takes edits out of a save file. Screens ask the app (`edit_enabled()`, `edits_off_online()`, `command_text()`) instead of reaching into the gated fields.

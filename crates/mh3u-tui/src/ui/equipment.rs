@@ -113,7 +113,7 @@ pub(super) fn draw_equipment(f: &mut Frame, app: &mut App, area: Rect) {
             if app.save.is_worn(e) {
                 lines.insert(2, Line::styled("● worn", good()));
             }
-            if app.console.enabled {
+            if app.edit_enabled() {
                 // for the debug commands `equip` and `talisman`: where the record is and what its 16 bytes are
                 let mut bytes = vec![e.kind, e.upgrade];
                 bytes.extend(e.id.to_be_bytes());

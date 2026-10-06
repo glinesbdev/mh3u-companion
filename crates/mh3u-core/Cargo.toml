@@ -11,3 +11,7 @@ workspace = true
 anyhow.workspace = true
 flate2.workspace = true
 memchr = "2.8.3"
+
+[features]
+# Writing to the game's memory (the debug editing tools). Without it the program can only read.
+edit = []

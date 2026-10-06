@@ -14,3 +14,7 @@ dirs.workspace = true
 mh3u-app.workspace = true
 mh3u-core.workspace = true
 ratatui = "0.30.2"
+
+[features]
+# The debug editing tools (--debug-edit); see docs/code-guidelines.md. Left out of a default build, which only reads the game.
+edit = ["mh3u-app/edit"]

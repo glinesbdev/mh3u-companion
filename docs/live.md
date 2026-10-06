@@ -63,8 +63,10 @@ has become craftable. The game's data holds no quest state, so pickups are group
 
 ## Debug editing (`--debug-edit`)
 
+Only in a build with the `edit` feature; the default build cannot write to the game and has no such flag.
+
 ```
-mh3u-tui --live --debug-edit
+cargo run -p mh3u-tui --features edit -- --live --debug-edit
 ```
 
 For testing: a game takes a long time to play, so this lets you set up a situation instead. It writes into the game's live
@@ -111,7 +113,8 @@ The debug commands are for playing alone, and the program tries to keep their re
   the header change (turn it back off afterwards; Cemu writes the file itself on exit). The tests cover the settings file and a connected
   socket.
 - **Without the flag.** If a ledger is on record, `--live` opens the game's memory for writing even without `--debug-edit`, so that the
-  edits can still be taken out when the game goes online.
+  edits can still be taken out when the game goes online. A default build (no `edit` feature) cannot do that; if you made edits with an
+  `edit` build, take them out of the save with `mh3u-tools purge-save` (below) before going online.
 - **A save file.** `mh3u-tools purge-save <save> <ledger file>` does the same to a save file the game is not running on, keeping a copy as
   `<save>.before-purge`.
 

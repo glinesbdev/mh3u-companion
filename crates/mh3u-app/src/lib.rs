@@ -5,6 +5,7 @@
 pub mod app;
 pub mod builds;
 pub mod changes;
+#[cfg(feature = "edit")]
 pub mod commands;
 pub mod compare;
 pub mod config;

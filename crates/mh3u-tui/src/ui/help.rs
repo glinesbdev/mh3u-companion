@@ -181,6 +181,7 @@ pub(super) const SECTIONS: &[Section] = &[
     },
 ];
 
+#[cfg(feature = "edit")]
 pub(super) const EDIT_SECTION: Section = Section {
     title: "Edit mode (--debug-edit)",
     rows: &[
@@ -196,6 +197,18 @@ pub(super) const EDIT_SECTION: Section = Section {
         (":", "scan head | body | arms | waist | legs (find the blacksmith's list in memory)"),
     ],
 };
+
+/// The edit mode's help, when debug editing is on.
+#[cfg(feature = "edit")]
+fn edit_section(app: &App) -> Option<&'static Section> {
+    app.edit_enabled().then_some(&EDIT_SECTION)
+}
+
+/// Without the `edit` feature there is no such help.
+#[cfg(not(feature = "edit"))]
+fn edit_section(_app: &App) -> Option<&'static Section> {
+    None
+}
 
 /// Break `text` into lines of at most `width` cells at word boundaries (a word longer than a line is left whole).
 pub(super) fn wrap_words(text: &str, width: usize) -> Vec<String> {
@@ -303,10 +316,7 @@ pub(super) fn draw_help(f: &mut Frame, app: &mut App) {
     let columns = (usize::from(inner.width) / COLUMN).clamp(1, 3);
     let gap = 3;
     let width = (usize::from(inner.width) + gap) / columns - gap;
-    let mut sections: Vec<&Section> = SECTIONS.iter().collect();
-    if app.console.enabled {
-        sections.push(&EDIT_SECTION);
-    }
+    let sections: Vec<&Section> = SECTIONS.iter().chain(edit_section(app)).collect();
     let laid_out: Vec<Vec<Line>> = sections.iter().map(|s| section_lines(s, width)).collect();
     let cols = arrange(&laid_out, columns);
 

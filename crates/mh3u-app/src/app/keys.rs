@@ -36,7 +36,7 @@ impl App {
             self.name_key(code);
         } else if self.builds.piece_picker.is_some() {
             self.piece_key(code);
-        } else if self.console.active {
+        } else if self.is_commanding() {
             self.command_key(code);
         } else if self.searching {
             self.search_key(code);
@@ -58,22 +58,6 @@ impl App {
             Key::PageUp => view.scroll = view.scroll.saturating_sub(10),
             Key::Home | Key::Char('g') => view.scroll = 0,
             Key::End | Key::Char('G') => view.scroll = u16::MAX, // the drawing code clamps it
-            _ => {}
-        }
-    }
-
-    fn command_key(&mut self, code: Key) {
-        match code {
-            Key::Esc => self.console.active = false,
-            Key::Enter => {
-                self.console.active = false;
-                let text = std::mem::take(&mut self.console.text);
-                self.run_command(&text);
-            }
-            Key::Backspace => {
-                self.console.text.pop();
-            }
-            Key::Char(c) => self.console.text.push(c),
             _ => {}
         }
     }
@@ -243,6 +227,7 @@ impl App {
             Key::Char('v') if matches!(self.tab, Tab::Crafting | Tab::Equipment | Tab::Wishlist) => self.toggle_compare(),
             Key::Char('t') if self.tab != Tab::Items => self.open_tree(),
             Key::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
+            #[cfg(feature = "edit")]
             Key::Char(':') if self.console.enabled => {
                 self.console.active = true;
                 self.console.text.clear();

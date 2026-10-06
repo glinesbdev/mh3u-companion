@@ -70,7 +70,8 @@ impl ProcMem {
             .open(format!("/proc/{pid}/mem"))
     }
 
-    /// Like `open`, but the memory can also be written with `write`. Only for the debug editing tools.
+    /// Like `open`, but the memory can also be written with `write`. Only for the debug editing tools (feature `edit`).
+    #[cfg(feature = "edit")]
     pub fn open_writable(pid: u32) -> io::Result<ProcMem> {
         Ok(ProcMem {
             pid,
@@ -80,6 +81,7 @@ impl ProcMem {
     }
 
     /// Write bytes at `addr`. Fails unless the memory was opened with `open_writable`.
+    #[cfg(feature = "edit")]
     pub fn write(&self, addr: u64, data: &[u8]) -> io::Result<()> {
         if !self.writable {
             return Err(io::Error::new(io::ErrorKind::PermissionDenied, "memory was opened read-only"));
@@ -169,6 +171,7 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsysca
         assert!(!r[3].readable);
     }
 
+    #[cfg(feature = "edit")]
     #[test]
     fn writes_only_when_opened_writable() {
         let mut data = vec![0u8; 4096];

@@ -9,8 +9,10 @@
 //! memory starts in the host): u32 at 0x08 is a guest pointer `P`, u32 at 0x24 is `P + 0x34`, and the hunter's name
 //! starts at 0x2b.
 
+#[cfg(feature = "edit")]
+use crate::edit::Patch;
+use crate::procmem::ProcMem;
 use crate::save::SAVE_LEN;
-use crate::{edit::Patch, procmem::ProcMem};
 use std::{
     io,
     sync::{
@@ -97,16 +99,19 @@ pub enum LiveEvent {
     /// The block went away (the game returned to the title screen or exited).
     Lost,
     /// A requested write did not happen (see `LiveReader::write`).
+    #[cfg(feature = "edit")]
     WriteFailed(String),
 }
 
 /// A background thread that finds the live block and reports changes. Dropping it stops the thread.
 pub struct LiveReader {
     pub events: mpsc::Receiver<LiveEvent>,
+    #[cfg(feature = "edit")]
     writes: mpsc::Sender<Patch>,
     stop: Arc<AtomicBool>,
 }
 
+#[cfg(feature = "edit")]
 impl LiveReader {
     /// Ask for bytes of the live save block to be overwritten (debug editing). The memory must have been opened with
     /// `ProcMem::open_writable`; if the write cannot be done a `WriteFailed` event follows. The new data comes back as a
@@ -126,6 +131,7 @@ impl Drop for LiveReader {
 /// second, so it happens on the thread and is repeated every few seconds until a block is found.
 pub fn spawn(mut mem: ProcMem, names: Vec<String>) -> LiveReader {
     let (tx, events) = mpsc::channel();
+    #[cfg(feature = "edit")]
     let (writes, pending_writes) = mpsc::channel::<Patch>();
     let stop = Arc::new(AtomicBool::new(false));
     let flag = stop.clone();
@@ -134,16 +140,19 @@ pub fn spawn(mut mem: ProcMem, names: Vec<String>) -> LiveReader {
         let mut last: Option<Vec<u8>> = None;
         let mut last_search = Instant::now() - Duration::from_secs(60);
         while !flag.load(Ordering::Relaxed) {
-            while let Ok(patch) = pending_writes.try_recv() {
-                let result = match block {
-                    None => Err("the game's save data has not been found yet".to_string()),
-                    Some(_) if patch.offset + patch.bytes.len() > SAVE_LEN => Err("write outside the save block".to_string()),
-                    Some(addr) => mem.write(addr + patch.offset as u64, &patch.bytes).map_err(|e| e.to_string()),
-                };
-                if let Err(why) = result
-                    && tx.send(LiveEvent::WriteFailed(why)).is_err()
-                {
-                    return;
+            #[cfg(feature = "edit")]
+            {
+                while let Ok(patch) = pending_writes.try_recv() {
+                    let result = match block {
+                        None => Err("the game's save data has not been found yet".to_string()),
+                        Some(_) if patch.offset + patch.bytes.len() > SAVE_LEN => Err("write outside the save block".to_string()),
+                        Some(addr) => mem.write(addr + patch.offset as u64, &patch.bytes).map_err(|e| e.to_string()),
+                    };
+                    if let Err(why) = result
+                        && tx.send(LiveEvent::WriteFailed(why)).is_err()
+                    {
+                        return;
+                    }
                 }
             }
             match block {
@@ -188,7 +197,12 @@ pub fn spawn(mut mem: ProcMem, names: Vec<String>) -> LiveReader {
             thread::sleep(Duration::from_millis(250));
         }
     });
-    LiveReader { events, writes, stop }
+    LiveReader {
+        events,
+        #[cfg(feature = "edit")]
+        writes,
+        stop,
+    }
 }
 
 #[cfg(test)]
@@ -304,6 +318,7 @@ time.sleep(30)
         child.kill().unwrap();
     }
 
+    #[cfg(feature = "edit")]
     /// Debug editing: a write request reaches the other process's memory and comes back as changed save data, and a
     /// read-only handle is refused.
     #[test]

@@ -1,14 +1,17 @@
 use crate::builds::{self, Candidate, Found, Settings, Target};
+#[cfg(feature = "edit")]
+use crate::commands;
 use crate::files::Files;
 use crate::input::{Key, Mods};
+use crate::search;
 use crate::select::ListState;
 use crate::templates::{self, Template};
 use crate::unlocked::Unlocked;
-use crate::{commands, search};
 use anyhow::{Context, Result};
+#[cfg(feature = "edit")]
+use mh3u_core::edit;
 use mh3u_core::{
     armor::{ArmorClass, Gender},
-    edit,
     gamedata::GameData,
     live::{LiveEvent, LiveReader},
     prices::{Ledger, Outcome, PriceEntry, PriceTracker, RecipeBook, Recorded, Route, Skip, SkipReason, Source},
@@ -27,9 +30,13 @@ use std::{
 mod blacksmith;
 mod build_manager;
 mod compare;
+#[cfg(feature = "edit")]
+mod console;
 mod crafting;
+#[cfg(feature = "edit")]
 mod debug_guard;
 mod families;
+#[cfg(feature = "edit")]
 mod find;
 #[cfg(test)]
 mod flow_tests;
@@ -44,6 +51,7 @@ mod monsters;
 mod pointer;
 mod price_watch;
 mod quests;
+#[cfg(feature = "edit")]
 mod scan;
 mod settings;
 mod skills;
@@ -53,8 +61,11 @@ mod wishlist;
 pub use blacksmith::Offer;
 pub use build_manager::{Availability, BuildFocus, BuildManager, NameAction};
 pub use compare::{CompareTab, MAX_COMPARED};
+#[cfg(feature = "edit")]
+pub use console::EditConsole;
 pub use crafting::Crafting;
 pub use crafting::Via;
+#[cfg(feature = "edit")]
 pub use debug_guard::DebugGuard;
 pub use families::FamiliesTab;
 pub use gains::GainsTab;
@@ -62,7 +73,6 @@ pub use hunters::HunterChoice;
 pub use hunts::HuntTab;
 pub use inventory::Inventory;
 pub use inventory::TreeView;
-pub use live::EditConsole;
 pub use money::{group_digits, signed_zenny};
 pub use monsters::MonsterTab;
 pub use price_watch::PriceBook;
@@ -176,8 +186,10 @@ pub struct App {
     /// Forging costs seen in the game and the watcher that finds them.
     pub costs: PriceBook,
     /// The debug command line (`--debug-edit`).
+    #[cfg(feature = "edit")]
     pub console: EditConsole,
     /// What the debug commands changed, and whether the game is online (see `debug_guard`).
+    #[cfg(feature = "edit")]
     pub guard: DebugGuard,
     /// The settings from `config.txt` (see `crate::config`), and the Settings screen when it is open.
     pub config: crate::config::Config,
@@ -247,7 +259,9 @@ impl App {
             builds,
             gains: GainsTab::new(gains::read_log(files.as_ref())),
             costs: PriceBook::new(prices),
+            #[cfg(feature = "edit")]
             console: EditConsole::default(),
+            #[cfg(feature = "edit")]
             guard: DebugGuard::load(files.as_ref()),
             config: crate::config::Config::default(),
             settings: None,
@@ -294,6 +308,7 @@ impl App {
     /// this about four times a second.
     pub fn tick(&mut self) {
         self.poll_live();
+        #[cfg(feature = "edit")]
         self.watch_online();
         self.tick_prices();
         self.reload_if_changed();

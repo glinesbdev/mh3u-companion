@@ -28,9 +28,13 @@ jobs:
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
       # the tests that need the game dump or a personal save skip themselves when those are missing
       - run: cargo fmt --all --check
+      # twice: the default build only reads the game; --all-features adds the debug editing tools (the `edit` feature)
       - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all
+      - run: cargo test --all --all-features
       - run: '! cargo tree -p mh3u-app | grep -E "ratatui|crossterm"'
+      - run: '! cargo run -q -p mh3u-tui -- --help | grep -e "--debug-edit"'
 
   audit:
     # known vulnerabilities in the crates we depend on (https://rustsec.org)

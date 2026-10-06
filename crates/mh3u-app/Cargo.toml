@@ -11,3 +11,8 @@ workspace = true
 anyhow.workspace = true
 dirs.workspace = true
 mh3u-core.workspace = true
+
+[features]
+# The debug editing tools: the `:` command line that changes the game through its memory, with the online guard that takes the edits out
+# again. Without it the program only reads.
+edit = ["mh3u-core/edit"]

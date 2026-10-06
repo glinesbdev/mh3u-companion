@@ -1036,6 +1036,7 @@ fn g_switches_the_hunt_plan_between_the_fewest_steps_and_the_fewest_runs() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(feature = "edit")]
 #[test]
 fn debug_commands_are_refused_while_online_and_purge_needs_the_game() {
     let dir = temp_dir("onlineguard");
@@ -1056,6 +1057,7 @@ fn debug_commands_are_refused_while_online_and_purge_needs_the_game() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+#[cfg(feature = "edit")]
 #[test]
 fn turning_online_play_on_in_cemus_settings_switches_the_debug_edits_off_until_it_is_turned_off() {
     let dir = temp_dir("onlinewatch");

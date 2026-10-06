@@ -30,6 +30,7 @@ changing them. When a rule here stops being true, change the rule in the same co
 | A key | the tab's `*_key` method in `mh3u-app/src/app/keys.rs`; popups get keys before tabs do |
 | Something kept between sessions | a path in `files::Files`, saved with `files::save`; a small text format with `parse` and `format` and a round-trip test |
 | A colour, symbol or shared widget | `theme.rs`, so the screen keeps one visual language |
+| Anything that changes the game (writes its memory, edits a save) | behind the `edit` feature (`mh3u-core`, `mh3u-app` and `mh3u-tui` each have it, switched on together by `mh3u-tui/edit`). The default build only reads; `scripts/check.sh` builds and tests both ways and checks that the default build has no `--debug-edit`. Put the `#[cfg(feature = "edit")]` on the item, and keep a small always-there accessor (like `App::edit_enabled`) for screens that need to ask |
 | A command-line option | the `Cli` struct (clap); an explorer command goes in `mh3u-tools` |
 
 ## Words
@@ -104,7 +105,7 @@ A feature is not done until:
 ## Before every commit
 
 ```
-scripts/check.sh                                   # fmt --check, clippy -D warnings, tests: what CI runs, stopping at the first failure
+scripts/check.sh                                   # fmt --check, clippy -D warnings and tests (default and --all-features), audit: what CI runs, stopping at the first failure
 cargo build --release && scripts/screenshots.sh   # when anything drawn could have changed
 ```
 

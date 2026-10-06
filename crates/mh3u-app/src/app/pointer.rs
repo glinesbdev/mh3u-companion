@@ -42,7 +42,7 @@ impl App {
 
     fn click(&mut self, col: u16, row: u16) {
         let popup = self.popup_open();
-        let typing = self.console.active || self.searching;
+        let typing = self.is_commanding() || self.searching;
         if !popup && !typing {
             let action = self.hits.actions.iter().find(|(a, _, _)| a.contains(col, row)).copied();
             if let Some((_, focus, key)) = action {

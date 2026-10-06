@@ -2,7 +2,9 @@ mod keymap;
 mod theme;
 mod ui;
 
-use anyhow::{Context, Result, bail};
+#[cfg(feature = "edit")]
+use anyhow::bail;
+use anyhow::{Context, Result};
 use clap::Parser;
 use mh3u_app::TITLE_ID;
 use mh3u_app::app::{App, Live};
@@ -36,6 +38,7 @@ struct Cli {
     #[arg(long, requires = "live", value_name = "PATH")]
     cemu: Option<String>,
     /// Allow commands that change the running game (backs up the saves first)
+    #[cfg(feature = "edit")]
     #[arg(long, requires = "live")]
     debug_edit: bool,
 }
@@ -70,7 +73,7 @@ fn home() -> Result<PathBuf> {
 }
 
 /// Start Cemu on the game and read its memory. Only a process we started may be read (see `docs/live.md`).
-fn start_live(game_dir: &std::path::Path, save: &std::path::Path, cemu: &str, editable: bool) -> Result<Live> {
+fn start_live(game_dir: &std::path::Path, save: &std::path::Path, cemu: &str, #[cfg(feature = "edit")] editable: bool) -> Result<Live> {
     let rpx = gamedata::rpx_path(game_dir)?;
     // Own process group: Ctrl-C in the TUI or closing its terminal must not take the game down with it.
     use std::os::unix::process::CommandExt;
@@ -83,12 +86,15 @@ fn start_live(game_dir: &std::path::Path, save: &std::path::Path, cemu: &str, ed
         .stderr(std::process::Stdio::null())
         .spawn()
         .with_context(|| format!("starting {cemu} (use --cemu to give its path)"))?;
+    #[cfg(feature = "edit")]
     let mem = if editable {
         ProcMem::open_writable(child.id())
     } else {
         ProcMem::open(child.id())
-    }
-    .context("opening Cemu's memory")?;
+    };
+    #[cfg(not(feature = "edit"))]
+    let mem = ProcMem::open(child.id());
+    let mem = mem.context("opening Cemu's memory")?;
     // The hunters in the three save slots; the one loaded in the game is one of them.
     let names: Vec<String> = (1..=3)
         .filter_map(|n| std::fs::read(save.with_file_name(format!("user{n}"))).ok())
@@ -102,6 +108,7 @@ fn start_live(game_dir: &std::path::Path, save: &std::path::Path, cemu: &str, ed
     })
 }
 
+#[cfg(feature = "edit")]
 /// Copy the save slots (and the system file) next to the one in use into `<backups>/<time>/`, so debug edits that get saved by
 /// mistake can be undone.
 fn back_up_saves(save: &std::path::Path, backups: &std::path::Path) -> Result<String> {
@@ -125,6 +132,7 @@ fn main() -> Result<()> {
         slot,
         live,
         cemu,
+        #[cfg(feature = "edit")]
         debug_edit,
         config: config_choice,
     } = Cli::parse();
@@ -167,31 +175,39 @@ fn main() -> Result<()> {
         files.use_settings_file(path.clone());
         files.profile = name.clone();
     }
-    let backups = files.as_ref().map(|f| f.backups.clone());
-    // Debug edits are for trying things out alone: not while Cemu is set up for online play.
-    if debug_edit
-        && let Some(settings) = mh3u_core::online::cemu_settings_path()
-        && mh3u_core::online::cemu_online_enabled(&settings)
-    {
-        bail!(
-            "--debug-edit is not available while online play is turned on in Cemu ({}). Turn online play off for the account in Cemu's \
-             account settings first.",
-            settings.display()
-        );
-    }
-    // edits recorded earlier must be possible to take out again, so the game's memory is opened for writing in that case too
-    let writable = debug_edit || files.as_ref().is_some_and(|f| f.any_debug_edits());
+    #[cfg(feature = "edit")]
+    let (backups, writable) = {
+        let backups = files.as_ref().map(|f| f.backups.clone());
+        // Debug edits are for trying things out alone: not while Cemu is set up for online play.
+        if debug_edit
+            && let Some(settings) = mh3u_core::online::cemu_settings_path()
+            && mh3u_core::online::cemu_online_enabled(&settings)
+        {
+            bail!(
+                "--debug-edit is not available while online play is turned on in Cemu ({}). Turn online play off for the account in Cemu's \
+                 account settings first.",
+                settings.display()
+            );
+        }
+        // edits recorded earlier must be possible to take out again, so the game's memory is opened for writing in that case too
+        (backups, debug_edit || files.as_ref().is_some_and(|f| f.any_debug_edits()))
+    };
     let mut app = App::new(game, save.clone(), files)?;
     if live {
-        let note = match (debug_edit, backups) {
-            (true, Some(dir)) => Some(back_up_saves(&save, &dir)?),
-            (true, None) => bail!("--debug-edit needs a home folder to keep backups of the saves in"),
-            (false, _) => None,
-        };
-        app.set_live(start_live(&game_dir, &save, &cemu, writable)?);
-        if let Some(note) = note {
-            app.enable_edit(note);
+        #[cfg(feature = "edit")]
+        {
+            let note = match (debug_edit, backups) {
+                (true, Some(dir)) => Some(back_up_saves(&save, &dir)?),
+                (true, None) => bail!("--debug-edit needs a home folder to keep backups of the saves in"),
+                (false, _) => None,
+            };
+            app.set_live(start_live(&game_dir, &save, &cemu, writable)?);
+            if let Some(note) = note {
+                app.enable_edit(note);
+            }
         }
+        #[cfg(not(feature = "edit"))]
+        app.set_live(start_live(&game_dir, &save, &cemu)?);
     }
     let mouse = app.config.mouse();
     let mut terminal = ratatui::init();
