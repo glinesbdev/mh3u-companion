@@ -13,8 +13,7 @@ belong to.
   hunter rank is read, but the limit to the ranks the hunter has reached only differs from the single ranks at HR3 to HR5.
 - **More from the quest files.** The Quests tab shows the goal, client, time limit, monsters and rewards, and whether it is a village or a
   hall quest. Not decoded: whether a map is day or night (the game's makers chose it as flavor,
-  and no byte tells them apart), the two Elder Dragon places (maps 14 and 15) and what the save's points total at 0x5a46 counts (it also
-  rises with village quests, so it is not the hall's hunter rank points alone).
+  and no byte tells them apart), the two Elder Dragon places (maps 14 and 15).
 - **Gathering chances.** The Items tab says where an item can be gathered (from Kiranico, no chances). **Needs:** the game's gather lists (a table
   of pointers sits just before the capture and break lists in the executable's data) decoded.
 
@@ -28,7 +27,7 @@ belong to.
   monsters first. The game's own source for part names was searched for and not found (the monster archive's `em_status00` and
   `em_hitdata00`, and the executable's data and read-only sections).
 - Monster **hit points** and the zones of other states (enraged, broken); `em_status00` has no names, and the zone names shown come from Kiranico (33 rows have none).
-- Shakalaka (Cha-Cha and Kayamba, the game's two sidekicks; there is no Palico) gear, and the rest of the guild card (the hunter rank, title, greeting and weapon usage are read; the weapon usage list is fully read; the quest points at 0x5a46 and the 0x7569 counter are not understood).
+- Shakalaka (Cha-Cha and Kayamba, the game's two sidekicks; there is no Palico) gear, and the rest of the guild card (the hunter rank, title, greeting and weapon usage are read; the weapon usage list is fully read; the counters at 0x7563, 0x7569, 0x756a and the bytes 0x5a4d and 0x5a4e are not understood: see "Guild card" in `formats.md`).
 - **Which shop sells what.** The Items tab shows an item's shop price and carry limit (from Kiranico), but not where it is sold or when it appears. **Needs:** the shop tables.
 - How the **special pieces** are unlocked (Yukumo armor and a few earrings have recipe tier 0 and do not follow the hunt rule).
 - Other languages: the text archive also has French, German, Italian and Spanish names and descriptions; a language option would only
