@@ -190,28 +190,33 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
 
     // Right: defense and resistances, the skills (one is highlighted), and what lies behind that skill.
     let [header, list_area, detail_area] =
-        Layout::vertical([Constraint::Length(4), Constraint::Min(5), Constraint::Length(13)]).areas(right);
+        Layout::vertical([Constraint::Length(4), Constraint::Min(5), Constraint::Length(17)]).areas(right);
     let mut head: Vec<Line> = totals_lines(app, &summary, &[]);
     head.truncate(2);
     f.render_widget(Paragraph::new(head).block(theme::pane(" Totals ", false)), header);
 
     let selected = app.worn_selected(&summary);
     app.worn.skills.select(selected);
-    if summary.skills.is_empty() {
-        empty_pane(
-            f,
-            list_area,
-            " Skills ".to_string(),
-            true,
-            vec![Line::styled("No skill points.", muted())],
-        );
+    let shown = app.worn_rows(&summary);
+    let list_title = if app.worn.near {
+        format!(" Skills within {} points of the next tier ", mh3u_app::app::NEAR)
     } else {
-        let rows: Vec<ListItem> = summary.skills.iter().map(|t| ListItem::new(skill_row(app, t, None))).collect();
-        render_list(f, focused_list(rows, " Skills ".to_string(), true), list_area, &mut app.worn.skills);
-        scrollbar(f, list_area, summary.skills.len(), selected);
+        " Skills ".to_string()
+    };
+    if shown.is_empty() {
+        let what = if app.worn.near {
+            "No skill is that close to a tier."
+        } else {
+            "No skill points."
+        };
+        empty_pane(f, list_area, list_title, true, vec![Line::styled(what, muted())]);
+    } else {
+        let rows: Vec<ListItem> = shown.iter().map(|t| ListItem::new(skill_row(app, t, None))).collect();
+        render_list(f, focused_list(rows, list_title, true), list_area, &mut app.worn.skills);
+        scrollbar(f, list_area, shown.len(), selected);
     }
 
-    let (title, mut lines) = match selected.and_then(|i| summary.skills.get(i)) {
+    let (title, mut lines) = match selected.and_then(|i| shown.get(i)) {
         Some(t) => skill_detail_lines(app, t),
         None => (" Skill ".to_string(), Vec::new()),
     };
@@ -260,6 +265,56 @@ fn skill_detail_lines(app: &App, t: &mh3u_app::worn::SkillTotal) -> (String, Vec
             spans.push(Span::styled(format!("   ← {missing} more"), accent()));
         }
         lines.push(Line::from(spans));
+    }
+    if let Some((points, effect, gap)) = detail.next {
+        lines.push(Line::raw(""));
+        let m = app.worn_missing(t.id, gap);
+        let target = format!("{:+} {}", points, app.game.effect_name(effect).unwrap_or("?"));
+        lines.push(Line::from(vec![
+            Span::styled(format!("To reach {target}: {gap} more"), accent()),
+            Span::styled(
+                if m.free.is_empty() {
+                    "  no free gem slots".to_string()
+                } else {
+                    format!(
+                        "  free slots: {}",
+                        m.free.iter().map(|(w, n)| format!("{w} {n}")).collect::<Vec<_>>().join(", ")
+                    )
+                },
+                muted(),
+            ),
+        ]));
+        if m.jewels.is_empty() {
+            lines.push(Line::styled("  You own no jewel that adds to it.", muted()));
+        }
+        for j in &m.jewels {
+            let costs = j.costs.as_ref().map_or(String::new(), |c| format!(", costs {c}"));
+            lines.push(Line::styled(
+                format!(
+                    "  {} x{}: {:+} for {} slot{}{costs}",
+                    j.name,
+                    j.owned,
+                    j.points,
+                    j.slots,
+                    if j.slots == 1 { "" } else { "s" }
+                ),
+                muted(),
+            ));
+        }
+        if !m.fills.is_empty() {
+            let way: Vec<String> = m.fills.iter().map(|p| format!("{} ← {}", p.place, p.jewel)).collect();
+            let (text, style) = if m.reaches {
+                (format!("  Reachable: {} ({:+})", way.join(", "), m.gained), good())
+            } else {
+                (
+                    format!("  Best with what fits: {} ({:+} of {gap})", way.join(", "), m.gained),
+                    warn(),
+                )
+            };
+            lines.push(Line::styled(text, style));
+        } else if !m.jewels.is_empty() {
+            lines.push(Line::styled("  None of them fits a free gem slot.", warn()));
+        }
     }
     if app.skill_info
         && let Some(text) = t

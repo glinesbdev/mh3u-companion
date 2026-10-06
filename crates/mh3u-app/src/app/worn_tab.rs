@@ -12,7 +12,12 @@ const CHARM: u8 = 6;
 #[derive(Default)]
 pub struct WornTab {
     pub skills: ListState,
+    /// Only the skills that are a few points short of their next tier.
+    pub near: bool,
 }
+
+/// How many points short of the next tier a skill is to count as "near" (key `m`).
+pub const NEAR: i32 = 5;
 
 /// One thing that adds points to a skill.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,6 +44,37 @@ pub struct SkillDetail {
     pub tiers: Vec<TierRow>,
     /// The next tier above the total: (points where it starts, effect, points still missing).
     pub next: Option<(i8, u16, i32)>,
+}
+
+/// A jewel the hunter owns that adds to a skill.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OwnedJewel {
+    pub name: String,
+    pub points: i32,
+    pub slots: u8,
+    pub owned: u32,
+    /// What it costs in another skill, as text (`-1 Whim`), if anything.
+    pub costs: Option<String>,
+}
+
+/// Where to put one of them: a worn piece or the charm with free gem slots.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Placement {
+    pub place: String,
+    pub jewel: String,
+    pub points: i32,
+}
+
+/// What it would take to reach a skill's next tier with the jewels the hunter owns and the gem slots that are free.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Missing {
+    /// (where, free gem slots) for every worn piece and the charm with room.
+    pub free: Vec<(String, u8)>,
+    pub jewels: Vec<OwnedJewel>,
+    /// One way to fill the free slots, best use of a slot first, until the tier is reached or nothing more fits.
+    pub fills: Vec<Placement>,
+    pub gained: i32,
+    pub reaches: bool,
 }
 
 impl App {
@@ -71,18 +107,35 @@ impl App {
 
     /// The highlighted row of the totals, kept inside the list.
     pub fn worn_selected(&self, summary: &Summary) -> Option<usize> {
-        let last = summary.skills.len().checked_sub(1)?;
+        let last = self.worn_rows(summary).len().checked_sub(1)?;
         Some(self.worn.skills.selected().unwrap_or(0).min(last))
     }
 
     /// The skill highlighted on the Worn tab.
     pub fn worn_skill<'a>(&self, summary: &'a Summary) -> Option<&'a SkillTotal> {
-        summary.skills.get(self.worn_selected(summary)?)
+        self.worn_rows(summary).get(self.worn_selected(summary)?).copied()
+    }
+
+    /// Keys of the Worn tab (the ones for moving are the shared ones).
+    pub(super) fn worn_key(&mut self, code: Key) -> bool {
+        match code {
+            Key::Char('m') => {
+                self.worn.near = !self.worn.near;
+                self.worn.skills.select(Some(0));
+                self.status = if self.worn.near {
+                    format!("only skills within {NEAR} points of their next tier (m shows all)")
+                } else {
+                    String::new()
+                };
+            }
+            _ => return false,
+        }
+        true
     }
 
     pub(super) fn worn_move(&mut self, step: isize) {
         let summary = self.worn_summary();
-        let len = summary.skills.len();
+        let len = self.worn_rows(&summary).len();
         let at = self.worn_selected(&summary);
         self.worn.skills.select((len > 0).then(|| stepped(at, step, len)));
     }
@@ -189,5 +242,93 @@ impl App {
             tiers,
             next,
         }
+    }
+
+    /// The skills of the Worn tab as listed: all of them, or with `near` only those a few points short of the next tier.
+    pub fn worn_rows<'a>(&self, summary: &'a Summary) -> Vec<&'a SkillTotal> {
+        summary
+            .skills
+            .iter()
+            .filter(|t| {
+                !self.worn.near
+                    || mh3u_core::skilltiers::tiers(t.id)
+                        .filter(|x| x.0 > 0)
+                        .map(|x| i32::from(x.0) - t.points)
+                        .filter(|&gap| gap > 0)
+                        .min()
+                        .is_some_and(|gap| gap <= NEAR)
+            })
+            .collect()
+    }
+
+    /// The gem slots still free on the worn armor and the charm.
+    fn worn_free_slots(&self) -> Vec<(String, u8)> {
+        let used = |codes: &[u16]| -> u8 { codes.iter().filter_map(|&c| self.game.decoration(c)).map(|d| d.slots).sum() };
+        let mut out = Vec::new();
+        for (kind, e) in self.worn_armor() {
+            if let Some(a) = self.game.armor_stats(kind, e.id) {
+                let free = a.slots.saturating_sub(used(&e.decorations()));
+                if free > 0 {
+                    out.push((self.game.equipment_kind_label(kind).unwrap_or("?").to_string(), free));
+                }
+            }
+        }
+        if let Some(t) = self.worn_talisman() {
+            let free = t.talisman_slots().saturating_sub(used(&t.talisman_decorations()));
+            if free > 0 {
+                out.push(("Charm".to_string(), free));
+            }
+        }
+        out
+    }
+
+    /// Whether the jewels the hunter owns and the free gem slots can close the gap (`gap` points) to a skill's next tier, and one way
+    /// to do it. A jewel needs as many free slots on one piece as it has slots; the ones that give the most per slot go in first.
+    pub fn worn_missing(&self, skill: u8, gap: i32) -> Missing {
+        let mut free = self.worn_free_slots();
+        let mut jewels: Vec<OwnedJewel> = Vec::new();
+        for d in self.game.decoration_table() {
+            if d.skill != skill || d.points <= 0 {
+                continue;
+            }
+            let owned = self.save.item_count(d.item);
+            if owned == 0 {
+                continue;
+            }
+            jewels.push(OwnedJewel {
+                name: self.game.item_name(d.item).unwrap_or("?").to_string(),
+                points: i32::from(d.points),
+                slots: d.slots,
+                owned,
+                costs: d.penalty.map(|(s, p)| format!("{p:+} {}", self.game.skill_name(s).unwrap_or("?"))),
+            });
+        }
+        // the most points for each slot first, then the most points
+        jewels.sort_by_key(|j| (std::cmp::Reverse(j.points * 12 / i32::from(j.slots)), std::cmp::Reverse(j.points)));
+        let mut summary = Missing {
+            free: free.clone(),
+            jewels: jewels.clone(),
+            ..Missing::default()
+        };
+        'fill: for j in &jewels {
+            for _ in 0..j.owned.min(18) {
+                if summary.gained >= gap {
+                    break 'fill;
+                }
+                // the piece with the least room that still fits it
+                let Some(at) = (0..free.len()).filter(|&i| free[i].1 >= j.slots).min_by_key(|&i| free[i].1) else {
+                    break;
+                };
+                free[at].1 -= j.slots;
+                summary.gained += j.points;
+                summary.fills.push(Placement {
+                    place: free[at].0.clone(),
+                    jewel: j.name.clone(),
+                    points: j.points,
+                });
+            }
+        }
+        summary.reaches = summary.gained >= gap;
+        summary
     }
 }

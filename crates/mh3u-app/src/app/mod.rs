@@ -94,7 +94,7 @@ pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
 #[cfg(feature = "edit")]
 pub use talisman::{ROW_MAKE, ROW_SLOTS, SkillFind, TalismanForm};
 pub use wishlist::{WishList, WishSort};
-pub use worn_tab::{JEWELS, SkillDetail, SkillSource, TierRow, WornTab};
+pub use worn_tab::{JEWELS, Missing, NEAR, OwnedJewel, Placement, SkillDetail, SkillSource, TierRow, WornTab};
 
 // the helpers the submodules share (their `use super::*` picks these up)
 use crafting::kind_rank;

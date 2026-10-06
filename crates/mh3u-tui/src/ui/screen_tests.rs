@@ -408,3 +408,46 @@ fn the_worn_tab_has_a_highlighted_skill_with_its_sources_and_tiers() {
     });
     assert_eq!(app.worn_selected(&summary), Some(0));
 }
+
+#[test]
+fn the_worn_tab_says_what_it_takes_to_reach_the_next_tier() {
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    let summary = app.worn_summary();
+    // a skill the worn gear has points in, and a jewel for it
+    let Some((skill, jewel)) = summary.skills.iter().find_map(|t| {
+        app.game
+            .decoration_table()
+            .iter()
+            .find(|d| d.skill == t.id && d.points > 0 && d.slots == 1)
+            .map(|d| (t.id, *d))
+    }) else {
+        eprintln!("skipped: no worn skill has a one-slot jewel");
+        return;
+    };
+    let points = summary.skills.iter().find(|t| t.id == skill).unwrap().points;
+    // free slots: the test save wears Leather pieces with open gem slots
+    let none = app.worn_missing(skill, 1);
+    assert!(!none.free.is_empty(), "the worn pieces have free gem slots");
+    assert!(none.jewels.is_empty() && none.fills.is_empty(), "no jewel owned yet");
+    // own three of the jewel: it is listed and placed in a free slot
+    app.save.item_box.push(mh3u_core::save::ItemStack { id: jewel.item, count: 3 });
+    let m = app.worn_missing(skill, i32::from(jewel.points));
+    assert_eq!(m.jewels.len(), 1);
+    assert_eq!(m.jewels[0].owned, 3);
+    assert_eq!(m.fills.len(), 1, "one jewel closes a gap of its own points: {m:?}");
+    assert!(m.reaches && m.gained == i32::from(jewel.points));
+    // a gap that more jewels than there are slots could not close is not reached
+    let big = app.worn_missing(skill, 1000);
+    assert!(!big.reaches && big.gained > 0 && big.fills.len() <= 3);
+    // m narrows the list to skills a few points short of a tier
+    let _ = points;
+    app.worn.near = true;
+    let near = app.worn_rows(&summary);
+    assert!(near.iter().all(|t| {
+        mh3u_core::skilltiers::tiers(t.id)
+            .filter(|x| x.0 > 0 && i32::from(x.0) > t.points)
+            .any(|x| i32::from(x.0) - t.points <= mh3u_app::app::NEAR)
+    }));
+    draw_all(&mut app, 140, 40);
+}

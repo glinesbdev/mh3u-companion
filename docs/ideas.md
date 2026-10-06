@@ -35,7 +35,6 @@ belong to.
 
 ## Quality of life
 
-- Search on the Worn tab (it has no list).
 - The zenny cost of upgrading armor, if the game has one (not found).
 
 - Edit the guild card (title words, greeting) in the save file while the game is not running, with a backup; the file layout is known (see "The guild card in the running game" in `formats.md` for why not live). Untested: whether the game accepts a changed file.

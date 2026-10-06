@@ -345,6 +345,11 @@ impl GameData {
         self.decorations.get(usize::from(code).checked_sub(1)?)
     }
 
+    /// Every decoration, in the game's table order.
+    pub fn decoration_table(&self) -> &[crate::decorations::Decoration] {
+        &self.decorations
+    }
+
     /// The skill points a set of socketed decorations (save numbers, 0 = empty) add up to, penalties as negative points.
     pub fn decoration_points(&self, codes: &[u16]) -> Vec<(u8, i8)> {
         let mut out = Vec::new();
