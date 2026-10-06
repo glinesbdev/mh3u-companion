@@ -41,6 +41,8 @@ pub const WEAPON_USAGE_KINDS: [u8; 12] = [7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 1
 /// "Fledgling" 4); in the second the top byte joins the words (0: nothing, else the word numbered 612 plus it: 6 is "to", 1 "of", 2 "and")
 /// and the rest is the second word ("Hunter" is 6, "Excited" 51). Found by changing the title from "Fledgling Hunter" to "Noob to Excited".
 const CARD_TITLE: usize = 0x7a28;
+/// The Shakalaka sidekick's record starts with a byte that is 0x80 and the number of the mask it wears (0 before the sidekick joined).
+const SIDEKICK_MASK: usize = 0x6f68;
 /// The greeting on the card: text up to a NUL from here. Its longest length is not known.
 const CARD_GREETING: usize = 0x7ad0;
 const GREETING_MAX: usize = 48;
@@ -160,6 +162,8 @@ pub struct Save {
     pub card_title: (u32, u8, u32),
     /// The guild card's greeting.
     pub greeting: String,
+    /// The mask the Shakalaka sidekick wears, as a number into the game's list of masks (0 Acorn, 5 Fluffy); `None` until it joined.
+    pub sidekick_mask: Option<u8>,
     /// The last quests done, newest first (the Hunter's Journal).
     pub journal: Vec<JournalEntry>,
     pub pouch: Vec<ItemStack>,
@@ -315,6 +319,7 @@ impl Save {
                 let end = text.iter().position(|&b| b == 0).unwrap_or(GREETING_MAX);
                 String::from_utf8_lossy(&text[..end]).into_owned()
             },
+            sidekick_mask: (d[SIDEKICK_MASK] & 0x80 != 0).then_some(d[SIDEKICK_MASK] & 0x7f),
             pouch: read_stacks(d, POUCH_OFFSET, POUCH_SLOTS),
             item_box: read_stacks(d, BOX_OFFSET, BOX_SLOTS),
             equipment_box: read_equipment(d),
@@ -349,6 +354,7 @@ mod tests {
             weapon_uses: [0; 12],
             card_title: (0, 0, 0),
             greeting: String::new(),
+            sidekick_mask: None,
             journal: Vec::new(),
             pouch,
             item_box,
@@ -635,5 +641,22 @@ mod tests {
             return;
         };
         assert_eq!((before.resource_points, after.resource_points), (14, 20));
+    }
+
+    /// The Shakalaka's mask: none before the sidekick joined (the Shakalaka Savior quest), 0 (Acorn) after, 5 (Fluffy) when it wore
+    /// that (checked on three saves in the snapshots; skips without them).
+    #[test]
+    fn the_sidekicks_mask_is_read_from_real_saves() {
+        let read = |name: &str| {
+            let path = format!("{}/../../snapshots/{name}/user2", env!("CARGO_MANIFEST_DIR"));
+            std::fs::read(path).ok().and_then(|b| Save::parse(&b).ok())
+        };
+        let (Some(before), Some(acorn), Some(fluffy)) = (read("23-hr2"), read("37-rp-20"), read("38-fluffy-mask")) else {
+            return;
+        };
+        assert_eq!(
+            (before.sidekick_mask, acorn.sidekick_mask, fluffy.sidekick_mask),
+            (None, Some(0), Some(5))
+        );
     }
 }

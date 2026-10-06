@@ -181,6 +181,17 @@ pub(super) fn draw_worn(f: &mut Frame, app: &mut App, area: Rect) {
             gear.push(Line::from(vec![Span::styled("  Charm ", muted()), Span::raw(name.to_string())]));
         }
     }
+    // the Shakalaka sidekick's mask, with what the game says about it
+    if let Some(n) = app.save.sidekick_mask {
+        gear.push(Line::raw(""));
+        gear.push(Line::from(vec![
+            Span::styled(format!("{:<10}", "Shakalaka"), muted()),
+            Span::styled(app.game.mask_name(n).unwrap_or("a mask").to_string(), bold()),
+        ]));
+        if let Some(text) = app.game.mask_description(n) {
+            gear.push(Line::styled(format!("  {text}"), muted()));
+        }
+    }
     f.render_widget(
         Paragraph::new(gear)
             .wrap(Wrap { trim: false })

@@ -503,3 +503,17 @@ fn the_worn_pieces_can_be_compared_with_a_template() {
     press(&mut app, Key::Char('v'));
     assert!(app.worn_versus().is_none());
 }
+
+#[test]
+fn the_worn_tab_names_the_shakalaka_sidekicks_mask() {
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    while app.tab != Tab::Worn {
+        app.on_key(Key::Right, Mods::default());
+    }
+    let none = draw_all(&mut app, 140, 40).join("\n");
+    assert!(!none.contains("Shakalaka"), "no sidekick in this save");
+    app.save.sidekick_mask = Some(5);
+    let shown = draw_all(&mut app, 140, 40).join("\n");
+    assert!(shown.contains("Shakalaka") && shown.contains("Fluffy Mask"), "{shown}");
+}

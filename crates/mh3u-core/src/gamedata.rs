@@ -16,6 +16,9 @@ use std::{
 /// English text for items and equipment lives in this archive, relative to the dump's game folder.
 const TEXT_ARCHIVE: &str = "content/nativeCafe/arc/ID/ID_arena_eng.arc";
 /// The archive with the guild card's text.
+/// Where the Shakalaka masks' names (25, from the Acorn Mask) and descriptions (the same order) start in the `Facility_eng` text.
+const MASK_NAMES: usize = 372;
+const MASK_DESCRIPTIONS: usize = 397;
 const LOBBY_ARCHIVE: &str = "content/nativeCafe/arc/ID/ID_lb_eng.arc";
 
 /// Equipment `kind` byte -> (display name, GMD file holding that kind's piece names).
@@ -87,6 +90,8 @@ pub struct GameData {
     gather_spots: HashMap<u16, Vec<crate::gather_spots::Spot>>,
     /// The words a guild card title is put together from, by number (`CardTitle` in the lobby archive).
     card_title_words: Vec<String>,
+    /// The lobby's facility texts, among them the Shakalaka masks' names and descriptions.
+    facility_texts: Vec<String>,
     /// Carry limits and shop prices of items, by item id.
     item_extras: HashMap<u16, crate::item_extras::ItemExtras>,
     /// Songs of the hunting horns, by the horn's notes.
@@ -125,16 +130,17 @@ fn load_quests(game_dir: &Path) -> Vec<crate::quest::Quest> {
     quests
 }
 
-/// The guild card title words, from the lobby text archive; empty when the dump has none.
-fn card_title_words(game_dir: &Path) -> Vec<String> {
+/// The texts of one entry of the lobby text archive (`CardTitle_eng`, `Facility_eng`), by number; empty when the dump has none.
+fn lobby_texts(game_dir: &Path, entry: &str) -> Vec<String> {
     let read = || -> Result<Vec<String>> {
         let bytes = std::fs::read(game_dir.join(LOBBY_ARCHIVE))?;
         let arc = Arc::parse(&bytes)?;
+        let name = format!("GUI\\font\\lobby\\{entry}");
         let entry = arc
             .entries
             .iter()
-            .find(|e| e.name == "GUI\\font\\lobby\\CardTitle_eng")
-            .context("CardTitle_eng not found in the lobby archive")?;
+            .find(|e| e.name == name)
+            .with_context(|| format!("{name} not found in the lobby archive"))?;
         Ok(gmd::parse(&arc.read(entry)?)?.into_iter().map(|w| w.trim().to_string()).collect())
     };
     read().unwrap_or_default()
@@ -244,7 +250,8 @@ impl GameData {
             weapon_extras: HashMap::new(),
             horn_songs: crate::horn_songs::parse()?,
             item_extras: HashMap::new(),
-            card_title_words: card_title_words(game_dir),
+            card_title_words: lobby_texts(game_dir, "CardTitle_eng"),
+            facility_texts: lobby_texts(game_dir, "Facility_eng"),
             gather_spots: HashMap::new(),
             zone_names: crate::zone_names::parse()?,
             sell_prices: crate::items::parse_sell_prices(&data_section)?,
@@ -376,6 +383,18 @@ impl GameData {
     /// Where an item can be gathered (mined, picked, caught, fished); empty for items that cannot.
     pub fn gather_spots(&self, id: u16) -> &[crate::gather_spots::Spot] {
         self.gather_spots.get(&id).map_or(&[], Vec::as_slice)
+    }
+
+    /// The name of a Shakalaka mask by its number (0 is the Acorn Mask, 5 the Fluffy Mask): the game lists them from text 372.
+    pub fn mask_name(&self, n: u8) -> Option<&str> {
+        let name = self.facility_texts.get(MASK_NAMES + usize::from(n))?;
+        (!name.is_empty() && name != "DUMMY").then_some(name.as_str())
+    }
+
+    /// What a Shakalaka mask is and does, as a paragraph (the texts after the names, in the same order).
+    pub fn mask_description(&self, n: u8) -> Option<String> {
+        let text = self.facility_texts.get(MASK_DESCRIPTIONS + usize::from(n))?;
+        (!text.is_empty()).then(|| unwrap_text(text))
     }
 
     /// A guild card title in words ("Noob to Excited"), from the numbers in the save (see `Save::card_title`). `None` when the dump has
@@ -831,5 +850,17 @@ mod tests {
         assert_eq!(rathian[0].elements(), [0, 15, 15, 20, 35]);
         assert_eq!(game.hit_zones(42).len(), 5);
         assert!(game.hit_zones(0).is_empty());
+    }
+
+    /// The Shakalaka masks' names and descriptions are read in the game's order (skips without a dump).
+    #[test]
+    fn the_shakalaka_masks_are_named_in_the_games_order() {
+        let Some(dir) = dump_from_env() else { return };
+        let Ok(game) = super::GameData::load(&dir) else { return };
+        assert_eq!(game.mask_name(0), Some("Acorn Mask"));
+        assert_eq!(game.mask_name(5), Some("Fluffy Mask"));
+        assert_eq!(game.mask_name(18), None, "the dummy ones have no name");
+        assert!(game.mask_description(0).is_some_and(|d| d.contains("acorn")));
+        assert!(game.mask_description(5).is_some());
     }
 }
