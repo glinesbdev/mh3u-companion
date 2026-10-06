@@ -66,6 +66,10 @@ pub enum Command {
     },
     /// Take out of the game everything the debug commands added for this hunter.
     Purge,
+    /// Look in the game's memory for a piece of text (read-only), to find where the game keeps something.
+    Locate {
+        text: String,
+    },
     /// Look in the game's memory for a sharpness bar (its numbers in any unit), read-only.
     Find {
         bar: Vec<u32>,
@@ -85,7 +89,7 @@ fn number(word: &str) -> Option<u32> {
 pub fn parse(text: &str) -> Result<Command, String> {
     let words: Vec<&str> = text.split_whitespace().collect();
     let Some((&verb, args)) = words.split_first() else {
-        return Err("type a command: zenny, give, set, stock, equip, talisman, purge, scan or find".into());
+        return Err("type a command: zenny, give, set, stock, equip, talisman, purge, scan, find or locate".into());
     };
     match verb.to_lowercase().as_str() {
         "zenny" | "z" => {
@@ -176,6 +180,13 @@ pub fn parse(text: &str) -> Result<Command, String> {
                 Err("purge takes no arguments".into())
             }
         }
+        "locate" => {
+            let text = args.join(" ");
+            if text.chars().count() < 4 || !text.is_ascii() {
+                return Err("locate TEXT: at least 4 plain letters, for example your greeting".into());
+            }
+            Ok(Command::Locate { text })
+        }
         "find" => {
             let bar: Vec<u32> = args.iter().filter_map(|w| number(w)).collect();
             if bar.len() != args.len() || !(3..=7).contains(&bar.len()) || bar[0] == 0 {
@@ -201,7 +212,7 @@ pub fn parse(text: &str) -> Result<Command, String> {
             Ok(Command::Scan { kind, names })
         }
         other => Err(format!(
-            "unknown command '{other}': zenny, give, set, stock, equip, talisman, purge, scan or find"
+            "unknown command '{other}': zenny, give, set, stock, equip, talisman, purge, scan, find or locate"
         )),
     }
 }

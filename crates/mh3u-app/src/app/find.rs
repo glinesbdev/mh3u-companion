@@ -15,6 +15,9 @@ use std::fmt::Write;
 const KEEP: usize = 300;
 /// Bytes shown on each side of a hit.
 const CONTEXT: u64 = 32;
+/// The window `locate` shows round a hit.
+const LOCATE_BEFORE: u64 = 0x100;
+const LOCATE_AFTER: u64 = 0x40;
 
 impl App {
     pub(super) fn run_find(&mut self, bar: &[u32]) {
@@ -65,6 +68,73 @@ impl App {
             Err(e) => format!("find failed: {e}"),
             Ok((report, n)) => match self.write_report("find", &report) {
                 Ok(path) => format!("find: {n} hit(s), report in {}", path.display()),
+                Err(e) => e,
+            },
+        };
+    }
+
+    /// `locate TEXT`: every place the game's memory holds this text, with the bytes around it and where it is in the game's save
+    /// block, if inside. For finding out where the game keeps something that is also in the save (a guild card's greeting).
+    pub(super) fn run_locate(&mut self, text: &str) {
+        if !self.live_connected() {
+            return self.status = "locate needs a hunter loaded in the game".into();
+        }
+        let Some(live) = &self.live else { return };
+        let result = ProcMem::open(live.child.id()).and_then(|mem| {
+            let base = livemod::find_live_block(&mem, std::slice::from_ref(&self.save.hunter_name))?;
+            // the whole process: the game keeps things below the save block as well as above it; and the text in the forms the game
+            // may keep it in: plain bytes, and 16-bit letters (big-endian, as the Wii U's own memory is, and little-endian)
+            let wide = |big: bool| -> Vec<u8> {
+                text.encode_utf16()
+                    .flat_map(|u| if big { u.to_be_bytes() } else { u.to_le_bytes() })
+                    .collect()
+            };
+            let forms: [(&str, Vec<u8>); 3] = [
+                ("plain bytes", text.as_bytes().to_vec()),
+                ("16-bit big-endian", wide(true)),
+                ("16-bit little-endian", wide(false)),
+            ];
+            let mut hits: Vec<(&str, usize, u64)> = Vec::new();
+            for (label, pattern) in &forms {
+                for at in mem.scan(pattern)?.into_iter().take(KEEP) {
+                    hits.push((label, pattern.len(), at));
+                }
+            }
+            let mut report = format!("TEXT {text:?}: the save block starts at {base:x?}\n\n");
+            // what the save block itself holds where the save file keeps the guild card (title at 0x7a28, greeting at 0x7ad0)
+            if let Some(b) = base {
+                for (what, off, len) in [("title and name", 0x7a28u64, 0x30usize), ("greeting", 0x7ad0, 0x30)] {
+                    if let Ok(bytes) = mem.read(b + off, len) {
+                        let hex: Vec<String> = bytes.iter().map(|x| format!("{x:02x}")).collect();
+                        let _ = writeln!(report, "block {what} at {off:#x}: {}", hex.join(" "));
+                    }
+                }
+                report.push('\n');
+            }
+            for (n, (label, len, at)) in hits.iter().enumerate() {
+                let place = match base.map(|b| *at as i128 - b as i128) {
+                    Some(d) if (0..mh3u_core::save::SAVE_LEN as i128).contains(&d) => format!("INSIDE the save block at offset {d:#x}"),
+                    Some(d) if d < 0 => format!("{:#x} BEFORE the save block", -d),
+                    Some(d) => format!("{d:#x} after the start of the save block"),
+                    None => "?".to_string(),
+                };
+                let _ = writeln!(report, "H{} {label} host {at:#x}: {place}", n + 1);
+                // a wide window: what comes before a text shows what kind of record it is in
+                let from = at.saturating_sub(LOCATE_BEFORE);
+                if let Ok(bytes) = mem.read(from, (LOCATE_BEFORE + LOCATE_AFTER) as usize + len) {
+                    for (i, line) in bytes.chunks(16).enumerate() {
+                        let hex: Vec<String> = line.iter().map(|b| format!("{b:02x}")).collect();
+                        let _ = writeln!(report, "  {:#x}  {}", from + (i * 16) as u64, hex.join(" "));
+                    }
+                }
+                report.push('\n');
+            }
+            Ok((report, hits.len()))
+        });
+        self.status = match result {
+            Err(e) => format!("locate failed: {e}"),
+            Ok((report, n)) => match self.write_report("locate", &report) {
+                Ok(path) => format!("locate: {n} place(s), report in {}", path.display()),
                 Err(e) => e,
             },
         };

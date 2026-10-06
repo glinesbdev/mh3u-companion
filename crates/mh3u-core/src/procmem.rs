@@ -124,6 +124,11 @@ impl ProcMem {
         Ok(())
     }
 
+    /// Where `pattern` occurs in `chunk` (a piece of memory read with `for_each_chunk_in`).
+    pub fn matches_in(chunk: &[u8], pattern: &[u8]) -> Vec<usize> {
+        memchr::memmem::find_iter(chunk, pattern).collect()
+    }
+
     /// Find every address where `pattern` occurs in readable, writable memory. Unreadable chunks are skipped.
     pub fn scan(&self, pattern: &[u8]) -> io::Result<Vec<u64>> {
         const CHUNK: usize = 16 << 20;

@@ -37,6 +37,9 @@ impl App {
         if let commands::Command::Find { bar } = command {
             return self.run_find(&bar);
         }
+        if let commands::Command::Locate { text } = &command {
+            return self.run_locate(text);
+        }
         if let commands::Command::Purge = command {
             return self.status = self.purge_debug_edits();
         }
@@ -116,7 +119,10 @@ impl App {
                     push(edit::set_box_item(&data, found.id, count).map_err(|e| e.to_string())?, &mut data);
                     notes.push(format!("{} in the box set to {}", found.describe(), count.min(edit::MAX_STACK)));
                 }
-                commands::Command::Scan { .. } | commands::Command::Find { .. } | commands::Command::Purge => {}
+                commands::Command::Scan { .. }
+                | commands::Command::Find { .. }
+                | commands::Command::Locate { .. }
+                | commands::Command::Purge => {}
                 commands::Command::Equip { slot, offset, bytes } => {
                     if bytes.is_empty() {
                         let record = edit::equipment_record(&data, slot).map_err(|e| e.to_string())?;
