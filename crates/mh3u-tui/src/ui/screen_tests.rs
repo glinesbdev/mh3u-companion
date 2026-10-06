@@ -293,7 +293,8 @@ fn the_give_picker_finds_things_by_name_and_its_buttons_can_be_clicked() {
     let Some(mut app) = app() else { return };
     app.enable_edit("test".into());
     app.on_key(Key::Char('E'), Mods::default());
-    assert!(app.give_picker_open());
+    app.on_key(Key::Enter, Mods::default()); // the first editor: give
+    assert!(app.give.is_some());
     for c in "tenderizer".chars() {
         app.on_key(Key::Char(c), Mods::default());
     }
@@ -321,7 +322,50 @@ fn the_give_picker_finds_things_by_name_and_its_buttons_can_be_clicked() {
     // giving without the game running says so, and the picker stays for the next one
     app.on_key(Key::Enter, Mods::default());
     assert!(app.status.contains("--live"), "{}", app.status);
-    assert!(app.give_picker_open());
+    assert!(app.give.is_some());
     app.on_key(Key::Esc, Mods::default());
-    assert!(!app.give_picker_open());
+    assert!(app.give.is_none());
+}
+
+#[cfg(feature = "edit")]
+#[test]
+fn the_talisman_form_picks_skills_points_and_slots() {
+    use mh3u_app::input::Pointer;
+    let _turn = turn();
+    let Some(mut app) = app() else { return };
+    let press = |app: &mut App, k: Key| app.on_key(k, Mods::default());
+    app.enable_edit("test".into());
+    press(&mut app, Key::Char('E'));
+    press(&mut app, Key::Down);
+    press(&mut app, Key::Enter); // the second editor: talisman
+    assert!(app.talisman.is_some());
+    draw_all(&mut app, 140, 40);
+    // typing on the first skill row finds a skill; Enter takes it
+    for c in "attack".chars() {
+        press(&mut app, Key::Char(c));
+    }
+    let shown = draw_all(&mut app, 140, 40).join("\n");
+    assert!(shown.contains("Attack Boost"), "{shown}");
+    press(&mut app, Key::Enter);
+    let (_, points) = app.talisman.as_ref().unwrap().skills[0].expect("a skill was chosen");
+    assert_eq!(points, 10);
+    // the + button raises the points of the highlighted row
+    draw_all(&mut app, 140, 40);
+    let plus = app.hits.actions[app.hits.tab_actions + 1];
+    app.on_pointer(Pointer::Click {
+        col: plus.0.x + 1,
+        row: plus.0.y,
+    });
+    assert_eq!(app.talisman.as_ref().unwrap().skills[0].unwrap().1, 11);
+    // the slots row
+    press(&mut app, Key::Down);
+    press(&mut app, Key::Down);
+    press(&mut app, Key::Left);
+    assert_eq!(app.talisman.as_ref().unwrap().slots, 2);
+    // making it without the game running says so
+    press(&mut app, Key::Down);
+    press(&mut app, Key::Enter);
+    assert!(app.status.contains("--live"), "{}", app.status);
+    press(&mut app, Key::Esc);
+    assert!(app.talisman.is_none());
 }

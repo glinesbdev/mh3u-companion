@@ -112,10 +112,6 @@ impl App {
         });
     }
 
-    pub fn give_picker_open(&self) -> bool {
-        self.give.is_some()
-    }
-
     fn refilter_give(&mut self) {
         let Some(text) = self.give.as_ref().map(|g| g.text.clone()) else {
             return;

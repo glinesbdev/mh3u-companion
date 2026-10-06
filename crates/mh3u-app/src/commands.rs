@@ -61,6 +61,8 @@ pub enum Command {
     /// Add a talisman with skills given as (skill name, points).
     Talisman {
         skills: Vec<(String, i8)>,
+        /// Gem slots (0 to 3); `None` keeps the number of the talisman copied from.
+        slots: Option<u8>,
     },
     /// Take out of the game everything the debug commands added for this hunter.
     Purge,
@@ -165,7 +167,7 @@ pub fn parse(text: &str) -> Result<Command, String> {
             if skills.is_empty() {
                 return Err("talisman needs skills: talisman auto-guard 10, psychic 5".into());
             }
-            Ok(Command::Talisman { skills })
+            Ok(Command::Talisman { skills, slots: None })
         }
         "purge" => {
             if args.is_empty() {
@@ -405,13 +407,15 @@ mod tests {
         assert_eq!(
             parse("talisman auto-guard +10, psychic -3"),
             Ok(Command::Talisman {
-                skills: vec![("auto-guard".into(), 10), ("psychic".into(), -3)]
+                skills: vec![("auto-guard".into(), 10), ("psychic".into(), -3)],
+                slots: None
             })
         );
         assert_eq!(
             parse("tal attack up (s) 4"),
             Ok(Command::Talisman {
-                skills: vec![("attack up (s)".into(), 4)]
+                skills: vec![("attack up (s)".into(), 4)],
+                slots: None
             })
         );
         assert!(parse("talisman").is_err());

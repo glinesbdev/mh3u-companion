@@ -38,7 +38,7 @@ impl App {
             || self.builds.name_prompt.is_some()
             || self.builds.piece_picker.is_some()
             || self.show_help
-            || self.give_picker_open()
+            || self.edit_popup_open()
     }
 
     fn click(&mut self, col: u16, row: u16) {

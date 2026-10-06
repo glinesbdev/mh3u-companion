@@ -71,7 +71,10 @@ cargo run -p mh3u-tui --features edit -- --live --debug-edit
 
 For testing: a game takes a long time to play, so this lets you set up a situation instead. It writes into the game's live
 copy of the save data, and nothing else; it is off unless you pass the flag, and the header shows a red `✎ EDIT`. Press `:` to
-type a command, or press `E` for the give picker: type part of a name to find an item, armor piece or weapon (every word must match, loosely), choose how many with ← → (or the − and + buttons; Tab steps 1, 10, 50, 99), and Enter gives it, as `give` does. A click picks a row and the buttons work; a double-click gives. The picker stays open for the next one, and the status line says what was added.
+type a command, or press `E` for the edit menu (clicks work in all of it):
+
+- **Give an item or gear.** Type part of a name to find an item, armor piece or weapon (every word must match, loosely); choose how many with ← → (or the − and + buttons; Tab steps 1, 10, 50, 99); Enter gives it, as `give` does. A double-click gives. The picker stays open for the next one, and the status line says what was added.
+- **Make a talisman.** Two skill rows, the gem slots and a button. Enter (or typing) on a skill row finds a skill by name; ← → change its points (-15 to 15) or the slots (0 to 3); Delete clears a skill; Enter on "Make the talisman" adds it, as `talisman` does (the talisman is copied from one already in the equipment box, so it needs one).
 
 | Command | Effect |
 |---------|--------|

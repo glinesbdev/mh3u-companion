@@ -132,16 +132,17 @@ impl App {
                         notes.push(format!("slot {slot} is now {}", hex.join(" ")));
                     }
                 }
-                commands::Command::Talisman { skills } => {
+                commands::Command::Talisman { skills, slots } => {
                     let mut pairs = Vec::new();
                     for (name, points) in &skills {
                         let (id, full) = commands::resolve_skill(&self.game, name).ok_or(format!("no skill matches '{name}'"))?;
                         notes.push(format!("{full} {points:+}"));
                         pairs.push((id, *points));
                     }
-                    let (slot, patch) = edit::new_talisman(&data, &pairs).map_err(|e| e.to_string())?;
+                    let (slot, patch) = edit::new_talisman(&data, &pairs, slots).map_err(|e| e.to_string())?;
                     push(patch, &mut data);
-                    notes = vec![format!("talisman in slot {slot}: {}", notes.join(", "))];
+                    let gems = slots.map_or(String::new(), |n| format!(", {n} slot{}", if n == 1 { "" } else { "s" }));
+                    notes = vec![format!("talisman in slot {slot}: {}{gems}", notes.join(", "))];
                 }
                 commands::Command::Stock { include_owned } => {
                     let (need, _) = self.shopping_need_with(include_owned);

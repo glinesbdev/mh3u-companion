@@ -95,13 +95,15 @@ pub fn first_empty_equipment(data: &[u8]) -> Option<usize> {
 /// The most skills a talisman has (pairs of skill id and points from byte 4). A third pair lands on the decoration sockets: the game
 /// then shows a filled slot with no jewel that cannot be emptied (seen with `talisman a +20, b +10, c +5`).
 pub const TALISMAN_PAIRS: usize = 2;
+/// The most gem slots a talisman has.
+pub const MAX_TALISMAN_SLOTS: u8 = 3;
 /// Equipment kind of a talisman.
 const TALISMAN_KIND: u8 = 6;
 
 /// A new talisman in the first empty slot, with these skills (id, points). Its first four bytes (kind, state, id) are copied from a
 /// talisman already in the box, since what the state and id bytes mean is not known; the rest of the record is zero but the pairs.
-/// Returns the slot and the patch.
-pub fn new_talisman(data: &[u8], skills: &[(u8, i8)]) -> Result<(usize, Patch)> {
+/// `slots` (0 to 3) replaces the copied number of gem slots, the second byte of the record. Returns the slot and the patch.
+pub fn new_talisman(data: &[u8], skills: &[(u8, i8)], slots: Option<u8>) -> Result<(usize, Patch)> {
     if skills.is_empty() || skills.len() > TALISMAN_PAIRS {
         bail!("a talisman takes 1 to {TALISMAN_PAIRS} skills");
     }
@@ -114,6 +116,12 @@ pub fn new_talisman(data: &[u8], skills: &[(u8, i8)]) -> Result<(usize, Patch)> 
     let slot = first_empty_equipment(data).ok_or_else(|| anyhow::anyhow!("the equipment box is full"))?;
     let mut record = [0u8; EQUIP_LEN];
     record[..4].copy_from_slice(&model[..4]);
+    if let Some(n) = slots {
+        if n > MAX_TALISMAN_SLOTS {
+            bail!("a talisman has 0 to {MAX_TALISMAN_SLOTS} gem slots");
+        }
+        record[1] = n;
+    }
     for (k, &(id, points)) in skills.iter().enumerate() {
         record[4 + 2 * k] = id;
         record[5 + 2 * k] = points as u8;
@@ -185,19 +193,22 @@ mod tests {
         let mut d = vec![0u8; SAVE_LEN];
         let at = |slot: usize| EQUIP_OFFSET + slot * EQUIP_LEN;
         d[at(0)] = 5; // some armor in slot 0
-        assert!(new_talisman(&d, &[(0x25, 10)]).is_err(), "no talisman to copy from");
+        assert!(new_talisman(&d, &[(0x25, 10)], None).is_err(), "no talisman to copy from");
         d[at(1)..at(1) + 4].copy_from_slice(&[6, 2, 0, 1]);
         d[at(1) + 4..at(1) + 6].copy_from_slice(&[0x25, 0x0a]);
-        let (slot, patch) = new_talisman(&d, &[(0x25, 10), (0x30, -3)]).unwrap();
+        let (slot, patch) = new_talisman(&d, &[(0x25, 10), (0x30, -3)], None).unwrap();
         assert_eq!(slot, 2);
         assert_eq!(patch.offset, at(2));
         assert_eq!(patch.bytes, [6, 2, 0, 1, 0x25, 10, 0x30, 0xfd, 0, 0, 0, 0, 0, 0, 0, 0]);
-        assert!(new_talisman(&d, &[]).is_err());
+        assert!(new_talisman(&d, &[], None).is_err());
+        let (_, with_slots) = new_talisman(&d, &[(0x25, 10)], Some(3)).unwrap();
+        assert_eq!(with_slots.bytes[..4], [6, 3, 0, 1], "the slot count is replaced, the rest copied");
+        assert!(new_talisman(&d, &[(0x25, 10)], Some(4)).is_err());
         let (slot, patch) = new_piece(&d, 5, 1).unwrap();
         assert_eq!(patch.bytes[..4], [5, 0, 0, 1]);
         assert_eq!(patch.offset, EQUIP_OFFSET + slot * EQUIP_LEN);
         assert!(new_piece(&d, 6, 1).is_err());
-        assert!(new_talisman(&d, &[(1, 1); 3]).is_err());
+        assert!(new_talisman(&d, &[(1, 1); 3], None).is_err());
     }
 
     #[test]

@@ -36,8 +36,8 @@ impl App {
             self.name_key(code);
         } else if self.builds.piece_picker.is_some() {
             self.piece_key(code);
-        } else if self.give_picker_open() {
-            self.give_key(code);
+        } else if self.edit_popup_open() {
+            self.edit_popup_key(code);
         } else if self.is_commanding() {
             self.command_key(code);
         } else if self.searching {
@@ -230,7 +230,7 @@ impl App {
             Key::Char('t') if self.tab != Tab::Items => self.open_tree(),
             Key::Char('i') if self.tab != Tab::Items => self.skill_info = !self.skill_info,
             #[cfg(feature = "edit")]
-            Key::Char('E') if self.console.enabled => self.open_give_picker(),
+            Key::Char('E') if self.console.enabled => self.open_edit_menu(),
             #[cfg(feature = "edit")]
             Key::Char(':') if self.console.enabled => {
                 self.console.active = true;

@@ -35,6 +35,8 @@ mod console;
 mod crafting;
 #[cfg(feature = "edit")]
 mod debug_guard;
+#[cfg(feature = "edit")]
+mod edit_menu;
 mod families;
 #[cfg(feature = "edit")]
 mod find;
@@ -58,6 +60,8 @@ mod scan;
 mod settings;
 mod skills;
 mod sorting;
+#[cfg(feature = "edit")]
+mod talisman;
 mod wishlist;
 
 pub use blacksmith::Offer;
@@ -69,6 +73,8 @@ pub use crafting::Crafting;
 pub use crafting::Via;
 #[cfg(feature = "edit")]
 pub use debug_guard::DebugGuard;
+#[cfg(feature = "edit")]
+pub use edit_menu::EDITORS;
 pub use families::FamiliesTab;
 pub use gains::GainsTab;
 #[cfg(feature = "edit")]
@@ -84,6 +90,8 @@ pub use quests::QuestTab;
 pub use settings::SettingsScreen;
 pub use skills::{SkillsTab, WithSkill};
 pub use sorting::{BoxSort, EquipSort, MonsterSort, PieceSort};
+#[cfg(feature = "edit")]
+pub use talisman::{ROW_MAKE, ROW_SLOTS, SkillFind, TalismanForm};
 pub use wishlist::{WishList, WishSort};
 
 // the helpers the submodules share (their `use super::*` picks these up)
@@ -198,6 +206,12 @@ pub struct App {
     /// The popup that gives an item or a piece of gear, when open.
     #[cfg(feature = "edit")]
     pub give: Option<GivePicker>,
+    /// The talisman form, when open.
+    #[cfg(feature = "edit")]
+    pub talisman: Option<TalismanForm>,
+    /// The list of editors, when open.
+    #[cfg(feature = "edit")]
+    pub edit_menu: Option<ListState>,
     /// The settings from `config.txt` (see `crate::config`), and the Settings screen when it is open.
     pub config: crate::config::Config,
     pub settings: Option<SettingsScreen>,
@@ -272,6 +286,10 @@ impl App {
             guard: DebugGuard::load(files.as_ref()),
             #[cfg(feature = "edit")]
             give: None,
+            #[cfg(feature = "edit")]
+            talisman: None,
+            #[cfg(feature = "edit")]
+            edit_menu: None,
             config: crate::config::Config::default(),
             settings: None,
             unlocked,

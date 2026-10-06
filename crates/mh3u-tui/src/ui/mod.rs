@@ -16,6 +16,8 @@ mod compare;
 mod crafting;
 mod equipment;
 mod families;
+#[cfg(feature = "edit")]
+mod forms;
 mod gains;
 #[cfg(feature = "edit")]
 mod give;
@@ -184,7 +186,11 @@ pub fn draw(f: &mut Frame, app: &mut App) {
     }
     draw_name_prompt(f, app);
     #[cfg(feature = "edit")]
-    give::draw_give(f, app);
+    {
+        forms::draw_edit_menu(f, app);
+        give::draw_give(f, app);
+        forms::draw_talisman(f, app);
+    }
     app.hits = HITS.with(|h| std::mem::take(&mut *h.borrow_mut()));
 }
 
