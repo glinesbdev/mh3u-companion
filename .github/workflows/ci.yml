@@ -25,7 +25,7 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
       # the tests that need the game dump or a personal save skip themselves when those are missing
       - run: cargo fmt --all --check
       # twice: the default build only reads the game; --all-features adds the debug editing tools (the `edit` feature)
